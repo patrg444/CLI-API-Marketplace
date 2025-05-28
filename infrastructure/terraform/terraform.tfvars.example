@@ -1,0 +1,22 @@
+# API-Direct Platform Configuration
+# Copy this file to terraform.tfvars and update with your values
+
+# Project Configuration
+project_name = "api-direct"
+environment  = "dev"
+aws_region   = "us-east-1"
+
+# Database Configuration
+db_username = "apidirect"
+db_password = "ChangeMeToASecurePassword123!"  # IMPORTANT: Use a strong password
+
+# EKS Configuration
+eks_cluster_version = "1.29"
+node_instance_types = ["t3.medium"]  # For development; use larger instances for production
+min_node_count      = 2
+max_node_count      = 10
+
+# Optional: Custom domain configuration
+# If you have a domain, uncomment and configure:
+# domain_name = "api-direct.io"
+# certificate_arn = "arn:aws:acm:us-east-1:123456789012:certificate/..."

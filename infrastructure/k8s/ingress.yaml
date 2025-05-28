@@ -1,0 +1,43 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: api-direct-ingress
+  namespace: api-direct
+  annotations:
+    kubernetes.io/ingress.class: alb
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+    alb.ingress.kubernetes.io/healthcheck-path: /health
+    alb.ingress.kubernetes.io/success-codes: 200-299
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS": 443}]'
+    alb.ingress.kubernetes.io/ssl-redirect: '443'
+    # Certificate ARN will be added after domain setup
+    # alb.ingress.kubernetes.io/certificate-arn: ${CERTIFICATE_ARN}
+spec:
+  rules:
+  - http:
+      paths:
+      # Storage Service Routes
+      - path: /storage
+        pathType: Prefix
+        backend:
+          service:
+            name: storage-service
+            port:
+              number: 80
+      # Deployment Service Routes  
+      - path: /deployment
+        pathType: Prefix
+        backend:
+          service:
+            name: deployment-service
+            port:
+              number: 80
+      # Gateway Service Routes (Future)
+      # - path: /api
+      #   pathType: Prefix
+      #   backend:
+      #     service:
+      #       name: gateway-service
+      #       port:
+      #         number: 80
