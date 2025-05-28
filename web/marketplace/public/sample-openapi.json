@@ -1,0 +1,405 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Weather API",
+    "version": "1.0.0",
+    "description": "A simple weather API that provides current weather data and forecasts",
+    "contact": {
+      "name": "API Support",
+      "email": "support@weatherapi.com"
+    }
+  },
+  "servers": [
+    {
+      "url": "https://api.weatherapi.com/v1",
+      "description": "Production server"
+    }
+  ],
+  "security": [
+    {
+      "ApiKeyAuth": []
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "ApiKeyAuth": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-API-Key",
+        "description": "API key for authentication"
+      }
+    },
+    "schemas": {
+      "Weather": {
+        "type": "object",
+        "properties": {
+          "location": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "example": "San Francisco"
+              },
+              "country": {
+                "type": "string",
+                "example": "United States"
+              },
+              "lat": {
+                "type": "number",
+                "example": 37.7749
+              },
+              "lon": {
+                "type": "number",
+                "example": -122.4194
+              }
+            }
+          },
+          "current": {
+            "type": "object",
+            "properties": {
+              "temp_c": {
+                "type": "number",
+                "example": 15.5
+              },
+              "temp_f": {
+                "type": "number",
+                "example": 59.9
+              },
+              "condition": {
+                "type": "object",
+                "properties": {
+                  "text": {
+                    "type": "string",
+                    "example": "Partly cloudy"
+                  },
+                  "icon": {
+                    "type": "string",
+                    "example": "//cdn.weatherapi.com/weather/64x64/day/116.png"
+                  }
+                }
+              },
+              "wind_mph": {
+                "type": "number",
+                "example": 12.5
+              },
+              "wind_kph": {
+                "type": "number",
+                "example": 20.1
+              },
+              "humidity": {
+                "type": "integer",
+                "example": 65
+              }
+            }
+          }
+        }
+      },
+      "Forecast": {
+        "type": "object",
+        "properties": {
+          "location": {
+            "$ref": "#/components/schemas/Weather/properties/location"
+          },
+          "forecast": {
+            "type": "object",
+            "properties": {
+              "forecastday": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "date": {
+                      "type": "string",
+                      "format": "date",
+                      "example": "2024-01-15"
+                    },
+                    "day": {
+                      "type": "object",
+                      "properties": {
+                        "maxtemp_c": {
+                          "type": "number",
+                          "example": 20.5
+                        },
+                        "mintemp_c": {
+                          "type": "number",
+                          "example": 10.2
+                        },
+                        "avgtemp_c": {
+                          "type": "number",
+                          "example": 15.3
+                        },
+                        "condition": {
+                          "$ref": "#/components/schemas/Weather/properties/current/properties/condition"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "Error": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "integer",
+                "example": 1006
+              },
+              "message": {
+                "type": "string",
+                "example": "No matching location found"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "paths": {
+    "/current": {
+      "get": {
+        "summary": "Get current weather",
+        "description": "Returns current weather data for a specific location",
+        "operationId": "getCurrentWeather",
+        "tags": ["Weather"],
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "description": "Location query (city name, zip code, coordinates)",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "San Francisco"
+            }
+          },
+          {
+            "name": "lang",
+            "in": "query",
+            "description": "Language for weather condition text",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "en",
+              "enum": ["en", "es", "fr", "de", "pt", "it", "ja", "zh"]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Weather"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request - Invalid location",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Invalid API key",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests - Rate limit exceeded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/forecast": {
+      "get": {
+        "summary": "Get weather forecast",
+        "description": "Returns weather forecast for a specific location",
+        "operationId": "getForecast",
+        "tags": ["Weather"],
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "description": "Location query (city name, zip code, coordinates)",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "San Francisco"
+            }
+          },
+          {
+            "name": "days",
+            "in": "query",
+            "description": "Number of days to forecast (1-10)",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 10,
+              "default": 3
+            }
+          },
+          {
+            "name": "lang",
+            "in": "query",
+            "description": "Language for weather condition text",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "en",
+              "enum": ["en", "es", "fr", "de", "pt", "it", "ja", "zh"]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Forecast"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request - Invalid location or parameters",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Invalid API key",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests - Rate limit exceeded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/search": {
+      "get": {
+        "summary": "Search locations",
+        "description": "Search for locations by name",
+        "operationId": "searchLocations",
+        "tags": ["Location"],
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "description": "Search query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 3,
+              "example": "San"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "integer",
+                        "example": 2487956
+                      },
+                      "name": {
+                        "type": "string",
+                        "example": "San Francisco"
+                      },
+                      "region": {
+                        "type": "string",
+                        "example": "California"
+                      },
+                      "country": {
+                        "type": "string",
+                        "example": "United States of America"
+                      },
+                      "lat": {
+                        "type": "number",
+                        "example": 37.78
+                      },
+                      "lon": {
+                        "type": "number",
+                        "example": -122.42
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request - Query too short",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "Weather",
+      "description": "Weather data endpoints"
+    },
+    {
+      "name": "Location",
+      "description": "Location search endpoints"
+    }
+  ]
+}

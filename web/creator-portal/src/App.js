@@ -13,7 +13,7 @@ import APIs from './pages/APIs';
 import APIDetails from './pages/APIDetails';
 import Settings from './pages/Settings';
 import Billing from './pages/Billing';
-import MarketplaceListing from './pages/MarketplaceListing';
+import MarketplaceSettings from './pages/MarketplaceSettings';
 
 // Theme
 const theme = createTheme({
@@ -74,7 +74,7 @@ function App() {
                 <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/apis" element={<APIs />} />
                 <Route path="/apis/:apiId" element={<APIDetails />} />
-                <Route path="/apis/:apiId/marketplace" element={<MarketplaceListing />} />
+                <Route path="/apis/:apiId/marketplace" element={<MarketplaceSettings />} />
                 <Route path="/billing" element={<Billing />} />
                 <Route path="/settings" element={<Settings />} />
               </Routes>

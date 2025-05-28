@@ -1,81 +1,25 @@
 version: '3.8'
 
 services:
-  # Storage Service
-  storage:
-    build:
-      context: ./services/storage
-      dockerfile: Dockerfile
-    ports:
-      - "8080:8080"
-    environment:
-      - PORT=8080
-      - AWS_REGION=${AWS_REGION:-us-east-1}
-      - CODE_STORAGE_BUCKET=${CODE_STORAGE_BUCKET}
-      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
-      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
-    healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/health"]
-      interval: 30s
-      timeout: 3s
-      retries: 3
-    networks:
-      - api-direct
-
-  # Deployment Service  
-  deployment:
-    build:
-      context: ./services/deployment
-      dockerfile: Dockerfile
-    ports:
-      - "8081:8081"
-    environment:
-      - PORT=8081
-      - AWS_REGION=${AWS_REGION:-us-east-1}
-      - DEPLOYMENT_NAMESPACE=api-direct-apis
-      - KUBECONFIG=/root/.kube/config
-    volumes:
-      - ~/.kube:/root/.kube:ro  # Mount kubeconfig for K8s access
-    healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8081/health"]
-      interval: 30s
-      timeout: 3s
-      retries: 3
-    networks:
-      - api-direct
-
-  # Gateway Service (Future)
-  # gateway:
-  #   build:
-  #     context: ./services/gateway
-  #     dockerfile: Dockerfile
-  #   ports:
-  #     - "8082:8082"
-  #   environment:
-  #     - PORT=8082
-  #   networks:
-  #     - api-direct
-
-  # Local PostgreSQL for development (optional - use RDS in production)
+  # PostgreSQL Database
   postgres:
     image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: apidirect
+      POSTGRES_PASSWORD: localpassword
+      POSTGRES_DB: apidirect
     ports:
       - "5432:5432"
-    environment:
-      - POSTGRES_USER=apidirect
-      - POSTGRES_PASSWORD=localdevpassword
-      - POSTGRES_DB=apidirect
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./infrastructure/database/migrations:/docker-entrypoint-initdb.d
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U apidirect"]
       interval: 10s
       timeout: 5s
       retries: 5
-    networks:
-      - api-direct
 
-  # Redis for caching (optional)
+  # Redis for rate limiting
   redis:
     image: redis:7-alpine
     ports:
@@ -88,31 +32,153 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-    networks:
-      - api-direct
 
-  # LocalStack for AWS services in development (optional)
-  localstack:
-    image: localstack/localstack:latest
+  # Storage Service
+  storage:
+    build: ./services/storage
     ports:
-      - "4566:4566"  # LocalStack gateway
-      - "4571:4571"  # Elasticsearch
+      - "8080:8080"
     environment:
-      - SERVICES=s3,cognito,secretsmanager,cloudwatch
-      - DEBUG=1
-      - DATA_DIR=/tmp/localstack/data
-      - LAMBDA_EXECUTOR=docker
-      - DOCKER_HOST=unix:///var/run/docker.sock
+      PORT: 8080
+      AWS_REGION: us-east-1
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+      S3_BUCKET: api-direct-code-storage-dev
+      COGNITO_USER_POOL_ID: ${COGNITO_USER_POOL_ID}
+      COGNITO_REGION: ${AWS_REGION:-us-east-1}
+    depends_on:
+      - postgres
+
+  # Deployment Service
+  deployment:
+    build: ./services/deployment
+    ports:
+      - "8081:8081"
+    environment:
+      PORT: 8081
+      KUBECONFIG: /root/.kube/config
+      COGNITO_USER_POOL_ID: ${COGNITO_USER_POOL_ID}
+      COGNITO_REGION: ${AWS_REGION:-us-east-1}
     volumes:
-      - "${TMPDIR:-/tmp}/localstack:/tmp/localstack"
-      - "/var/run/docker.sock:/var/run/docker.sock"
-    networks:
-      - api-direct
+      - ~/.kube:/root/.kube:ro
+    depends_on:
+      - postgres
+
+  # API Key Management Service
+  apikey:
+    build: ./services/apikey
+    ports:
+      - "8083:8083"
+    environment:
+      PORT: 8083
+      DATABASE_URL: postgresql://apidirect:localpassword@postgres:5432/apidirect?sslmode=disable
+      COGNITO_USER_POOL_ID: ${COGNITO_USER_POOL_ID}
+      COGNITO_REGION: ${AWS_REGION:-us-east-1}
+      GIN_MODE: debug
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  # API Gateway Service
+  gateway:
+    build: ./services/gateway
+    ports:
+      - "8082:8082"
+    environment:
+      PORT: 8082
+      REDIS_URL: redis://redis:6379
+      API_KEY_SERVICE_URL: http://apikey:8083
+      METERING_SERVICE_URL: http://metering:8084
+      GIN_MODE: debug
+    depends_on:
+      - redis
+      - apikey
+
+  # Metering Service
+  metering:
+    build: ./services/metering
+    ports:
+      - "8084:8084"
+    environment:
+      PORT: 8084
+      DATABASE_URL: postgresql://apidirect:localpassword@postgres:5432/apidirect?sslmode=disable
+      REDIS_URL: redis://redis:6379
+      COGNITO_USER_POOL_ID: ${COGNITO_USER_POOL_ID}
+      COGNITO_REGION: ${AWS_REGION:-us-east-1}
+      GIN_MODE: debug
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8084/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Creator Portal
+  creator-portal:
+    build: ./web/creator-portal
+    ports:
+      - "3000:3000"
+    environment:
+      REACT_APP_API_URL: http://localhost:8082
+      REACT_APP_COGNITO_USER_POOL_ID: ${COGNITO_USER_POOL_ID}
+      REACT_APP_COGNITO_CLIENT_ID: ${COGNITO_WEB_CLIENT_ID}
+      REACT_APP_COGNITO_REGION: ${AWS_REGION:-us-east-1}
+    volumes:
+      - ./web/creator-portal:/app
+      - /app/node_modules
+    command: npm start
+
+  # Billing Service
+  billing:
+    build: ./services/billing
+    ports:
+      - "8085:8080"
+    environment:
+      PORT: 8080
+      DATABASE_URL: postgresql://apidirect:localpassword@postgres:5432/apidirect?sslmode=disable
+      REDIS_URL: redis://redis:6379
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-sk_test_your_stripe_secret_key}
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-whsec_your_webhook_secret}
+      JWT_SECRET: ${JWT_SECRET:-your-jwt-secret-key}
+      COGNITO_USER_POOL_ID: ${COGNITO_USER_POOL_ID}
+      COGNITO_REGION: ${AWS_REGION:-us-east-1}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      metering:
+        condition: service_healthy
+      apikey:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Marketplace Frontend
+  marketplace:
+    build: ./web/marketplace
+    ports:
+      - "3001:3000"
+    environment:
+      REACT_APP_API_URL: http://localhost:8082
+      REACT_APP_APIKEY_SERVICE_URL: http://localhost:8083
+      REACT_APP_BILLING_SERVICE_URL: http://localhost:8085
+      REACT_APP_COGNITO_USER_POOL_ID: ${COGNITO_USER_POOL_ID}
+      REACT_APP_COGNITO_CLIENT_ID: ${COGNITO_WEB_CLIENT_ID}
+      REACT_APP_COGNITO_REGION: ${AWS_REGION:-us-east-1}
+      REACT_APP_STRIPE_PUBLISHABLE_KEY: pk_test_51RTaKEIeLEFImVyF5u9rm8nDSN42hWmrNbxSLk16k2KBSiSlLPn2np3vljS9RnoJxAuKrrnqiYJqFGU7MIwSTZFT00idvU8gKF
+    volumes:
+      - ./web/marketplace:/app
+      - /app/node_modules
+    command: npm start
 
 volumes:
   postgres_data:
   redis_data:
-
-networks:
-  api-direct:
-    driver: bridge

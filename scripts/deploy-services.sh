@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# API-Direct Services Deployment Script
-# This script builds and deploys backend services to EKS
+# Deploy services to Kubernetes
+# This script builds and deploys all microservices to the EKS cluster
 
 set -e
 
@@ -9,143 +9,104 @@ set -e
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
-NC='\033[0m'
+NC='\033[0m' # No Color
 
-echo -e "${GREEN}=== API-Direct Services Deployment ===${NC}"
+# Configuration
+AWS_REGION=${AWS_REGION:-us-east-1}
+ECR_REGISTRY=$(aws ecr describe-repositories --repository-names api-direct-services --region $AWS_REGION --query 'repositories[0].repositoryUri' --output text | cut -d'/' -f1)
+CLUSTER_NAME="api-direct-${ENVIRONMENT:-dev}"
 
-# Check prerequisites
-echo -e "\n${YELLOW}Checking prerequisites...${NC}"
+echo -e "${GREEN}Starting deployment of API-Direct services...${NC}"
 
-# Check if Docker is installed
-if ! command -v docker &> /dev/null; then
-    echo -e "${RED}Docker is not installed. Please install it first.${NC}"
-    exit 1
-fi
+# Ensure we're logged into ECR
+echo -e "${YELLOW}Logging into ECR...${NC}"
+aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REGISTRY
 
-# Check if kubectl is installed
-if ! command -v kubectl &> /dev/null; then
-    echo -e "${RED}kubectl is not installed. Please install it first.${NC}"
-    exit 1
-fi
-
-# Check if AWS CLI is installed
-if ! command -v aws &> /dev/null; then
-    echo -e "${RED}AWS CLI is not installed. Please install it first.${NC}"
-    exit 1
-fi
-
-# Check if connected to EKS cluster
-if ! kubectl get nodes &> /dev/null; then
-    echo -e "${RED}Not connected to EKS cluster. Run: aws eks update-kubeconfig --region <region> --name <cluster-name>${NC}"
-    exit 1
-fi
-
-echo -e "${GREEN}✓ All prerequisites met${NC}"
-
-# Get ECR registry URL from environment or Terraform output
-if [ -z "$ECR_REGISTRY" ]; then
-    echo -e "${YELLOW}Getting ECR registry URL from Terraform outputs...${NC}"
-    cd infrastructure/terraform
-    ECR_REGISTRY=$(terraform output -raw ecr_registry_url 2>/dev/null || echo "")
-    cd ../..
-    
-    if [ -z "$ECR_REGISTRY" ]; then
-        echo -e "${RED}ECR_REGISTRY not found. Please set it or ensure Terraform has been applied.${NC}"
-        exit 1
-    fi
-fi
-
-echo -e "${GREEN}ECR Registry: ${ECR_REGISTRY}${NC}"
-
-# Login to ECR
-echo -e "\n${YELLOW}Logging into ECR...${NC}"
-aws ecr get-login-password --region ${AWS_REGION:-us-east-1} | docker login --username AWS --password-stdin $ECR_REGISTRY
+# Update kubeconfig
+echo -e "${YELLOW}Updating kubeconfig for EKS cluster...${NC}"
+aws eks update-kubeconfig --region $AWS_REGION --name $CLUSTER_NAME
 
 # Build and push services
-SERVICES=("storage" "deployment")
+services=(
+  "storage:8080"
+  "deployment:8081"
+  "gateway:8082"
+  "apikey:8083"
+  "metering:8084"
+  "billing:8085"
+)
 
-for SERVICE in "${SERVICES[@]}"; do
-    echo -e "\n${YELLOW}Building ${SERVICE} service...${NC}"
-    
-    # Build Docker image
-    docker build -t ${SERVICE}-service:latest ./services/${SERVICE}
-    
-    # Tag for ECR
-    docker tag ${SERVICE}-service:latest ${ECR_REGISTRY}/api-direct/${SERVICE}-service:latest
-    
-    # Push to ECR
-    echo -e "${YELLOW}Pushing ${SERVICE} service to ECR...${NC}"
-    docker push ${ECR_REGISTRY}/api-direct/${SERVICE}-service:latest
+for service_info in "${services[@]}"; do
+  IFS=':' read -r service port <<< "$service_info"
+  
+  echo -e "${YELLOW}Building $service service...${NC}"
+  
+  # Skip if service directory doesn't exist yet
+  if [ ! -d "services/$service" ]; then
+    echo -e "${YELLOW}Service $service not implemented yet, skipping...${NC}"
+    continue
+  fi
+  
+  # Build Docker image
+  docker build -t api-direct-$service:latest services/$service/
+  
+  # Tag for ECR
+  docker tag api-direct-$service:latest $ECR_REGISTRY/api-direct-$service:latest
+  
+  # Push to ECR
+  echo -e "${YELLOW}Pushing $service to ECR...${NC}"
+  docker push $ECR_REGISTRY/api-direct-$service:latest
 done
 
-# Deploy Kubernetes resources
-echo -e "\n${YELLOW}Deploying Kubernetes resources...${NC}"
+# Apply Kubernetes configurations
+echo -e "${YELLOW}Applying Kubernetes configurations...${NC}"
 
-# Apply namespaces first
+# Create namespace if it doesn't exist
+kubectl create namespace api-direct --dry-run=client -o yaml | kubectl apply -f -
+
+# Apply infrastructure components
 kubectl apply -f infrastructure/k8s/namespace.yaml
+kubectl apply -f infrastructure/k8s/redis-service.yaml
 
-# Get IAM role ARNs from Terraform outputs
-cd infrastructure/terraform
-STORAGE_ROLE_ARN=$(terraform output -raw storage_service_role_arn 2>/dev/null || echo "")
-DEPLOYMENT_ROLE_ARN=$(terraform output -raw deployment_service_role_arn 2>/dev/null || echo "")
-CODE_BUCKET=$(terraform output -raw code_storage_bucket_name 2>/dev/null || echo "")
-cd ../..
+# Update ConfigMap with actual values from Terraform
+echo -e "${YELLOW}Updating platform configuration...${NC}"
+COGNITO_USER_POOL_ID=$(aws cognito-idp list-user-pools --max-results 10 --region $AWS_REGION --query "UserPools[?Name=='api-direct-${ENVIRONMENT:-dev}'].Id" --output text)
+kubectl create configmap platform-config \
+  --from-literal=aws_region=$AWS_REGION \
+  --from-literal=cognito_user_pool_id=$COGNITO_USER_POOL_ID \
+  --namespace api-direct \
+  --dry-run=client -o yaml | kubectl apply -f -
 
-# Create secrets
-echo -e "${YELLOW}Creating Kubernetes secrets...${NC}"
-kubectl create secret generic platform-secrets \
-    --from-literal=code-storage-bucket=${CODE_BUCKET} \
-    --namespace=api-direct \
-    --dry-run=client -o yaml | kubectl apply -f -
-
-# Apply service manifests with substitutions
-for MANIFEST in infrastructure/k8s/*.yaml; do
-    if [[ $MANIFEST == *"namespace.yaml"* ]]; then
-        continue  # Already applied
-    fi
-    
-    echo -e "${YELLOW}Applying $(basename $MANIFEST)...${NC}"
-    
-    # Substitute environment variables
-    envsubst < $MANIFEST | kubectl apply -f -
+# Apply service deployments
+for service_info in "${services[@]}"; do
+  IFS=':' read -r service port <<< "$service_info"
+  
+  if [ -f "infrastructure/k8s/${service}-service.yaml" ]; then
+    echo -e "${YELLOW}Deploying $service service...${NC}"
+    # Update image in deployment to use ECR
+    sed "s|api-direct-${service}:latest|${ECR_REGISTRY}/api-direct-${service}:latest|g" \
+      infrastructure/k8s/${service}-service.yaml | kubectl apply -f -
+  fi
 done
+
+# Apply ingress rules
+echo -e "${YELLOW}Configuring ingress...${NC}"
+kubectl apply -f infrastructure/k8s/ingress.yaml
 
 # Wait for deployments to be ready
-echo -e "\n${YELLOW}Waiting for deployments to be ready...${NC}"
+echo -e "${YELLOW}Waiting for services to be ready...${NC}"
+kubectl wait --for=condition=available --timeout=300s deployment --all -n api-direct
 
-kubectl wait --for=condition=available --timeout=300s \
-    deployment/storage-service deployment/deployment-service \
-    -n api-direct
+# Get load balancer URL
+LB_URL=$(kubectl get ingress -n api-direct api-direct-ingress -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
 
-# Get ingress endpoint
-echo -e "\n${YELLOW}Getting ALB endpoint...${NC}"
-ALB_ENDPOINT=""
-for i in {1..60}; do
-    ALB_ENDPOINT=$(kubectl get ingress api-direct-ingress -n api-direct -o jsonpath='{.status.loadBalancer.ingress[0].hostname}' 2>/dev/null || echo "")
-    if [ -n "$ALB_ENDPOINT" ]; then
-        break
-    fi
-    echo -n "."
-    sleep 5
-done
+echo -e "${GREEN}Deployment complete!${NC}"
+echo -e "${GREEN}Services are available at:${NC}"
+echo -e "  API Gateway: http://$LB_URL/api"
+echo -e "  Storage Service: http://$LB_URL/storage"
+echo -e "  Deployment Service: http://$LB_URL/deployment"
+echo -e "  API Key Service: http://$LB_URL/apikey"
 
-if [ -z "$ALB_ENDPOINT" ]; then
-    echo -e "\n${YELLOW}Warning: Could not get ALB endpoint. Check ingress status manually.${NC}"
-else
-    echo -e "\n${GREEN}✓ ALB Endpoint: ${ALB_ENDPOINT}${NC}"
-fi
-
-echo -e "\n${GREEN}=== Deployment complete! ===${NC}"
-echo -e "\n${YELLOW}Service endpoints:${NC}"
-echo -e "  Storage Service:    http://${ALB_ENDPOINT}/storage/health"
-echo -e "  Deployment Service: http://${ALB_ENDPOINT}/deployment/health"
-echo -e "\n${YELLOW}Next steps:${NC}"
-echo -e "1. Update CLI configuration with the ALB endpoint"
-echo -e "2. Test the services with: curl http://${ALB_ENDPOINT}/storage/health"
-echo -e "3. Deploy a test API using the CLI"
-
-# Save endpoint for CLI configuration
-if [ -n "$ALB_ENDPOINT" ]; then
-    echo "export APIDIRECT_API_ENDPOINT=http://${ALB_ENDPOINT}" >> cli-env.sh
-    echo -e "\n${GREEN}API endpoint added to cli-env.sh${NC}"
-fi
+# Output database migration reminder
+echo -e "${YELLOW}Don't forget to run database migrations:${NC}"
+echo -e "  psql \$DATABASE_URL < infrastructure/database/migrations/002_marketplace_schema.sql"
