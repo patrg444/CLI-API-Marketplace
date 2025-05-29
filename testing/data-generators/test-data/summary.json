@@ -1,0 +1,38 @@
+[
+  {
+    "generated_at": "2025-05-28T09:03:26.649Z",
+    "counts": {
+      "creators": 50,
+      "consumers": 200,
+      "apis": 100,
+      "reviews": 495,
+      "subscriptions": 511,
+      "api_keys": 511,
+      "usage_records": 3000
+    },
+    "categories": [
+      "Financial Services",
+      "AI/ML",
+      "Communication",
+      "Data & Analytics",
+      "Developer Tools",
+      "Security",
+      "Media",
+      "IoT",
+      "Healthcare",
+      "Education"
+    ],
+    "sample_api_names": [
+      "end-to-end solutions API",
+      "transparent experiences API",
+      "proactive networks API",
+      "virtual metrics API",
+      "killer experiences API",
+      "cross-platform metrics API",
+      "collaborative blockchains API",
+      "interactive models API",
+      "front-end initiatives API",
+      "immersive infrastructures API"
+    ]
+  }
+]

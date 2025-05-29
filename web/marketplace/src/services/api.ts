@@ -7,6 +7,7 @@ class APIService {
   private apiKeyClient: AxiosInstance
   private billingClient: AxiosInstance
   private meteringClient: AxiosInstance
+  private marketplaceClient: AxiosInstance
 
   constructor() {
     this.client = axios.create({
@@ -25,6 +26,10 @@ class APIService {
       baseURL: process.env.NEXT_PUBLIC_METERING_SERVICE_URL || 'http://localhost:8084',
     })
 
+    this.marketplaceClient = axios.create({
+      baseURL: process.env.NEXT_PUBLIC_MARKETPLACE_SERVICE_URL || 'http://localhost:8086',
+    })
+
     // Add auth interceptor
     const authInterceptor = async (config: any) => {
       try {
@@ -41,6 +46,7 @@ class APIService {
     this.apiKeyClient.interceptors.request.use(authInterceptor)
     this.billingClient.interceptors.request.use(authInterceptor)
     this.meteringClient.interceptors.request.use(authInterceptor)
+    this.marketplaceClient.interceptors.request.use(authInterceptor)
   }
 
   // API Discovery
@@ -50,18 +56,50 @@ class APIService {
     page?: number
     limit?: number
   }): Promise<{ apis: API[]; total: number }> {
-    const response = await this.client.get('/api/v1/marketplace/apis', { params })
+    const response = await this.marketplaceClient.get('/api/v1/marketplace/apis', { params })
     return response.data
   }
 
   async getAPI(id: string): Promise<API> {
-    const response = await this.client.get(`/api/v1/marketplace/apis/${id}`)
+    const response = await this.marketplaceClient.get(`/api/v1/marketplace/apis/${id}`)
     return response.data
   }
 
   async getAPIDocumentation(apiId: string) {
-    const response = await this.client.get(`/api/v1/marketplace/apis/${apiId}/documentation`)
+    const response = await this.marketplaceClient.get(`/api/v1/marketplace/apis/${apiId}/documentation`)
     return response.data
+  }
+
+  // Advanced Search
+  async searchAPIs(params: {
+    query?: string
+    category?: string
+    tags?: string[]
+    price_range?: 'free' | 'low' | 'medium' | 'high'
+    min_rating?: number
+    has_free_tier?: boolean
+    sort_by?: 'relevance' | 'rating' | 'subscriptions' | 'newest'
+    page?: number
+    limit?: number
+  }): Promise<{ 
+    apis: API[]
+    total: number
+    facets: {
+      categories: { [key: string]: number }
+      tags: { [key: string]: number }
+      price_ranges: { [key: string]: number }
+      ratings: { [key: string]: number }
+    }
+  }> {
+    const response = await this.marketplaceClient.post('/api/v1/marketplace/search', params)
+    return response.data
+  }
+
+  async getSearchSuggestions(query: string): Promise<string[]> {
+    const response = await this.marketplaceClient.get('/api/v1/marketplace/search/suggestions', {
+      params: { q: query }
+    })
+    return response.data.suggestions || []
   }
 
   // Consumer Management
@@ -188,18 +226,40 @@ class APIService {
   }
 
   // Reviews
-  async submitReview(apiId: string, rating: number, comment: string): Promise<void> {
-    await this.client.post(`/api/v1/marketplace/apis/${apiId}/reviews`, {
-      rating,
-      comment,
+  async submitReview(apiId: string, data: {
+    rating: number
+    title: string
+    comment: string
+  }): Promise<void> {
+    await this.marketplaceClient.post(`/api/v1/marketplace/apis/${apiId}/reviews`, data)
+  }
+
+  async getAPIReviews(apiId: string, params?: {
+    page?: number
+    limit?: number
+    sort?: 'newest' | 'oldest' | 'highest' | 'lowest' | 'most_helpful'
+  }) {
+    const response = await this.marketplaceClient.get(`/api/v1/marketplace/apis/${apiId}/reviews`, {
+      params: params || { page: 1, limit: 10 }
+    })
+    return response.data
+  }
+
+  async getReviewStats(apiId: string) {
+    const response = await this.marketplaceClient.get(`/api/v1/marketplace/apis/${apiId}/reviews/stats`)
+    return response.data
+  }
+
+  async voteOnReview(reviewId: string, helpful: boolean): Promise<void> {
+    await this.marketplaceClient.post(`/api/v1/marketplace/reviews/${reviewId}/vote`, {
+      helpful
     })
   }
 
-  async getAPIReviews(apiId: string, page = 1, limit = 10) {
-    const response = await this.client.get(`/api/v1/marketplace/apis/${apiId}/reviews`, {
-      params: { page, limit },
+  async respondToReview(reviewId: string, response: string): Promise<void> {
+    await this.marketplaceClient.post(`/api/v1/marketplace/reviews/${reviewId}/response`, {
+      response
     })
-    return response.data
   }
 }
 

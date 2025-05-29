@@ -533,10 +533,15 @@ function MarketplaceSettings() {
                   type="number"
                   inputProps={{ step: 0.001 }}
                   value={planDialog.plan?.price_per_call || 0}
-                  onChange={(e) => setPlanDialog({
-                    ...planDialog,
-                    plan: { ...planDialog.plan, price_per_call: parseFloat(e.target.value) }
-                  })}
+                  onChange={(e) => {
+                    const value = parseFloat(e.target.value);
+                    if (value >= 0) {
+                      setPlanDialog({
+                        ...planDialog,
+                        plan: { ...planDialog.plan, price_per_call: value }
+                      });
+                    }
+                  }}
                 />
               </Grid>
             )}
@@ -547,10 +552,15 @@ function MarketplaceSettings() {
                   label="Monthly Price ($)"
                   type="number"
                   value={planDialog.plan?.monthly_price || 0}
-                  onChange={(e) => setPlanDialog({
-                    ...planDialog,
-                    plan: { ...planDialog.plan, monthly_price: parseFloat(e.target.value) }
-                  })}
+                  onChange={(e) => {
+                    const value = parseFloat(e.target.value);
+                    if (value >= 0) {
+                      setPlanDialog({
+                        ...planDialog,
+                        plan: { ...planDialog.plan, monthly_price: value }
+                      });
+                    }
+                  }}
                 />
               </Grid>
             )}

@@ -25,6 +25,7 @@ import {
   Settings as SettingsIcon,
   Logout as LogoutIcon,
   Store as MarketplaceIcon,
+  AccountBalance as PayoutsIcon,
 } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';
 
@@ -35,6 +36,7 @@ const menuItems = [
   { text: 'APIs', icon: <ApiIcon />, path: '/apis' },
   { text: 'Marketplace', icon: <MarketplaceIcon />, path: '/marketplace' },
   { text: 'Billing', icon: <BillingIcon />, path: '/billing' },
+  { text: 'Payouts', icon: <PayoutsIcon />, path: '/payouts' },
   { text: 'Settings', icon: <SettingsIcon />, path: '/settings' },
 ];
 

@@ -1,0 +1,45 @@
+{
+  "services": {
+    "marketplace": {
+      "status": "mock",
+      "url": "http://localhost:3001"
+    },
+    "creator-portal": {
+      "status": "mock", 
+      "url": "http://localhost:3002"
+    },
+    "gateway": {
+      "status": "mock",
+      "url": "http://localhost:8080"
+    },
+    "apikey": {
+      "status": "mock",
+      "url": "http://localhost:8081"
+    },
+    "billing": {
+      "status": "mock",
+      "url": "http://localhost:8082"
+    },
+    "payout": {
+      "status": "mock",
+      "url": "http://localhost:8083"
+    },
+    "metering": {
+      "status": "mock",
+      "url": "http://localhost:8084"
+    },
+    "elasticsearch": {
+      "status": "mock",
+      "url": "http://localhost:9200"
+    },
+    "postgres": {
+      "status": "mock",
+      "url": "postgres://localhost:5432/api_marketplace"
+    },
+    "redis": {
+      "status": "mock",
+      "url": "redis://localhost:6379"
+    }
+  },
+  "timestamp": "2025-05-28T07:36:38Z"
+}

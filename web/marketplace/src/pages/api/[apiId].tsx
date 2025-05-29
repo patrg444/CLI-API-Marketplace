@@ -3,6 +3,7 @@ import { useRouter } from 'next/router';
 import { useQuery } from 'react-query';
 import Layout from '../../components/Layout';
 import APIDocumentation from '../../components/APIDocumentation';
+import ReviewSection from '../../components/ReviewSection';
 import apiService from '../../services/api';
 import { API, PricingPlan, APIDocumentation as APIDocType, Subscription } from '../../types/api';
 import { useSwaggerInterceptor, useAPIBaseUrl } from '../../hooks/useSwaggerInterceptor';
@@ -177,13 +178,11 @@ const APIDetails: React.FC = () => {
                 />
               </div>
 
-              {/* Reviews Placeholder */}
-              <div className="mt-8">
-                <h2 className="text-lg font-medium text-gray-900 mb-4">Reviews & Ratings</h2>
-                <p className="text-gray-500">
-                  Customer reviews and ratings will be displayed here in a future update.
-                </p>
-              </div>
+              {/* Reviews Section */}
+              <ReviewSection 
+                apiId={apiId as string} 
+                canReview={isAuthenticated && !!userSubscription && userSubscription.status === 'active'} 
+              />
             </div>
 
             {/* Sidebar - Pricing & Subscribe */}

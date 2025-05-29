@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"crypto/sha256"
+	"database/sql"
 	"encoding/hex"
 	"fmt"
 	"io"
@@ -10,6 +11,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/api-direct/services/storage/s3client"
+	"github.com/api-direct/services/storage/auth"
+	"github.com/api-direct/services/storage/store"
 )
 
 // UploadCode handles code package uploads
@@ -141,7 +144,31 @@ func DeleteVersion(client *s3client.Client) gin.HandlerFunc {
 			return
 		}
 
-		// TODO: Check if user owns this API
+		// Check if user owns this API
+		user, exists := auth.GetUserFromContext(c)
+		if !exists {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "User not authenticated"})
+			return
+		}
+
+		// Get database connection from context
+		db, exists := c.Get("db")
+		if !exists {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Database connection not available"})
+			return
+		}
+
+		apiStore := store.NewAPIStore(db.(*sql.DB))
+		isOwner, err := apiStore.CheckAPIOwnership(user.UserID, apiId)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to verify API ownership"})
+			return
+		}
+
+		if !isOwner && !auth.IsAdmin(user) {
+			c.JSON(http.StatusForbidden, gin.H{"error": "You don't have permission to delete this API version"})
+			return
+		}
 
 		err := client.DeleteVersion(c.Request.Context(), apiId, version)
 		if err != nil {
@@ -168,16 +195,17 @@ func GetMetadata(client *s3client.Client) gin.HandlerFunc {
 			return
 		}
 
-		// TODO: Implement metadata retrieval
+		// Get metadata from S3
+		metadata, err := client.GetVersionMetadata(c.Request.Context(), apiId, version)
+		if err != nil {
+			c.JSON(http.StatusNotFound, gin.H{"error": "Version metadata not found"})
+			return
+		}
+
 		c.JSON(http.StatusOK, gin.H{
-			"api_id":  apiId,
-			"version": version,
-			"metadata": gin.H{
-				"runtime":    "python3.9",
-				"uploaded":   time.Now(),
-				"size":       1024,
-				"checksum":   "placeholder",
-			},
+			"api_id":   apiId,
+			"version":  version,
+			"metadata": metadata,
 		})
 	}
 }
@@ -199,7 +227,38 @@ func UpdateMetadata(client *s3client.Client) gin.HandlerFunc {
 			return
 		}
 
-		// TODO: Implement metadata update
+		// Check if user owns this API
+		user, exists := auth.GetUserFromContext(c)
+		if !exists {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "User not authenticated"})
+			return
+		}
+
+		// Get database connection from context
+		db, exists := c.Get("db")
+		if !exists {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Database connection not available"})
+			return
+		}
+
+		apiStore := store.NewAPIStore(db.(*sql.DB))
+		isOwner, err := apiStore.CheckAPIOwnership(user.UserID, apiId)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to verify API ownership"})
+			return
+		}
+
+		if !isOwner && !auth.IsAdmin(user) {
+			c.JSON(http.StatusForbidden, gin.H{"error": "You don't have permission to update this API version"})
+			return
+		}
+
+		// Update metadata in S3
+		err = client.UpdateVersionMetadata(c.Request.Context(), apiId, version, metadata)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update metadata"})
+			return
+		}
 
 		c.JSON(http.StatusOK, gin.H{
 			"message":  "Metadata updated successfully",

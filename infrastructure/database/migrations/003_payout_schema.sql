@@ -4,7 +4,7 @@
 -- Creator payment accounts (Stripe Connect)
 CREATE TABLE IF NOT EXISTS creator_payment_accounts (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    creator_id VARCHAR(128) NOT NULL UNIQUE,
+    creator_id UUID NOT NULL UNIQUE,
     stripe_account_id VARCHAR(255) UNIQUE,
     account_status VARCHAR(50) NOT NULL DEFAULT 'pending',
     -- Status: pending, onboarding, active, restricted, disabled
@@ -26,14 +26,14 @@ CREATE TABLE IF NOT EXISTS creator_payment_accounts (
     
     CONSTRAINT fk_creator_payment_creator
         FOREIGN KEY (creator_id) 
-        REFERENCES creators(id) 
+        REFERENCES users(id) 
         ON DELETE CASCADE
 );
 
 -- Payout records
 CREATE TABLE IF NOT EXISTS payouts (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    creator_id VARCHAR(128) NOT NULL,
+    creator_id UUID NOT NULL,
     stripe_payout_id VARCHAR(255) UNIQUE,
     
     -- Financial details
@@ -62,7 +62,7 @@ CREATE TABLE IF NOT EXISTS payouts (
     
     CONSTRAINT fk_payout_creator
         FOREIGN KEY (creator_id) 
-        REFERENCES creators(id) 
+        REFERENCES users(id) 
         ON DELETE CASCADE
 );
 
@@ -70,7 +70,7 @@ CREATE TABLE IF NOT EXISTS payouts (
 CREATE TABLE IF NOT EXISTS payout_line_items (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     payout_id UUID NOT NULL,
-    api_id VARCHAR(255) NOT NULL,
+    api_id UUID NOT NULL,
     
     -- Revenue details
     gross_revenue DECIMAL(10, 2) NOT NULL,
@@ -97,8 +97,8 @@ CREATE TABLE IF NOT EXISTS payout_line_items (
 -- Creator earnings summary (real-time view)
 CREATE TABLE IF NOT EXISTS creator_earnings (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    creator_id VARCHAR(128) NOT NULL,
-    api_id VARCHAR(255) NOT NULL,
+    creator_id UUID NOT NULL,
+    api_id UUID NOT NULL,
     
     -- Current month earnings
     current_month_gross DECIMAL(10, 2) DEFAULT 0,
@@ -118,7 +118,7 @@ CREATE TABLE IF NOT EXISTS creator_earnings (
     
     CONSTRAINT fk_earnings_creator
         FOREIGN KEY (creator_id) 
-        REFERENCES creators(id) 
+        REFERENCES users(id) 
         ON DELETE CASCADE,
     
     CONSTRAINT fk_earnings_api

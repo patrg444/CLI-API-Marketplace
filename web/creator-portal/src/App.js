@@ -14,6 +14,7 @@ import APIDetails from './pages/APIDetails';
 import Settings from './pages/Settings';
 import Billing from './pages/Billing';
 import MarketplaceSettings from './pages/MarketplaceSettings';
+import Payouts from './pages/Payouts';
 
 // Theme
 const theme = createTheme({
@@ -76,6 +77,7 @@ function App() {
                 <Route path="/apis/:apiId" element={<APIDetails />} />
                 <Route path="/apis/:apiId/marketplace" element={<MarketplaceSettings />} />
                 <Route path="/billing" element={<Billing />} />
+                <Route path="/payouts" element={<Payouts />} />
                 <Route path="/settings" element={<Settings />} />
               </Routes>
             </Layout>

@@ -5,12 +5,12 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
+	"github.com/api-direct/services/storage/auth"
 )
 
-// AuthRequired validates JWT tokens from API requests
+// AuthRequired middleware requires a valid JWT token
 func AuthRequired() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		// Get authorization header
 		authHeader := c.GetHeader("Authorization")
 		if authHeader == "" {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "Authorization header required"})
@@ -18,44 +18,67 @@ func AuthRequired() gin.HandlerFunc {
 			return
 		}
 
-		// Check Bearer token format
-		parts := strings.Split(authHeader, " ")
-		if len(parts) != 2 || parts[0] != "Bearer" {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid authorization format"})
+		// Extract token from Bearer scheme
+		tokenParts := strings.Split(authHeader, " ")
+		if len(tokenParts) != 2 || tokenParts[0] != "Bearer" {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid authorization header format"})
 			c.Abort()
 			return
 		}
 
-		token := parts[1]
+		token := tokenParts[1]
 
-		// TODO: Validate JWT token with Cognito
-		// For now, we'll accept any non-empty token
-		// In production, this should verify the token with AWS Cognito
-		if token == "" {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token"})
+		// Verify token with Cognito using shared auth package
+		user, err := auth.VerifyCognitoToken(token)
+		if err != nil {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token: " + err.Error()})
 			c.Abort()
 			return
 		}
 
-		// Extract user info from token and add to context
-		// TODO: Parse JWT and extract claims
-		c.Set("user_id", "placeholder-user-id")
-		c.Set("user_email", "user@example.com")
+		// Store user info in context
+		c.Set("user", user)
+		c.Set("userID", user.UserID)
+		c.Set("userType", user.UserType)
+		c.Next()
+	}
+}
+
+// CreatorOnly middleware ensures the user is a creator
+func CreatorOnly() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		user, exists := auth.GetUserFromContext(c)
+		if !exists || user == nil {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "User not authenticated"})
+			c.Abort()
+			return
+		}
+
+		// Check if user is a creator
+		if !auth.IsCreator(user) {
+			c.JSON(http.StatusForbidden, gin.H{"error": "Creator access required"})
+			c.Abort()
+			return
+		}
 
 		c.Next()
 	}
 }
 
-// CORS middleware for cross-origin requests
-func CORS() gin.HandlerFunc {
+// AdminOnly middleware ensures the user has admin privileges
+func AdminOnly() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
-		c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
-		c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, accept, origin, Cache-Control, X-Requested-With")
-		c.Writer.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS, GET, PUT, DELETE")
+		user, exists := auth.GetUserFromContext(c)
+		if !exists || user == nil {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "User not authenticated"})
+			c.Abort()
+			return
+		}
 
-		if c.Request.Method == "OPTIONS" {
-			c.AbortWithStatus(204)
+		// Check if user is an admin
+		if !auth.IsAdmin(user) {
+			c.JSON(http.StatusForbidden, gin.H{"error": "Admin access required"})
+			c.Abort()
 			return
 		}
 

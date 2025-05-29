@@ -90,6 +90,31 @@ Add to your shell profile for persistence:
 echo "source $(pwd)/cli-env.sh" >> ~/.bashrc  # or ~/.zshrc
 ```
 
+### 6. Configure Security Environment Variables
+
+Create a `.env` file for service configuration:
+
+```bash
+# Cognito Configuration (from Terraform outputs)
+export COGNITO_USER_POOL_ID="your-user-pool-id"
+export COGNITO_CLIENT_ID="your-client-id"
+export AWS_REGION="us-east-1"
+
+# Database Configuration
+export DATABASE_URL="postgresql://user:password@rds-endpoint:5432/apiplatform"
+
+# Stripe Configuration (for billing)
+export STRIPE_SECRET_KEY="sk_test_..."
+export STRIPE_WEBHOOK_SECRET="whsec_..."
+export STRIPE_PUBLISHABLE_KEY="pk_test_..."
+
+# Elasticsearch Configuration
+export ELASTICSEARCH_URL="http://elasticsearch-service:9200"
+
+# Redis Configuration
+export REDIS_URL="redis://redis-service:6379"
+```
+
 ## Building and Testing the CLI
 
 ### 1. Build the CLI Tool
@@ -199,20 +224,140 @@ terraform destroy -auto-approve
 
 ⚠️ **Warning**: This will delete all resources including databases and stored data.
 
+## Service Deployment
+
+### 1. Deploy Database Migrations
+
+```bash
+# Connect to RDS and run migrations
+cd infrastructure/database/migrations
+psql -h <rds-endpoint> -U postgres -d apiplatform < 001_base_schema.sql
+psql -h <rds-endpoint> -U postgres -d apiplatform < 002_marketplace_schema.sql
+psql -h <rds-endpoint> -U postgres -d apiplatform < 003_payout_schema.sql
+psql -h <rds-endpoint> -U postgres -d apiplatform < 004_review_system_updates.sql
+```
+
+### 2. Deploy Kubernetes Services
+
+```bash
+# Create namespace and deploy all services
+kubectl apply -f infrastructure/k8s/namespace.yaml
+kubectl apply -f infrastructure/k8s/
+```
+
+### 3. Build and Push Service Images
+
+Use the automated deployment script:
+
+```bash
+./scripts/deploy-services.sh
+```
+
+Or manually build each service:
+
+```bash
+# Get ECR login
+aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin $ECR_REGISTRY_URL
+
+# Build and push each service
+for service in gateway storage deployment marketplace apikey billing metering payout; do
+  cd services/$service
+  docker build -t $ECR_REGISTRY_URL/$service:latest .
+  docker push $ECR_REGISTRY_URL/$service:latest
+  cd ../..
+done
+```
+
+### 4. Configure Service Secrets
+
+```bash
+# Create Kubernetes secrets for sensitive data
+kubectl create secret generic cognito-config \
+  --from-literal=user-pool-id=$COGNITO_USER_POOL_ID \
+  --from-literal=client-id=$COGNITO_CLIENT_ID \
+  -n api-platform
+
+kubectl create secret generic stripe-config \
+  --from-literal=secret-key=$STRIPE_SECRET_KEY \
+  --from-literal=webhook-secret=$STRIPE_WEBHOOK_SECRET \
+  -n api-platform
+
+kubectl create secret generic db-config \
+  --from-literal=url=$DATABASE_URL \
+  -n api-platform
+```
+
+## Security Configuration
+
+### JWT Authentication Setup
+
+All services now implement JWT authentication with AWS Cognito:
+
+1. **Shared Authentication Package**: `services/shared/auth/cognito.go`
+   - JWKS validation against Cognito
+   - Token expiration checks
+   - Role-based access control
+
+2. **Service Middleware**: Each service has updated auth middleware
+   - Validates JWT tokens on protected endpoints
+   - Enforces role requirements (Creator, Consumer, Admin)
+   - API ownership verification
+
+### Required Cognito Custom Attributes
+
+Ensure your Cognito User Pool has these custom attributes:
+- `custom:user_type` - Values: "creator", "consumer", "admin"
+- `custom:stripe_customer_id` - For billing integration
+- `custom:stripe_account_id` - For creator payouts
+
+### API Ownership Verification
+
+The platform now enforces API ownership across all services:
+- Storage Service: Verifies ownership before delete/update operations
+- Deployment Service: Checks ownership for deployment actions
+- Marketplace Service: Ensures only owners can modify API settings
+
+## Production Checklist
+
+### Security Requirements ✅
+- [ ] All environment variables set
+- [ ] Cognito user pool configured with custom attributes
+- [ ] SSL certificates installed on ALB
+- [ ] Database connection uses SSL
+- [ ] Kubernetes secrets created
+- [ ] Network policies configured
+
+### Service Dependencies ✅
+- [ ] PostgreSQL database running and migrations applied
+- [ ] Redis deployed for caching and rate limiting
+- [ ] Elasticsearch cluster ready for search
+- [ ] All microservices deployed and healthy
+- [ ] Ingress configured with proper routing
+
+### Monitoring Setup
+- [ ] CloudWatch logs configured
+- [ ] Service health checks enabled
+- [ ] Alerts configured for critical failures
+- [ ] Backup strategy implemented
+
 ## Next Steps
 
-1. **Deploy Kubernetes components**:
+1. **Verify Service Health**:
    ```bash
-   kubectl apply -f infrastructure/k8s/
+   kubectl get pods -n api-platform
+   kubectl get services -n api-platform
    ```
 
-2. **Build backend services**:
+2. **Test Authentication Flow**:
    ```bash
-   cd services/storage
-   docker build -t storage-service .
+   ./apidirect login
+   ./apidirect init test-api --runtime python3.9
+   ./apidirect deploy
    ```
 
 3. **Set up CI/CD** for automated deployments
+
+4. **Configure Monitoring** with CloudWatch and Prometheus
 
 ## Support
 

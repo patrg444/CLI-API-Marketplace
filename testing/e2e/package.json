@@ -1,0 +1,27 @@
+{
+  "name": "api-direct-e2e-tests",
+  "version": "1.0.0",
+  "description": "End-to-end tests for API-Direct platform",
+  "scripts": {
+    "test": "playwright test",
+    "test:headed": "playwright test --headed",
+    "test:debug": "playwright test --debug",
+    "test:creator": "playwright test tests/creator-flows/",
+    "test:consumer": "playwright test tests/consumer-flows/",
+    "test:search": "playwright test tests/search/",
+    "test:reviews": "playwright test tests/reviews/",
+    "test:ui": "playwright test --ui",
+    "report": "playwright show-report",
+    "codegen": "playwright codegen http://localhost:3001"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.40.0",
+    "@types/node": "^20.0.0",
+    "dotenv": "^16.3.1",
+    "typescript": "^5.3.0"
+  },
+  "dependencies": {
+    "stripe": "^14.0.0",
+    "faker": "^5.5.3"
+  }
+}
