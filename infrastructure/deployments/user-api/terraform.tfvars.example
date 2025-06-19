@@ -1,0 +1,170 @@
+# Example Terraform Variables for API-Direct BYOA User API Deployment
+# Copy this file to terraform.tfvars and customize the values for your deployment
+
+# Core Configuration
+project_name = "my-api"
+environment  = "prod"
+aws_region   = "us-east-1"
+owner_email  = "your-email@example.com"
+
+# API-Direct Platform Configuration
+# This will be provided by API-Direct during onboarding
+api_direct_account_id = "123456789012"
+
+# Networking Configuration
+vpc_cidr = "10.0.0.0/16"
+az_count = 2
+
+# SSL Certificate (optional - for HTTPS)
+# ssl_certificate_arn = "arn:aws:acm:us-east-1:123456789012:certificate/12345678-1234-1234-1234-123456789012"
+
+# Load Balancer Configuration
+enable_deletion_protection = true
+
+# Database Configuration
+db_instance_class        = "db.t3.micro"    # For production, consider db.t3.small or larger
+db_allocated_storage     = 20               # GB
+db_max_allocated_storage = 100              # GB - auto-scaling limit
+db_storage_type         = "gp3"
+
+# Database Backup and Maintenance
+db_backup_retention_period = 7              # days
+db_backup_window          = "03:00-04:00"   # UTC
+db_maintenance_window     = "sun:04:00-sun:05:00"  # UTC
+
+# Database Monitoring
+db_monitoring_interval                    = 60    # seconds
+db_performance_insights_enabled          = true
+db_performance_insights_retention_period = 7      # days
+
+# High Availability (optional)
+db_create_read_replica    = false
+db_replica_instance_class = "db.t3.micro"
+
+# Database Security
+db_deletion_protection        = true
+db_auto_minor_version_upgrade = true
+
+# Container Configuration
+# Leave container_image empty to use ECR repository created by this deployment
+container_image = ""
+container_port  = 8000
+
+# Resource Allocation
+cpu    = 256   # CPU units (256, 512, 1024, 2048, 4096)
+memory = 512   # MB
+
+# Service Configuration
+desired_count = 2
+
+# Auto Scaling Configuration
+enable_auto_scaling = true
+min_capacity       = 1
+max_capacity       = 10
+cpu_target_value   = 70    # percent
+memory_target_value = 80   # percent
+
+# Load Balancer Configuration
+# host_headers = ["api.yourdomain.com"]  # Optional: specific host headers for routing
+listener_rule_priority = 100
+
+# Health Check Configuration
+health_check_path                = "/health"
+health_check_matcher             = "200"
+health_check_interval            = 30     # seconds
+health_check_timeout             = 5      # seconds
+health_check_healthy_threshold   = 2      # consecutive successes
+health_check_unhealthy_threshold = 2      # consecutive failures
+
+# Container Health Check
+health_check_command = ["CMD-SHELL", "curl -f http://localhost:8000/health || exit 1"]
+
+# Environment Variables for your application
+environment_variables = [
+  {
+    name  = "NODE_ENV"
+    value = "production"
+  },
+  {
+    name  = "LOG_LEVEL"
+    value = "info"
+  }
+  # Add more environment variables as needed
+]
+
+# Monitoring Configuration
+log_retention_days         = 14
+enable_container_insights  = true
+enable_service_discovery   = false
+
+# Monitoring Dashboard and Alerts
+create_monitoring_dashboard = true
+create_alerting            = true
+alert_email               = "alerts@example.com"
+
+# Security Configuration
+allowed_user_patterns  = ["*"]  # API-Direct will configure this appropriately
+max_session_duration  = 3600   # seconds (1 hour)
+require_mfa          = true
+# allowed_source_ips = ["203.0.113.0/24"]  # Optional: restrict by IP
+
+# Feature Flags
+enable_cloudformation_access = false
+enable_cost_controls        = true
+
+# Compliance Configuration
+compliance_framework        = "SOC2"  # Options: SOC2, HIPAA, PCI-DSS, ISO27001, GDPR, NONE
+data_residency_requirements = "US"    # Options: US, EU, APAC, GLOBAL
+
+# Integration Configuration (optional)
+# webhook_url = "https://your-webhook-endpoint.com/api-direct-notifications"
+
+# API-Direct Service Endpoints (will be configured by API-Direct)
+api_direct_service_endpoints = {
+  deployment_service = ""
+  monitoring_service = ""
+  billing_service    = ""
+}
+
+# Additional Tags
+additional_tags = {
+  Owner       = "Your Team"
+  Project     = "My API Project"
+  CostCenter  = "Engineering"
+  Environment = "Production"
+}
+
+# Example configurations for different environments:
+
+# Development Environment Example:
+# project_name = "my-api-dev"
+# environment  = "dev"
+# db_instance_class = "db.t3.micro"
+# cpu = 256
+# memory = 512
+# desired_count = 1
+# enable_auto_scaling = false
+# db_backup_retention_period = 1
+# db_deletion_protection = false
+# enable_deletion_protection = false
+
+# Staging Environment Example:
+# project_name = "my-api-staging"
+# environment  = "staging"
+# db_instance_class = "db.t3.small"
+# cpu = 512
+# memory = 1024
+# desired_count = 2
+# db_backup_retention_period = 3
+
+# Production Environment Example:
+# project_name = "my-api-prod"
+# environment  = "prod"
+# db_instance_class = "db.t3.medium"
+# cpu = 1024
+# memory = 2048
+# desired_count = 3
+# min_capacity = 2
+# max_capacity = 20
+# db_create_read_replica = true
+# db_backup_retention_period = 30
