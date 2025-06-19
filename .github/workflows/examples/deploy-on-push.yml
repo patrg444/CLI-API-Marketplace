@@ -1,0 +1,60 @@
+name: Deploy API to API-Direct
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
+      - name: Run tests
+        run: |
+          if [ -f tests/ ]; then python -m pytest tests/ -v; fi
+
+  deploy:
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deploy to API-Direct
+        uses: api-direct/deploy-action@v1
+        with:
+          api-key: ${{ secrets.API_DIRECT_TOKEN }}
+          publish: true
+          description: "My awesome API deployed from GitHub"
+          category: "Web Services"
+          tags: "api,rest,automated"
+
+  preview:
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deploy preview to API-Direct
+        uses: api-direct/deploy-action@v1
+        with:
+          api-key: ${{ secrets.API_DIRECT_TOKEN }}
+          api-name: "${{ github.event.repository.name }}-pr-${{ github.event.number }}"
+          publish: false

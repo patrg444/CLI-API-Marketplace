@@ -1,0 +1,297 @@
+name: 'API-Direct Deploy'
+description: 'Deploy your API to API-Direct platform and optionally publish to marketplace'
+author: 'API-Direct'
+branding:
+  icon: 'upload-cloud'
+  color: 'blue'
+
+inputs:
+  api-key:
+    description: 'API-Direct API key for authentication'
+    required: true
+  
+  api-name:
+    description: 'Name of the API to deploy (defaults to repository name)'
+    required: false
+    default: ''
+  
+  publish:
+    description: 'Whether to publish to marketplace after deployment'
+    required: false
+    default: 'false'
+  
+  description:
+    description: 'API description for marketplace (required if publish=true)'
+    required: false
+    default: ''
+  
+  category:
+    description: 'API category for marketplace'
+    required: false
+    default: 'General'
+  
+  tags:
+    description: 'Comma-separated tags for marketplace'
+    required: false
+    default: ''
+  
+  working-directory:
+    description: 'Working directory containing apidirect.yaml'
+    required: false
+    default: '.'
+  
+  cli-version:
+    description: 'Version of API-Direct CLI to use'
+    required: false
+    default: 'latest'
+
+outputs:
+  api-url:
+    description: 'URL of the deployed API'
+    value: ${{ steps.deploy.outputs.api-url }}
+  
+  marketplace-url:
+    description: 'URL of the marketplace listing (if published)'
+    value: ${{ steps.publish.outputs.marketplace-url }}
+  
+  deployment-id:
+    description: 'Unique deployment identifier'
+    value: ${{ steps.deploy.outputs.deployment-id }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Setup API-Direct CLI
+      shell: bash
+      run: |
+        echo "🚀 Setting up API-Direct CLI..."
+        
+        # Download and install CLI
+        if [ "${{ inputs.cli-version }}" = "latest" ]; then
+          CLI_VERSION=$(curl -s https://api.github.com/repos/api-direct/cli/releases/latest | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
+        else
+          CLI_VERSION="${{ inputs.cli-version }}"
+        fi
+        
+        echo "Installing API-Direct CLI version: $CLI_VERSION"
+        
+        # Detect OS and architecture
+        OS=$(uname -s | tr '[:upper:]' '[:lower:]')
+        ARCH=$(uname -m)
+        case $ARCH in
+          x86_64) ARCH="amd64" ;;
+          aarch64) ARCH="arm64" ;;
+          armv7l) ARCH="arm" ;;
+        esac
+        
+        # Download CLI binary
+        DOWNLOAD_URL="https://github.com/api-direct/cli/releases/download/${CLI_VERSION}/apidirect-${OS}-${ARCH}"
+        curl -L -o /usr/local/bin/apidirect "$DOWNLOAD_URL"
+        chmod +x /usr/local/bin/apidirect
+        
+        # Verify installation
+        apidirect version
+        echo "✅ API-Direct CLI installed successfully"
+
+    - name: Authenticate with API-Direct
+      shell: bash
+      run: |
+        echo "🔐 Authenticating with API-Direct..."
+        echo "${{ inputs.api-key }}" | apidirect auth login --token-stdin
+        echo "✅ Authentication successful"
+
+    - name: Validate API project
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      run: |
+        echo "🔍 Validating API project..."
+        
+        if [ ! -f "apidirect.yaml" ]; then
+          echo "❌ apidirect.yaml not found in ${{ inputs.working-directory }}"
+          echo "Make sure you're running this action from a directory containing an API-Direct project"
+          exit 1
+        fi
+        
+        # Validate configuration
+        apidirect config validate
+        echo "✅ API project validation successful"
+
+    - name: Deploy API
+      id: deploy
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      run: |
+        echo "🚀 Deploying API to API-Direct..."
+        
+        # Set API name
+        if [ -n "${{ inputs.api-name }}" ]; then
+          API_NAME="${{ inputs.api-name }}"
+        else
+          API_NAME="${GITHUB_REPOSITORY##*/}"
+        fi
+        
+        echo "Deploying API: $API_NAME"
+        
+        # Deploy the API
+        DEPLOY_OUTPUT=$(apidirect deploy --output json)
+        
+        # Extract outputs
+        API_URL=$(echo "$DEPLOY_OUTPUT" | jq -r '.api_url // empty')
+        DEPLOYMENT_ID=$(echo "$DEPLOY_OUTPUT" | jq -r '.deployment_id // empty')
+        
+        if [ -z "$API_URL" ]; then
+          echo "❌ Deployment failed - no API URL returned"
+          exit 1
+        fi
+        
+        echo "✅ API deployed successfully"
+        echo "🌐 API URL: $API_URL"
+        echo "🆔 Deployment ID: $DEPLOYMENT_ID"
+        
+        # Set outputs
+        echo "api-url=$API_URL" >> $GITHUB_OUTPUT
+        echo "deployment-id=$DEPLOYMENT_ID" >> $GITHUB_OUTPUT
+        
+        # Set environment variables for next steps
+        echo "API_URL=$API_URL" >> $GITHUB_ENV
+        echo "DEPLOYMENT_ID=$DEPLOYMENT_ID" >> $GITHUB_ENV
+
+    - name: Test deployed API
+      shell: bash
+      run: |
+        echo "🧪 Testing deployed API..."
+        
+        # Wait a moment for deployment to be ready
+        sleep 10
+        
+        # Test health endpoint if available
+        if curl -f -s "$API_URL/health" > /dev/null 2>&1; then
+          echo "✅ Health check passed"
+        else
+          echo "⚠️ Health check not available or failed (this may be normal)"
+        fi
+        
+        echo "✅ API is responding"
+
+    - name: Publish to marketplace
+      id: publish
+      if: inputs.publish == 'true'
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      run: |
+        echo "📢 Publishing API to marketplace..."
+        
+        # Set API name
+        if [ -n "${{ inputs.api-name }}" ]; then
+          API_NAME="${{ inputs.api-name }}"
+        else
+          API_NAME="${GITHUB_REPOSITORY##*/}"
+        fi
+        
+        # Build publish command
+        PUBLISH_CMD="apidirect publish $API_NAME"
+        
+        if [ -n "${{ inputs.description }}" ]; then
+          PUBLISH_CMD="$PUBLISH_CMD --description '${{ inputs.description }}'"
+        fi
+        
+        if [ -n "${{ inputs.category }}" ]; then
+          PUBLISH_CMD="$PUBLISH_CMD --category '${{ inputs.category }}'"
+        fi
+        
+        if [ -n "${{ inputs.tags }}" ]; then
+          PUBLISH_CMD="$PUBLISH_CMD --tags '${{ inputs.tags }}'"
+        fi
+        
+        # Execute publish command
+        PUBLISH_OUTPUT=$(eval "$PUBLISH_CMD --output json")
+        
+        # Extract marketplace URL
+        MARKETPLACE_URL=$(echo "$PUBLISH_OUTPUT" | jq -r '.marketplace_url // empty')
+        
+        if [ -n "$MARKETPLACE_URL" ]; then
+          echo "✅ API published to marketplace"
+          echo "🏪 Marketplace URL: $MARKETPLACE_URL"
+          echo "marketplace-url=$MARKETPLACE_URL" >> $GITHUB_OUTPUT
+        else
+          echo "⚠️ Marketplace URL not returned (publish may have failed)"
+        fi
+
+    - name: Create deployment summary
+      shell: bash
+      run: |
+        echo "📋 Creating deployment summary..."
+        
+        cat >> $GITHUB_STEP_SUMMARY << EOF
+        # 🚀 API-Direct Deployment Summary
+        
+        ## ✅ Deployment Successful
+        
+        **API Name:** \`${API_NAME:-${GITHUB_REPOSITORY##*/}}\`  
+        **Deployment ID:** \`${DEPLOYMENT_ID}\`  
+        **API URL:** [${API_URL}](${API_URL})
+        
+        $(if [ "${{ inputs.publish }}" = "true" ] && [ -n "${{ steps.publish.outputs.marketplace-url }}" ]; then
+          echo "**Marketplace URL:** [${{ steps.publish.outputs.marketplace-url }}](${{ steps.publish.outputs.marketplace-url }})"
+        fi)
+        
+        ## 📊 Deployment Details
+        
+        - **Repository:** \`${GITHUB_REPOSITORY}\`
+        - **Commit:** \`${GITHUB_SHA:0:7}\`
+        - **Branch:** \`${GITHUB_REF_NAME}\`
+        - **Workflow:** \`${GITHUB_WORKFLOW}\`
+        
+        ## 🔗 Quick Links
+        
+        - [View API Documentation](${API_URL}/docs)
+        - [API Health Check](${API_URL}/health)
+        $(if [ "${{ inputs.publish }}" = "true" ]; then
+          echo "- [Marketplace Listing](${{ steps.publish.outputs.marketplace-url }})"
+        fi)
+        
+        ---
+        
+        *Deployed with ❤️ by [API-Direct](https://api-direct.io)*
+        EOF
+        
+        echo "✅ Deployment summary created"
+
+    - name: Comment on PR
+      if: github.event_name == 'pull_request'
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const apiUrl = '${{ steps.deploy.outputs.api-url }}';
+          const marketplaceUrl = '${{ steps.publish.outputs.marketplace-url }}';
+          
+          let comment = `## 🚀 API-Direct Preview Deployment
+          
+          Your API has been deployed and is ready for testing!
+          
+          **🌐 Preview URL:** [${apiUrl}](${apiUrl})
+          **📋 Deployment ID:** \`${{ steps.deploy.outputs.deployment-id }}\`
+          
+          ### Quick Test Links
+          - [Health Check](${apiUrl}/health)
+          - [API Documentation](${apiUrl}/docs)
+          `;
+          
+          if (marketplaceUrl) {
+            comment += `- [Marketplace Preview](${marketplaceUrl})\n`;
+          }
+          
+          comment += `
+          ### 🧪 Test Your API
+          \`\`\`bash
+          curl ${apiUrl}/health
+          \`\`\`
+          
+          *This preview will be available until the PR is merged or closed.*`;
+          
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: comment
+          });

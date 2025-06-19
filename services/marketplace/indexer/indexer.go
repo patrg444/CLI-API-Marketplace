@@ -5,7 +5,6 @@ import (
 	"log"
 	"time"
 
-	"github.com/elastic/go-elasticsearch/v8"
 	"marketplace/elasticsearch"
 	"marketplace/store"
 )
@@ -56,6 +55,11 @@ func (idx *APIIndexer) DeleteAPI(apiID string) error {
 	return nil
 }
 
+// RemoveAPI is an alias for DeleteAPI for consistency
+func (idx *APIIndexer) RemoveAPI(apiID string) error {
+	return idx.DeleteAPI(apiID)
+}
+
 // ReindexAll reindexes all published APIs
 func (idx *APIIndexer) ReindexAll() error {
 	log.Println("Starting full reindex...")
@@ -84,82 +88,18 @@ func (idx *APIIndexer) ReindexAll() error {
 
 // transformToESDocument transforms an API to an Elasticsearch document
 func (idx *APIIndexer) transformToESDocument(api *store.API) map[string]interface{} {
-	// Calculate pricing info
-	hasFreeTier := false
-	minPrice := float64(0)
-	maxPrice := float64(0)
-
-	for _, plan := range api.PricingPlans {
-		if plan.Type == "free" {
-			hasFreeTier = true
-		}
-		
-		if plan.MonthlyPrice != nil {
-			if minPrice == 0 || *plan.MonthlyPrice < minPrice {
-				minPrice = *plan.MonthlyPrice
-			}
-			if *plan.MonthlyPrice > maxPrice {
-				maxPrice = *plan.MonthlyPrice
-			}
-		}
-		
-		if plan.PricePerCall != nil {
-			// Estimate monthly cost based on 10k calls/month
-			estimatedMonthly := *plan.PricePerCall * 10000
-			if minPrice == 0 || estimatedMonthly < minPrice {
-				minPrice = estimatedMonthly
-			}
-			if estimatedMonthly > maxPrice {
-				maxPrice = estimatedMonthly
-			}
-		}
-	}
-
-	// Determine price range
-	priceRange := api.PriceRange()
-
-	// Calculate boost score (can be enhanced with more factors)
-	boostScore := float32(1.0)
-	if api.AverageRating != nil && *api.AverageRating > 4.0 {
-		boostScore += (*api.AverageRating - 4.0) * 0.5
-	}
-	if api.TotalSubscriptions > 100 {
-		boostScore += 0.5
-	}
-	if api.TotalReviews > 10 {
-		boostScore += 0.3
-	}
-
-	// Build document
+	// Build basic document
 	doc := map[string]interface{}{
 		"id":           api.ID,
 		"name":         api.Name,
 		"description":  api.Description,
 		"category":     api.Category,
 		"tags":         api.Tags,
-		"creator_id":   api.UserID,
-		"creator_name": api.CreatorName,
-		"pricing": map[string]interface{}{
-			"has_free_tier": hasFreeTier,
-			"min_price":     minPrice,
-			"max_price":     maxPrice,
-			"price_range":   priceRange,
-		},
-		"stats": map[string]interface{}{
-			"average_rating":      api.AverageRating,
-			"total_reviews":       api.TotalReviews,
-			"total_subscriptions": api.TotalSubscriptions,
-			"monthly_calls":       0, // TODO: Calculate from metering data
-		},
+		"creator_id":   api.CreatorID,
 		"created_at":   api.CreatedAt,
 		"updated_at":   api.UpdatedAt,
 		"is_published": api.IsPublished,
-		"boost_score":  boostScore,
-	}
-
-	// Add name to suggest field for autocomplete
-	doc["name"] = map[string]interface{}{
-		"input": []string{api.Name},
+		"endpoint":     api.Endpoint,
 	}
 
 	return doc

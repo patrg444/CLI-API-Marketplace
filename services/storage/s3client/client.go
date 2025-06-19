@@ -127,7 +127,7 @@ func (c *Client) ListVersions(ctx context.Context, apiId string) ([]CodeMetadata
 			// Extract version from key
 			if key := aws.ToString(obj.Key); len(key) > 0 {
 				// Parse metadata from object
-				metadata, err := c.getMetadata(ctx, apiId, extractVersion(key))
+				metadata, err := c.GetMetadata(ctx, apiId, extractVersion(key))
 				if err == nil {
 					versions = append(versions, metadata)
 				}
@@ -182,7 +182,7 @@ func (c *Client) GetPresignedUploadURL(ctx context.Context, apiId, version strin
 func (c *Client) storeMetadata(ctx context.Context, apiId string, metadata CodeMetadata) error {
 	// Implementation would store metadata in S3 or DynamoDB
 	// For now, we'll store it as a JSON file in S3
-	key := fmt.Sprintf("apis/%s/versions/%s/metadata.json", apiId, metadata.Version)
+	_ = fmt.Sprintf("apis/%s/versions/%s/metadata.json", apiId, metadata.Version)
 	
 	// Marshal metadata to JSON and upload
 	// (Implementation details omitted for brevity)
@@ -190,7 +190,7 @@ func (c *Client) storeMetadata(ctx context.Context, apiId string, metadata CodeM
 	return nil
 }
 
-func (c *Client) getMetadata(ctx context.Context, apiId, version string) (CodeMetadata, error) {
+func (c *Client) GetMetadata(ctx context.Context, apiId, version string) (CodeMetadata, error) {
 	// Implementation would retrieve metadata from storage
 	// For now, return a placeholder
 	return CodeMetadata{

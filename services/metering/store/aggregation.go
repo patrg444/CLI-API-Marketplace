@@ -91,11 +91,6 @@ func (s *AggregationStore) StoreAggregatedUsage(summary *UsageSummary) error {
 	// Create or update aggregation table (this could be a separate table in production)
 	// For now, we'll store in a JSON column for flexibility
 	
-	endpointJSON, err := json.Marshal(summary.EndpointUsage)
-	if err != nil {
-		return err
-	}
-	
 	// This would typically be a separate aggregation table
 	// For this implementation, we'll use a temporary approach
 	query := `

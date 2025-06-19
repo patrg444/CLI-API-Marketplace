@@ -108,16 +108,8 @@ func (a *Aggregator) AggregateDaily(ctx context.Context) error {
 	// Get yesterday's date range
 	now := time.Now()
 	startOfYesterday := time.Date(now.Year(), now.Month(), now.Day()-1, 0, 0, 0, 0, now.Location())
-	endOfYesterday := startOfYesterday.Add(24 * time.Hour).Add(-1 * time.Second)
 	
 	log.Printf("Running daily aggregation for %s", startOfYesterday.Format("2006-01-02"))
-	
-	// Get all subscriptions that had usage yesterday
-	query := `
-		SELECT DISTINCT subscription_id 
-		FROM api_usage 
-		WHERE timestamp >= $1 AND timestamp <= $2
-	`
 	
 	// This would be implemented with proper database access
 	// For now, we'll use the existing aggregation logic
@@ -131,7 +123,6 @@ func (a *Aggregator) AggregateMonthly(ctx context.Context) error {
 	now := time.Now()
 	firstOfMonth := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, now.Location())
 	firstOfLastMonth := firstOfMonth.AddDate(0, -1, 0)
-	lastOfLastMonth := firstOfMonth.Add(-1 * time.Second)
 	
 	log.Printf("Running monthly aggregation for %s", firstOfLastMonth.Format("2006-01"))
 	

@@ -23,6 +23,7 @@ import (
 var (
 	deployVersion string
 	deployReplicas int
+	outputFormat string
 )
 
 // deployCmd represents the deploy command
@@ -41,6 +42,7 @@ func init() {
 
 	deployCmd.Flags().StringVar(&deployVersion, "version", "", "Version label for this deployment")
 	deployCmd.Flags().IntVar(&deployReplicas, "replicas", 1, "Number of replicas to deploy")
+	deployCmd.Flags().StringVar(&outputFormat, "output", "", "Output format (json)")
 }
 
 func runDeploy(cmd *cobra.Command, args []string) error {
@@ -96,12 +98,34 @@ func runDeploy(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("deployment failed: %w", err)
 	}
 
-	fmt.Println("\n✅ Deployment successful!")
-	fmt.Printf("🌐 Your API is available at: %s\n", endpoint)
-	fmt.Printf("\nTest your API:\n")
-	fmt.Printf("  curl %s/hello\n", endpoint)
-	fmt.Printf("\nView logs:\n")
-	fmt.Printf("  apidirect logs %s\n", apiName)
+	// Generate deployment ID (in real implementation, this would come from the API)
+	deploymentID := fmt.Sprintf("deploy-%d", time.Now().Unix())
+
+	// Output results based on format
+	if outputFormat == "json" {
+		result := map[string]interface{}{
+			"api_url":       endpoint,
+			"deployment_id": deploymentID,
+			"api_name":      apiName,
+			"version":       version,
+			"status":        "success",
+		}
+		
+		output, err := json.Marshal(result)
+		if err != nil {
+			return fmt.Errorf("failed to marshal JSON output: %w", err)
+		}
+		
+		fmt.Println(string(output))
+	} else {
+		fmt.Println("\n✅ Deployment successful!")
+		fmt.Printf("🌐 Your API is available at: %s\n", endpoint)
+		fmt.Printf("🆔 Deployment ID: %s\n", deploymentID)
+		fmt.Printf("\nTest your API:\n")
+		fmt.Printf("  curl %s/hello\n", endpoint)
+		fmt.Printf("\nView logs:\n")
+		fmt.Printf("  apidirect logs %s\n", apiName)
+	}
 
 	return nil
 }

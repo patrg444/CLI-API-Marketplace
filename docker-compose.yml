@@ -37,13 +37,13 @@ services:
   storage:
     build: ./services/storage
     ports:
-      - "8080:8080"
+      - "8087:8080"
     environment:
       PORT: 8080
       AWS_REGION: us-east-1
       AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
       AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
-      S3_BUCKET: api-direct-code-storage-dev
+      CODE_STORAGE_BUCKET: ${CODE_STORAGE_BUCKET:-api-direct-code-storage-dev}
       COGNITO_USER_POOL_ID: ${COGNITO_USER_POOL_ID}
       COGNITO_REGION: ${AWS_REGION:-us-east-1}
     depends_on:

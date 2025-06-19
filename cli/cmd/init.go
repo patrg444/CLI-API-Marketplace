@@ -7,11 +7,14 @@ import (
 	"strings"
 
 	"github.com/api-direct/cli/pkg/scaffold"
+	"github.com/api-direct/cli/pkg/wizard"
 	"github.com/spf13/cobra"
 )
 
 var (
-	runtime string
+	runtime     string
+	interactive bool
+	template    string
 )
 
 // initCmd represents the init command
@@ -20,49 +23,141 @@ var initCmd = &cobra.Command{
 	Short: "Initialize a new API project",
 	Long: `Initialize a new API project with boilerplate code and configuration.
 This command creates a new directory with the specified name and sets up
-the basic structure for your API.`,
-	Args: cobra.ExactArgs(1),
+the basic structure for your API.
+
+Use --interactive for a guided setup experience with templates and features.`,
+	Args: cobra.RangeArgs(0, 1),
 	RunE: func(cmd *cobra.Command, args []string) error {
+		// Interactive mode
+		if interactive || len(args) == 0 {
+			return runInteractiveInit()
+		}
+
+		// Non-interactive mode (existing behavior)
 		apiName := args[0]
-		
-		// Validate API name
-		if !isValidAPIName(apiName) {
-			return fmt.Errorf("invalid API name: %s. Use only lowercase letters, numbers, and hyphens", apiName)
-		}
+		return runStandardInit(apiName)
+	},
+}
 
-		// Check if directory already exists
-		if _, err := os.Stat(apiName); err == nil {
-			return fmt.Errorf("directory %s already exists", apiName)
-		}
+func runInteractiveInit() error {
+	config, err := wizard.RunInteractiveWizard()
+	if err != nil {
+		return err
+	}
 
-		// Validate runtime
-		validRuntimes := []string{"python3.9", "python3.10", "python3.11", "nodejs18", "nodejs20"}
-		if runtime == "" {
-			runtime = "python3.9" // Default runtime
-		}
-		
-		runtimeValid := false
-		for _, r := range validRuntimes {
-			if r == runtime {
-				runtimeValid = true
-				break
+	// Create project directory
+	if err := os.MkdirAll(config.APIName, 0755); err != nil {
+		return fmt.Errorf("failed to create directory: %w", err)
+	}
+
+	// Initialize project based on template and runtime
+	var initErr error
+	switch {
+	case strings.HasPrefix(config.Runtime, "python"):
+		initErr = scaffold.InitPythonProjectWithTemplate(config.APIName, config.Runtime, config.Template, config.Features)
+	case strings.HasPrefix(config.Runtime, "nodejs"):
+		initErr = scaffold.InitNodeProjectWithTemplate(config.APIName, config.Runtime, config.Template, config.Features)
+	default:
+		initErr = fmt.Errorf("unsupported runtime: %s", config.Runtime)
+	}
+
+	if initErr != nil {
+		// Clean up on error
+		os.RemoveAll(config.APIName)
+		return fmt.Errorf("failed to initialize project: %w", initErr)
+	}
+
+	// Success message
+	printSuccess(fmt.Sprintf("🎉 API project '%s' created successfully!", config.APIName))
+	fmt.Printf("📁 Template: %s\n", config.Template.Name)
+	fmt.Printf("🐍 Runtime: %s\n", config.Runtime)
+	
+	if len(config.Features) > 0 {
+		fmt.Printf("✨ Features: %s\n", strings.Join(config.Features, ", "))
+	}
+	
+	fmt.Println("\n🚀 Next steps:")
+	fmt.Printf("  1. cd %s\n", config.APIName)
+	fmt.Println("  2. Review the generated code and configuration")
+	fmt.Println("  3. Customize your API logic")
+	fmt.Println("  4. Test locally with: apidirect run")
+	fmt.Println("  5. Deploy with: apidirect deploy")
+	fmt.Println("  6. Publish to marketplace: apidirect publish")
+	
+	return nil
+}
+
+func runStandardInit(apiName string) error {
+	// Validate API name
+	if !isValidAPIName(apiName) {
+		return fmt.Errorf("invalid API name: %s. Use only lowercase letters, numbers, and hyphens", apiName)
+	}
+
+	// Check if directory already exists
+	if _, err := os.Stat(apiName); err == nil {
+		return fmt.Errorf("directory %s already exists", apiName)
+	}
+
+	// Handle template flag
+	var selectedTemplate wizard.APITemplate
+	if template != "" {
+		var found bool
+		selectedTemplate, found = wizard.GetTemplateByID(template)
+		if !found {
+			fmt.Println("Available templates:")
+			for _, t := range wizard.ListTemplates() {
+				fmt.Printf("  %s - %s\n", t.ID, t.Name)
 			}
+			return fmt.Errorf("invalid template: %s", template)
 		}
-		
-		if !runtimeValid {
-			return fmt.Errorf("invalid runtime: %s. Valid options are: %s", runtime, strings.Join(validRuntimes, ", "))
+		if runtime == "" {
+			runtime = selectedTemplate.Runtime
 		}
+	}
 
-		printInfo(fmt.Sprintf("Creating new API project: %s", apiName))
-		printInfo(fmt.Sprintf("Runtime: %s", runtime))
-
-		// Create project directory
-		if err := os.MkdirAll(apiName, 0755); err != nil {
-			return fmt.Errorf("failed to create directory: %w", err)
+	// Validate runtime
+	validRuntimes := []string{"python3.9", "python3.10", "python3.11", "nodejs18", "nodejs20"}
+	if runtime == "" {
+		runtime = "python3.9" // Default runtime
+	}
+	
+	runtimeValid := false
+	for _, r := range validRuntimes {
+		if r == runtime {
+			runtimeValid = true
+			break
 		}
+	}
+	
+	if !runtimeValid {
+		return fmt.Errorf("invalid runtime: %s. Valid options are: %s", runtime, strings.Join(validRuntimes, ", "))
+	}
 
-		// Initialize project based on runtime
-		var err error
+	printInfo(fmt.Sprintf("Creating new API project: %s", apiName))
+	printInfo(fmt.Sprintf("Runtime: %s", runtime))
+	if template != "" {
+		printInfo(fmt.Sprintf("Template: %s", selectedTemplate.Name))
+	}
+
+	// Create project directory
+	if err := os.MkdirAll(apiName, 0755); err != nil {
+		return fmt.Errorf("failed to create directory: %w", err)
+	}
+
+	// Initialize project based on runtime
+	var err error
+	if template != "" {
+		// Use template-based initialization
+		switch {
+		case strings.HasPrefix(runtime, "python"):
+			err = scaffold.InitPythonProjectWithTemplate(apiName, runtime, selectedTemplate, []string{})
+		case strings.HasPrefix(runtime, "nodejs"):
+			err = scaffold.InitNodeProjectWithTemplate(apiName, runtime, selectedTemplate, []string{})
+		default:
+			err = fmt.Errorf("unsupported runtime: %s", runtime)
+		}
+	} else {
+		// Use standard initialization
 		switch {
 		case strings.HasPrefix(runtime, "python"):
 			err = scaffold.InitPythonProject(apiName, runtime)
@@ -71,28 +166,30 @@ the basic structure for your API.`,
 		default:
 			err = fmt.Errorf("unsupported runtime: %s", runtime)
 		}
+	}
 
-		if err != nil {
-			// Clean up on error
-			os.RemoveAll(apiName)
-			return fmt.Errorf("failed to initialize project: %w", err)
-		}
+	if err != nil {
+		// Clean up on error
+		os.RemoveAll(apiName)
+		return fmt.Errorf("failed to initialize project: %w", err)
+	}
 
-		// Success message
-		printSuccess(fmt.Sprintf("API project '%s' created successfully!", apiName))
-		fmt.Println("\nNext steps:")
-		fmt.Printf("  1. cd %s\n", apiName)
-		fmt.Println("  2. Review and edit apidirect.yaml")
-		fmt.Println("  3. Implement your API logic in main.py")
-		fmt.Println("  4. Test locally with: apidirect run")
-		fmt.Println("  5. Deploy with: apidirect deploy")
-		
-		return nil
-	},
+	// Success message
+	printSuccess(fmt.Sprintf("API project '%s' created successfully!", apiName))
+	fmt.Println("\nNext steps:")
+	fmt.Printf("  1. cd %s\n", apiName)
+	fmt.Println("  2. Review and edit apidirect.yaml")
+	fmt.Println("  3. Implement your API logic")
+	fmt.Println("  4. Test locally with: apidirect run")
+	fmt.Println("  5. Deploy with: apidirect deploy")
+	
+	return nil
 }
 
 func init() {
 	initCmd.Flags().StringVarP(&runtime, "runtime", "r", "", "Runtime for the API (e.g., python3.9, nodejs18)")
+	initCmd.Flags().BoolVarP(&interactive, "interactive", "i", false, "Run interactive setup wizard")
+	initCmd.Flags().StringVarP(&template, "template", "t", "", "Template to use (e.g., basic-rest, crud-database)")
 }
 
 // isValidAPIName checks if the API name is valid

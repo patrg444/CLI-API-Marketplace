@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -158,4 +159,78 @@ func (h *MarketplaceHandler) IndexAPI(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"message": "API indexed successfully",
 	})
+}
+
+// PublishAPI handles PUT /api/v1/marketplace/apis/:id/publish
+func (h *MarketplaceHandler) PublishAPI(c *gin.Context) {
+	apiID := c.Param("id")
+
+	var req struct {
+		IsPublished bool   `json:"is_published"`
+		Description string `json:"description,omitempty"`
+		Category    string `json:"category,omitempty"`
+		Tags        []string `json:"tags,omitempty"`
+	}
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	// Get user from context
+	userID, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not authenticated"})
+		return
+	}
+
+	// Check if user owns this API
+	isOwner, err := h.apiStore.CheckAPIOwnership(userID.(string), apiID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to verify API ownership"})
+		return
+	}
+
+	if !isOwner {
+		c.JSON(http.StatusForbidden, gin.H{"error": "You don't have permission to publish this API"})
+		return
+	}
+
+	// Update API marketplace status
+	err = h.apiStore.UpdateMarketplaceStatus(apiID, req.IsPublished, req.Description, req.Category, req.Tags)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	// Index/remove from Elasticsearch
+	if req.IsPublished {
+		if err := h.indexer.IndexAPI(apiID); err != nil {
+			// Log error but don't fail the request
+			// The API is published but search indexing failed
+		}
+	} else {
+		if err := h.indexer.RemoveAPI(apiID); err != nil {
+			// Log error but don't fail the request
+		}
+	}
+
+	// Get updated API info
+	api, err := h.apiStore.GetAPI(apiID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get updated API info"})
+		return
+	}
+
+	response := gin.H{
+		"message": "API marketplace status updated successfully",
+		"api_id":  apiID,
+		"is_published": req.IsPublished,
+	}
+
+	if req.IsPublished {
+		response["marketplace_url"] = fmt.Sprintf("https://marketplace.apidirect.com/api/%s", apiID)
+	}
+
+	c.JSON(http.StatusOK, response)
 }

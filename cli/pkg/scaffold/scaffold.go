@@ -4,7 +4,18 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 )
+
+// APITemplate represents a template for API creation (imported from wizard package)
+type APITemplate struct {
+	ID          string
+	Name        string
+	Description string
+	Runtime     string
+	Category    string
+	Features    []string
+}
 
 // InitPythonProject initializes a new Python API project
 func InitPythonProject(apiName, runtime string) error {
@@ -638,4 +649,900 @@ apidirect publish %s
 - Documentation: https://docs.api-direct.io
 - Support: support@api-direct.io
 `, apiName, language, apiName)
+}
+
+// InitPythonProjectWithTemplate initializes a Python project with a specific template
+func InitPythonProjectWithTemplate(apiName, runtime string, template APITemplate, features []string) error {
+	projectPath := apiName
+
+	// Create project structure based on template
+	dirs := getProjectDirs(template, features)
+	for _, dir := range dirs {
+		fullPath := filepath.Join(projectPath, dir)
+		if err := os.MkdirAll(fullPath, 0755); err != nil {
+			return fmt.Errorf("failed to create directory %s: %w", fullPath, err)
+		}
+	}
+
+	// Create files based on template
+	files := getPythonTemplateFiles(apiName, runtime, template, features)
+	for filename, content := range files {
+		fullPath := filepath.Join(projectPath, filename)
+		if err := os.WriteFile(fullPath, []byte(content), 0644); err != nil {
+			return fmt.Errorf("failed to create file %s: %w", fullPath, err)
+		}
+	}
+
+	return nil
+}
+
+// InitNodeProjectWithTemplate initializes a Node.js project with a specific template
+func InitNodeProjectWithTemplate(apiName, runtime string, template APITemplate, features []string) error {
+	projectPath := apiName
+
+	// Create project structure based on template
+	dirs := getProjectDirs(template, features)
+	for _, dir := range dirs {
+		fullPath := filepath.Join(projectPath, dir)
+		if err := os.MkdirAll(fullPath, 0755); err != nil {
+			return fmt.Errorf("failed to create directory %s: %w", fullPath, err)
+		}
+	}
+
+	// Create files based on template
+	files := getNodeTemplateFiles(apiName, runtime, template, features)
+	for filename, content := range files {
+		fullPath := filepath.Join(projectPath, filename)
+		if err := os.WriteFile(fullPath, []byte(content), 0644); err != nil {
+			return fmt.Errorf("failed to create file %s: %w", fullPath, err)
+		}
+	}
+
+	return nil
+}
+
+// getProjectDirs returns the directory structure based on template and features
+func getProjectDirs(template APITemplate, features []string) []string {
+	dirs := []string{"", "tests"}
+	
+	// Add directories based on template
+	switch template.ID {
+	case "crud-database":
+		dirs = append(dirs, "models", "migrations")
+	case "ml-model-serving":
+		dirs = append(dirs, "models", "data")
+	case "data-processing":
+		dirs = append(dirs, "processors", "uploads")
+	case "microservice":
+		dirs = append(dirs, "health", "metrics")
+	}
+	
+	// Add directories based on features
+	for _, feature := range features {
+		switch feature {
+		case "Docker support":
+			// Dockerfile will be created in root
+		case "GitHub Actions CI/CD":
+			dirs = append(dirs, ".github/workflows")
+		case "API documentation generation":
+			dirs = append(dirs, "docs")
+		}
+	}
+	
+	return dirs
+}
+
+// getPythonTemplateFiles returns the files to create for a Python template
+func getPythonTemplateFiles(apiName, runtime string, template APITemplate, features []string) map[string]string {
+	files := map[string]string{
+		"apidirect.yaml":     getPythonTemplateConfig(apiName, runtime, template),
+		"main.py":            getPythonTemplateMain(template),
+		"requirements.txt":   getPythonTemplateRequirements(template, features),
+		".gitignore":         getPythonGitignoreTemplate(),
+		"README.md":          getTemplateReadme(apiName, "Python", template, features),
+		"tests/__init__.py":  "",
+		"tests/test_main.py": getPythonTemplateTests(template),
+	}
+	
+	// Add feature-specific files
+	for _, feature := range features {
+		switch feature {
+		case "Docker support":
+			files["Dockerfile"] = getPythonDockerfile(runtime)
+			files[".dockerignore"] = getDockerignore()
+		case "GitHub Actions CI/CD":
+			files[".github/workflows/deploy.yml"] = getGitHubActionsWorkflow()
+		case "API documentation generation":
+			files["docs/api.md"] = getAPIDocumentation(template)
+		}
+	}
+	
+	return files
+}
+
+// getNodeTemplateFiles returns the files to create for a Node.js template
+func getNodeTemplateFiles(apiName, runtime string, template APITemplate, features []string) map[string]string {
+	files := map[string]string{
+		"apidirect.yaml":     getNodeTemplateConfig(apiName, runtime, template),
+		"main.js":            getNodeTemplateMain(template),
+		"package.json":       getNodeTemplatePackage(apiName, template, features),
+		".gitignore":         getNodeGitignoreTemplate(),
+		"README.md":          getTemplateReadme(apiName, "Node.js", template, features),
+		"tests/main.test.js": getNodeTemplateTests(template),
+	}
+	
+	// Add feature-specific files
+	for _, feature := range features {
+		switch feature {
+		case "Docker support":
+			files["Dockerfile"] = getNodeDockerfile(runtime)
+			files[".dockerignore"] = getDockerignore()
+		case "GitHub Actions CI/CD":
+			files[".github/workflows/deploy.yml"] = getGitHubActionsWorkflow()
+		case "API documentation generation":
+			files["docs/api.md"] = getAPIDocumentation(template)
+		}
+	}
+	
+	return files
+}
+
+// Template-specific configuration generators
+func getPythonTemplateConfig(apiName, runtime string, template APITemplate) string {
+	switch template.ID {
+	case "crud-database":
+		return fmt.Sprintf(`# API-Direct Configuration
+name: %s
+runtime: %s
+
+# API Endpoints
+endpoints:
+  - path: /items
+    method: GET
+    handler: main.list_items
+  
+  - path: /items
+    method: POST
+    handler: main.create_item
+  
+  - path: /items/{id}
+    method: GET
+    handler: main.get_item
+  
+  - path: /items/{id}
+    method: PUT
+    handler: main.update_item
+  
+  - path: /items/{id}
+    method: DELETE
+    handler: main.delete_item
+
+# Environment Variables
+environment:
+  DATABASE_URL: ${DATABASE_URL}
+  LOG_LEVEL: INFO
+`, apiName, runtime)
+	
+	case "webhook-receiver":
+		return fmt.Sprintf(`# API-Direct Configuration
+name: %s
+runtime: %s
+
+# API Endpoints
+endpoints:
+  - path: /webhook
+    method: POST
+    handler: main.receive_webhook
+  
+  - path: /webhook/status
+    method: GET
+    handler: main.webhook_status
+
+# Environment Variables
+environment:
+  WEBHOOK_SECRET: ${WEBHOOK_SECRET}
+  LOG_LEVEL: INFO
+`, apiName, runtime)
+	
+	default:
+		return getPythonConfigTemplate(apiName, runtime)
+	}
+}
+
+func getNodeTemplateConfig(apiName, runtime string, template APITemplate) string {
+	switch template.ID {
+	case "crud-database":
+		return fmt.Sprintf(`# API-Direct Configuration
+name: %s
+runtime: %s
+
+# API Endpoints
+endpoints:
+  - path: /items
+    method: GET
+    handler: main.listItems
+  
+  - path: /items
+    method: POST
+    handler: main.createItem
+  
+  - path: /items/{id}
+    method: GET
+    handler: main.getItem
+  
+  - path: /items/{id}
+    method: PUT
+    handler: main.updateItem
+  
+  - path: /items/{id}
+    method: DELETE
+    handler: main.deleteItem
+
+# Environment Variables
+environment:
+  DATABASE_URL: ${DATABASE_URL}
+  LOG_LEVEL: info
+`, apiName, runtime)
+	
+	default:
+		return getNodeConfigTemplate(apiName, runtime)
+	}
+}
+
+// Template-specific main file generators
+func getPythonTemplateMain(template APITemplate) string {
+	switch template.ID {
+	case "crud-database":
+		return `"""
+CRUD Database API Template
+A REST API with database operations using PostgreSQL.
+"""
+import json
+import logging
+import os
+from typing import Dict, Any, List
+
+# Configure logging
+logging.basicConfig(level=os.environ.get('LOG_LEVEL', 'INFO'))
+logger = logging.getLogger(__name__)
+
+# Mock database for demonstration
+# In production, replace with actual database connection
+ITEMS_DB = {}
+NEXT_ID = 1
+
+def list_items(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
+    """List all items"""
+    logger.info("Listing all items")
+    
+    items = list(ITEMS_DB.values())
+    
+    return {
+        'statusCode': 200,
+        'headers': {'Content-Type': 'application/json'},
+        'body': json.dumps({
+            'items': items,
+            'total': len(items)
+        })
+    }
+
+def create_item(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
+    """Create a new item"""
+    global NEXT_ID
+    
+    try:
+        body = json.loads(event.get('body', '{}'))
+        
+        item = {
+            'id': NEXT_ID,
+            'name': body.get('name'),
+            'description': body.get('description'),
+            'created_at': '2024-01-01T00:00:00Z'
+        }
+        
+        ITEMS_DB[NEXT_ID] = item
+        NEXT_ID += 1
+        
+        logger.info(f"Created item: {item['id']}")
+        
+        return {
+            'statusCode': 201,
+            'headers': {'Content-Type': 'application/json'},
+            'body': json.dumps(item)
+        }
+    except Exception as e:
+        logger.error(f"Error creating item: {e}")
+        return {
+            'statusCode': 400,
+            'headers': {'Content-Type': 'application/json'},
+            'body': json.dumps({'error': 'Invalid request'})
+        }
+
+def get_item(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
+    """Get a specific item"""
+    item_id = int(event.get('pathParameters', {}).get('id', 0))
+    
+    if item_id not in ITEMS_DB:
+        return {
+            'statusCode': 404,
+            'headers': {'Content-Type': 'application/json'},
+            'body': json.dumps({'error': 'Item not found'})
+        }
+    
+    return {
+        'statusCode': 200,
+        'headers': {'Content-Type': 'application/json'},
+        'body': json.dumps(ITEMS_DB[item_id])
+    }
+
+def update_item(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
+    """Update an existing item"""
+    item_id = int(event.get('pathParameters', {}).get('id', 0))
+    
+    if item_id not in ITEMS_DB:
+        return {
+            'statusCode': 404,
+            'headers': {'Content-Type': 'application/json'},
+            'body': json.dumps({'error': 'Item not found'})
+        }
+    
+    try:
+        body = json.loads(event.get('body', '{}'))
+        item = ITEMS_DB[item_id]
+        
+        item.update({
+            'name': body.get('name', item['name']),
+            'description': body.get('description', item['description'])
+        })
+        
+        logger.info(f"Updated item: {item_id}")
+        
+        return {
+            'statusCode': 200,
+            'headers': {'Content-Type': 'application/json'},
+            'body': json.dumps(item)
+        }
+    except Exception as e:
+        logger.error(f"Error updating item: {e}")
+        return {
+            'statusCode': 400,
+            'headers': {'Content-Type': 'application/json'},
+            'body': json.dumps({'error': 'Invalid request'})
+        }
+
+def delete_item(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
+    """Delete an item"""
+    item_id = int(event.get('pathParameters', {}).get('id', 0))
+    
+    if item_id not in ITEMS_DB:
+        return {
+            'statusCode': 404,
+            'headers': {'Content-Type': 'application/json'},
+            'body': json.dumps({'error': 'Item not found'})
+        }
+    
+    del ITEMS_DB[item_id]
+    logger.info(f"Deleted item: {item_id}")
+    
+    return {
+        'statusCode': 204,
+        'headers': {'Content-Type': 'application/json'},
+        'body': ''
+    }
+`
+	
+	default:
+		return getPythonMainTemplate()
+	}
+}
+
+func getNodeTemplateMain(template APITemplate) string {
+	switch template.ID {
+	case "crud-database":
+		return `/**
+ * CRUD Database API Template
+ * A REST API with database operations using PostgreSQL.
+ */
+
+// Mock database for demonstration
+// In production, replace with actual database connection
+const itemsDB = {};
+let nextId = 1;
+
+exports.listItems = async (event, context) => {
+    console.log('Listing all items');
+    
+    const items = Object.values(itemsDB);
+    
+    return {
+        statusCode: 200,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            items: items,
+            total: items.length
+        })
+    };
+};
+
+exports.createItem = async (event, context) => {
+    try {
+        const body = JSON.parse(event.body || '{}');
+        
+        const item = {
+            id: nextId,
+            name: body.name,
+            description: body.description,
+            createdAt: new Date().toISOString()
+        };
+        
+        itemsDB[nextId] = item;
+        nextId++;
+        
+        console.log(` + "`Created item: ${item.id}`" + `);
+        
+        return {
+            statusCode: 201,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(item)
+        };
+    } catch (error) {
+        console.error('Error creating item:', error);
+        return {
+            statusCode: 400,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ error: 'Invalid request' })
+        };
+    }
+};
+
+exports.getItem = async (event, context) => {
+    const itemId = parseInt(event.pathParameters?.id || '0');
+    
+    if (!itemsDB[itemId]) {
+        return {
+            statusCode: 404,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ error: 'Item not found' })
+        };
+    }
+    
+    return {
+        statusCode: 200,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(itemsDB[itemId])
+    };
+};
+
+exports.updateItem = async (event, context) => {
+    const itemId = parseInt(event.pathParameters?.id || '0');
+    
+    if (!itemsDB[itemId]) {
+        return {
+            statusCode: 404,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ error: 'Item not found' })
+        };
+    }
+    
+    try {
+        const body = JSON.parse(event.body || '{}');
+        const item = itemsDB[itemId];
+        
+        Object.assign(item, {
+            name: body.name || item.name,
+            description: body.description || item.description
+        });
+        
+        console.log(` + "`Updated item: ${itemId}`" + `);
+        
+        return {
+            statusCode: 200,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(item)
+        };
+    } catch (error) {
+        console.error('Error updating item:', error);
+        return {
+            statusCode: 400,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ error: 'Invalid request' })
+        };
+    }
+};
+
+exports.deleteItem = async (event, context) => {
+    const itemId = parseInt(event.pathParameters?.id || '0');
+    
+    if (!itemsDB[itemId]) {
+        return {
+            statusCode: 404,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ error: 'Item not found' })
+        };
+    }
+    
+    delete itemsDB[itemId];
+    console.log(` + "`Deleted item: ${itemId}`" + `);
+    
+    return {
+        statusCode: 204,
+        headers: { 'Content-Type': 'application/json' },
+        body: ''
+    };
+};
+`
+	
+	default:
+		return getNodeMainTemplate()
+	}
+}
+
+// Feature-specific file generators
+func getPythonDockerfile(runtime string) string {
+	return fmt.Sprintf(`FROM python:%s-slim
+
+WORKDIR /app
+
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY . .
+
+EXPOSE 8000
+
+CMD ["python", "-m", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+`, strings.TrimPrefix(runtime, "python"))
+}
+
+func getNodeDockerfile(runtime string) string {
+	return fmt.Sprintf(`FROM node:%s-slim
+
+WORKDIR /app
+
+COPY package*.json ./
+RUN npm ci --only=production
+
+COPY . .
+
+EXPOSE 8000
+
+CMD ["node", "main.js"]
+`, strings.TrimPrefix(runtime, "nodejs"))
+}
+
+func getDockerignore() string {
+	return `node_modules
+npm-debug.log
+.git
+.gitignore
+README.md
+.env
+.nyc_output
+coverage
+.pytest_cache
+__pycache__
+*.pyc
+.venv
+venv
+`
+}
+
+func getGitHubActionsWorkflow() string {
+	return `name: Deploy API
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+    
+    - name: Run tests
+      run: python -m pytest tests/
+
+  deploy:
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Deploy to API-Direct
+      run: |
+        # Install API-Direct CLI
+        # apidirect deploy
+      env:
+        API_DIRECT_TOKEN: ${{ secrets.API_DIRECT_TOKEN }}
+`
+}
+
+func getAPIDocumentation(template APITemplate) string {
+	return fmt.Sprintf(`# %s API Documentation
+
+## Overview
+%s
+
+## Endpoints
+
+### Base URL
+` + "`https://api.yourdomain.com`" + `
+
+### Authentication
+All endpoints require an API key passed in the ` + "`X-API-Key`" + ` header.
+
+## Template Features
+%s
+
+## Error Responses
+
+All endpoints return errors in the following format:
+
+` + "```json" + `
+{
+  "error": "Error description",
+  "code": "ERROR_CODE"
+}
+` + "```" + `
+
+## Rate Limiting
+- 1000 requests per hour per API key
+- Rate limit headers included in all responses
+
+## Support
+For API support, contact: support@yourdomain.com
+`, template.Name, template.Description, strings.Join(template.Features, "\n- "))
+}
+
+func getPythonTemplateRequirements(template APITemplate, features []string) string {
+	requirements := `# Core dependencies
+`
+	
+	switch template.ID {
+	case "crud-database":
+		requirements += `psycopg2-binary==2.9.7
+sqlalchemy==2.0.21
+`
+	case "ml-model-serving":
+		requirements += `scikit-learn==1.3.0
+numpy==1.24.3
+pandas==2.0.3
+`
+	case "webhook-receiver":
+		requirements += `cryptography==41.0.4
+`
+	}
+	
+	for _, feature := range features {
+		switch feature {
+		case "API documentation generation":
+			requirements += `fastapi==0.103.1
+uvicorn==0.23.2
+`
+		}
+	}
+	
+	return requirements
+}
+
+func getNodeTemplatePackage(apiName string, template APITemplate, features []string) string {
+	deps := `{}`
+	devDeps := `{
+    "jest": "^29.5.0"
+  }`
+	
+	switch template.ID {
+	case "crud-database":
+		deps = `{
+    "pg": "^8.11.3"
+  }`
+	}
+	
+	for _, feature := range features {
+		switch feature {
+		case "API documentation generation":
+			// Add swagger dependencies
+		}
+	}
+	
+	return fmt.Sprintf(`{
+  "name": "%s",
+  "version": "1.0.0",
+  "description": "%s",
+  "main": "main.js",
+  "scripts": {
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "start": "node main.js"
+  },
+  "keywords": ["api", "serverless", "api-direct"],
+  "author": "",
+  "license": "MIT",
+  "dependencies": %s,
+  "devDependencies": %s
+}`, apiName, template.Description, deps, devDeps)
+}
+
+func getPythonTemplateTests(template APITemplate) string {
+	switch template.ID {
+	case "crud-database":
+		return `"""
+Tests for CRUD API handlers
+"""
+import json
+import unittest
+from main import list_items, create_item, get_item, update_item, delete_item
+
+
+class TestCRUDAPI(unittest.TestCase):
+    
+    def test_list_items_empty(self):
+        event = {}
+        context = {}
+        
+        response = list_items(event, context)
+        
+        self.assertEqual(response['statusCode'], 200)
+        body = json.loads(response['body'])
+        self.assertEqual(body['total'], 0)
+    
+    def test_create_item(self):
+        event = {
+            'body': json.dumps({
+                'name': 'Test Item',
+                'description': 'A test item'
+            })
+        }
+        context = {}
+        
+        response = create_item(event, context)
+        
+        self.assertEqual(response['statusCode'], 201)
+        body = json.loads(response['body'])
+        self.assertEqual(body['name'], 'Test Item')
+        self.assertIn('id', body)
+
+
+if __name__ == '__main__':
+    unittest.main()
+`
+	
+	default:
+		return getPythonTestTemplate()
+	}
+}
+
+func getNodeTemplateTests(template APITemplate) string {
+	switch template.ID {
+	case "crud-database":
+		return `/**
+ * Tests for CRUD API handlers
+ */
+const { listItems, createItem, getItem, updateItem, deleteItem } = require('../main');
+
+describe('CRUD API', () => {
+    describe('listItems', () => {
+        it('should return empty list initially', async () => {
+            const event = {};
+            const context = {};
+            
+            const response = await listItems(event, context);
+            
+            expect(response.statusCode).toBe(200);
+            const body = JSON.parse(response.body);
+            expect(body.total).toBe(0);
+        });
+    });
+    
+    describe('createItem', () => {
+        it('should create a new item', async () => {
+            const event = {
+                body: JSON.stringify({
+                    name: 'Test Item',
+                    description: 'A test item'
+                })
+            };
+            const context = {};
+            
+            const response = await createItem(event, context);
+            
+            expect(response.statusCode).toBe(201);
+            const body = JSON.parse(response.body);
+            expect(body.name).toBe('Test Item');
+            expect(body.id).toBeDefined();
+        });
+    });
+});
+`
+	
+	default:
+		return getNodeTestTemplate()
+	}
+}
+
+func getTemplateReadme(apiName, language string, template APITemplate, features []string) string {
+	featuresSection := ""
+	if len(features) > 0 {
+		featuresSection = fmt.Sprintf(`
+
+## Features Included
+%s`, strings.Join(features, "\n- "))
+	}
+	
+	return fmt.Sprintf(`# %s
+
+%s
+
+**Template:** %s  
+**Runtime:** %s  
+**Category:** %s
+
+%s%s
+
+## Template Features
+%s
+
+## Getting Started
+
+1. **Install dependencies**:
+   ` + "```bash" + `
+   %s
+   ` + "```" + `
+
+2. **Configure your API**:
+   Edit ` + "`apidirect.yaml`" + ` to customize endpoints and settings.
+
+3. **Implement your logic**:
+   Edit the main implementation file to add your business logic.
+
+4. **Test locally**:
+   ` + "```bash" + `
+   apidirect run
+   ` + "```" + `
+
+5. **Deploy to API-Direct**:
+   ` + "```bash" + `
+   apidirect deploy
+   ` + "```" + `
+
+6. **Publish to marketplace**:
+   ` + "```bash" + `
+   apidirect publish %s
+   ` + "```" + `
+
+## Need Help?
+
+- Documentation: https://docs.api-direct.io
+- Support: support@api-direct.io
+`, 
+		apiName, 
+		template.Description,
+		template.Name,
+		language,
+		template.Category,
+		featuresSection,
+		strings.Join(template.Features, "\n- "),
+		getInstallCommand(language),
+		apiName)
+}
+
+func getInstallCommand(language string) string {
+	if strings.Contains(language, "Node") {
+		return "npm install"
+	}
+	return "pip install -r requirements.txt"
 }

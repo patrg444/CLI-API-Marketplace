@@ -1,0 +1,26 @@
+# API-Direct Configuration
+name: weather-info-api
+runtime: python3.9
+
+# API Endpoints
+endpoints:
+  - path: /health
+    method: GET
+    handler: main.health_check
+  
+  - path: /cities
+    method: GET
+    handler: main.get_cities
+  
+  - path: /weather/{city}
+    method: GET
+    handler: main.get_weather
+  
+  - path: /forecast
+    method: POST
+    handler: main.get_forecast
+
+# Environment Variables
+environment:
+  LOG_LEVEL: INFO
+  API_VERSION: "1.0.0"

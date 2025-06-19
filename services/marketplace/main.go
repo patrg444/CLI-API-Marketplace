@@ -93,6 +93,9 @@ func main() {
 	auth := r.Group("/api/v1/marketplace")
 	auth.Use(middleware.AuthRequired())
 	{
+		// API Publishing
+		auth.PUT("/apis/:id/publish", marketplaceHandler.PublishAPI)
+		
 		// Review Management
 		auth.POST("/apis/:id/reviews", reviewHandler.SubmitReview)
 		auth.POST("/reviews/:id/vote", reviewHandler.VoteOnReview)

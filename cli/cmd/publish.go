@@ -48,7 +48,7 @@ var publishCmd = &cobra.Command{
 
 		// Make API request to publish
 		cfg := config.Get()
-		url := fmt.Sprintf("%s/api/v1/apis/%s/marketplace", cfg.APIEndpoint, apiIdentifier)
+		url := fmt.Sprintf("%s/api/v1/marketplace/apis/%s/publish", cfg.APIEndpoint, apiIdentifier)
 
 		body, _ := json.Marshal(publishData)
 		resp, err := auth.MakeAuthenticatedRequest("PUT", url, token, body)
@@ -94,7 +94,7 @@ var unpublishCmd = &cobra.Command{
 
 		// Make API request to unpublish
 		cfg := config.Get()
-		url := fmt.Sprintf("%s/api/v1/apis/%s/marketplace", cfg.APIEndpoint, apiIdentifier)
+		url := fmt.Sprintf("%s/api/v1/marketplace/apis/%s/publish", cfg.APIEndpoint, apiIdentifier)
 
 		publishData := map[string]interface{}{
 			"is_published": false,
