@@ -1,0 +1,10 @@
+# API-Direct Framework Dependencies
+fastapi>=0.104.0
+uvicorn[standard]>=0.24.0
+pydantic>=2.0.0
+PyYAML>=6.0.0
+
+# Optional dependencies for enhanced features
+redis>=5.0.0  # For production rate limiting
+psycopg2-binary>=2.9.0  # For PostgreSQL integration
+requests>=2.31.0  # For API-Direct platform integration
