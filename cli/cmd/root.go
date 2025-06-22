@@ -14,7 +14,6 @@ import (
 var (
 	cfgFile string
 	verbose bool
-	Version = "0.1.0"
 )
 
 // rootCmd represents the base command when called without any subcommands
@@ -52,18 +51,15 @@ func init() {
 	// Bind flags to viper
 	viper.BindPFlag("verbose", rootCmd.PersistentFlags().Lookup("verbose"))
 
-	// Add commands
-	rootCmd.AddCommand(loginCmd)
-	rootCmd.AddCommand(logoutCmd)
-	rootCmd.AddCommand(whoamiCmd)
-	rootCmd.AddCommand(initCmd)
-	rootCmd.AddCommand(deployCmd)
-	rootCmd.AddCommand(logsCmd)
-	rootCmd.AddCommand(configCmd)
-	rootCmd.AddCommand(envCmd)
-	rootCmd.AddCommand(publishCmd)
-	rootCmd.AddCommand(unpublishCmd)
-	rootCmd.AddCommand(versionCmd)
+	// Check if version flag is set
+	rootCmd.PersistentPreRun = func(cmd *cobra.Command, args []string) {
+		if versionFlag {
+			showVersion()
+			os.Exit(0)
+		}
+	}
+	
+	// Add commands - removed as they will be added in their respective init() functions
 }
 
 // initConfig reads in config file and ENV variables if set.
@@ -98,15 +94,6 @@ func initConfig() {
 	if err := viper.ReadInConfig(); err == nil && verbose {
 		fmt.Println("Using config file:", viper.ConfigFileUsed())
 	}
-}
-
-// versionCmd represents the version command
-var versionCmd = &cobra.Command{
-	Use:   "version",
-	Short: "Display the version of API-Direct CLI",
-	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Printf("API-Direct CLI version %s\n", Version)
-	},
 }
 
 // Helper functions

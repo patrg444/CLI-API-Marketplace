@@ -653,6 +653,20 @@ apidirect publish %s
 
 // InitPythonProjectWithTemplate initializes a Python project with a specific template
 func InitPythonProjectWithTemplate(apiName, runtime string, template APITemplate, features []string) error {
+	// Check if this is an ML template and use specialized initialization
+	mlTemplates := map[string]bool{
+		"gpt-wrapper": true,
+		"image-classifier": true,
+		"sentiment-analyzer": true,
+		"embeddings-api": true,
+		"time-series-predictor": true,
+		"document-qa": true,
+	}
+	
+	if mlTemplates[template.ID] {
+		return InitMLProject(apiName, runtime, template)
+	}
+	
 	projectPath := apiName
 
 	// Create project structure based on template

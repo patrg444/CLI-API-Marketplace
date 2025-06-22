@@ -143,7 +143,7 @@ func (c *CognitoAuth) RefreshTokens(refreshToken string) (*AuthResult, error) {
 		AccessToken:  aws.ToString(resp.AuthenticationResult.AccessToken),
 		IDToken:      aws.ToString(resp.AuthenticationResult.IdToken),
 		RefreshToken: refreshToken, // Refresh token doesn't change
-		ExpiresIn:    int(aws.ToInt32(resp.AuthenticationResult.ExpiresIn)),
+		ExpiresIn:    int(resp.AuthenticationResult.ExpiresIn),
 	}, nil
 }
 

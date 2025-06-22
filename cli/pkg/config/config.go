@@ -13,6 +13,8 @@ type Config struct {
 	Auth        AuthConfig        `json:"auth"`
 	API         APIConfig         `json:"api"`
 	Preferences PreferencesConfig `json:"preferences"`
+	AuthToken   string            `json:"-"` // Temporary for backward compatibility
+	APIEndpoint string            `json:"-"` // Temporary for backward compatibility
 }
 
 // AuthConfig stores authentication information
@@ -62,6 +64,31 @@ func ConfigPath() (string, error) {
 		return "", err
 	}
 	return filepath.Join(home, ".apidirect", "config.json"), nil
+}
+
+// Load is an alias for LoadConfig for backward compatibility
+func Load() (*Config, error) {
+	cfg, err := LoadConfig()
+	if err != nil {
+		return nil, err
+	}
+	// Set backward compatibility fields
+	cfg.AuthToken = cfg.Auth.AccessToken
+	cfg.APIEndpoint = cfg.API.BaseURL
+	return cfg, nil
+}
+
+// Get returns the current configuration (loads if needed)
+func Get() *Config {
+	cfg, err := LoadConfig()
+	if err != nil {
+		// Return default config on error
+		return DefaultConfig()
+	}
+	// Set backward compatibility fields
+	cfg.AuthToken = cfg.Auth.AccessToken
+	cfg.APIEndpoint = cfg.API.BaseURL
+	return cfg
 }
 
 // LoadConfig loads the configuration from disk

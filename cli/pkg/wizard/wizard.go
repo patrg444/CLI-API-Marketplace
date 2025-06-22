@@ -37,8 +37,59 @@ var (
 	red     = color.New(color.FgRed).SprintFunc()
 	bold    = color.New(color.Bold).SprintFunc()
 	
-	// Available templates
+	// Available templates - AI/ML templates first (focused positioning)
 	templates = []APITemplate{
+		// AI/ML Templates (Priority - API-Direct for AI focus)
+		{
+			ID:          "gpt-wrapper",
+			Name:        "🤖 GPT Wrapper API",
+			Description: "Production-ready OpenAI GPT wrapper with caching and rate limiting",
+			Runtime:     "python3.9",
+			Category:    "AI/ML",
+			Features:    []string{"Response caching", "Rate limiting", "Cost optimization", "Error handling", "Usage analytics"},
+		},
+		{
+			ID:          "image-classifier",
+			Name:        "👁️ Image Classification API",
+			Description: "Computer vision API using pre-trained Vision Transformer models",
+			Runtime:     "python3.9",
+			Category:    "AI/ML",
+			Features:    []string{"Vision Transformer models", "Multi-format support", "Batch processing", "GPU optimization", "Confidence scoring"},
+		},
+		{
+			ID:          "sentiment-analyzer",
+			Name:        "😊 Sentiment Analysis API",
+			Description: "Advanced sentiment analysis with emotion detection using transformers",
+			Runtime:     "python3.9",
+			Category:    "AI/ML",
+			Features:    []string{"Multi-language support", "Emotion detection", "Confidence scores", "Batch processing", "Custom models"},
+		},
+		{
+			ID:          "embeddings-api",
+			Name:        "🔗 Text Embeddings API",
+			Description: "Generate semantic embeddings for text using sentence transformers",
+			Runtime:     "python3.9",
+			Category:    "AI/ML",
+			Features:    []string{"Sentence transformers", "Vector similarity", "Batch generation", "Multiple models", "Dimensionality options"},
+		},
+		{
+			ID:          "time-series-predictor",
+			Name:        "📈 Time Series Prediction API",
+			Description: "Forecast time series data using Prophet and LSTM models",
+			Runtime:     "python3.9",
+			Category:    "AI/ML",
+			Features:    []string{"Prophet forecasting", "LSTM networks", "Seasonal decomposition", "Confidence intervals", "Multi-step predictions"},
+		},
+		{
+			ID:          "document-qa",
+			Name:        "📄 Document Q&A API",
+			Description: "Question answering over documents using BERT and retrieval",
+			Runtime:     "python3.9",
+			Category:    "AI/ML",
+			Features:    []string{"Document ingestion", "Question answering", "Context retrieval", "Multiple formats", "Relevance scoring"},
+		},
+		
+		// Traditional Templates (Secondary)
 		{
 			ID:          "basic-rest",
 			Name:        "Basic REST API",
@@ -62,14 +113,6 @@ var (
 			Runtime:     "python3.9",
 			Category:    "Integration",
 			Features:    []string{"Webhook validation", "Event processing", "Queue integration"},
-		},
-		{
-			ID:          "ml-model-serving",
-			Name:        "ML Model Serving",
-			Description: "Serve machine learning models via REST API",
-			Runtime:     "python3.9",
-			Category:    "Machine Learning",
-			Features:    []string{"Model loading", "Prediction endpoints", "Input validation", "Batch processing"},
 		},
 		{
 			ID:          "data-processing",
