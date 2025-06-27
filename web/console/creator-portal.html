@@ -1,0 +1,933 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API-Direct Creator Portal - Manage Your API Business</title>
+    <meta name="description" content="Creator Portal for API-Direct. Manage your API deployments, track revenue, view analytics, and grow your API business.">
+    
+    <!-- Styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap');
+        
+        body { font-family: 'Inter', sans-serif; }
+        code, pre { font-family: 'JetBrains Mono', monospace; }
+        
+        .sidebar {
+            width: 280px;
+            min-height: calc(100vh - 4rem);
+        }
+        
+        .main-content {
+            max-width: calc(100% - 280px);
+        }
+        
+        .nav-item.active {
+            background: #f3f4f6;
+            color: #4f46e5;
+            border-right: 3px solid #4f46e5;
+        }
+        
+        .metric-card {
+            transition: all 0.3s ease;
+        }
+        
+        .metric-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+        
+        .api-status-running {
+            background: #10b981;
+        }
+        
+        .api-status-error {
+            background: #ef4444;
+        }
+        
+        .api-status-building {
+            background: #f59e0b;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Header -->
+    <header class="bg-white border-b border-gray-200 sticky top-0 z-50">
+        <div class="max-w-full mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center">
+                    <a href="https://apidirect.dev" class="text-2xl font-bold text-gray-900">API-Direct</a>
+                    <span class="ml-4 text-gray-500">/</span>
+                    <span class="ml-4 text-gray-700">Creator Portal</span>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <div class="flex items-center space-x-2">
+                        <div class="w-8 h-8 bg-indigo-600 rounded-full flex items-center justify-center">
+                            <span class="text-white text-sm font-medium">JD</span>
+                        </div>
+                        <span class="text-gray-700">John Developer</span>
+                    </div>
+                    <div class="relative">
+                        <button class="text-gray-500 hover:text-gray-700">
+                            <i class="fas fa-bell"></i>
+                        </button>
+                        <span class="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full"></span>
+                    </div>
+                    <button class="text-gray-500 hover:text-gray-700">
+                        <i class="fas fa-cog"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="flex">
+        <!-- Sidebar -->
+        <nav class="sidebar bg-white border-r border-gray-200 overflow-y-auto">
+            <div class="p-6">
+                <!-- Main Navigation -->
+                <div class="mb-8">
+                    <h3 class="text-sm font-semibold text-gray-900 uppercase tracking-wide mb-3">Creator Portal</h3>
+                    <ul class="space-y-1">
+                        <li><a href="#dashboard" class="nav-item active flex items-center px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md">
+                            <i class="fas fa-tachometer-alt w-5 mr-3"></i>Dashboard</a></li>
+                        <li><a href="#apis" class="nav-item flex items-center px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md">
+                            <i class="fas fa-server w-5 mr-3"></i>APIs & Deployments</a></li>
+                        <li><a href="#analytics" class="nav-item flex items-center px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md">
+                            <i class="fas fa-chart-line w-5 mr-3"></i>Analytics</a></li>
+                        <li><a href="#marketplace" class="nav-item flex items-center px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md">
+                            <i class="fas fa-store w-5 mr-3"></i>Marketplace</a></li>
+                        <li><a href="#earnings" class="nav-item flex items-center px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md">
+                            <i class="fas fa-dollar-sign w-5 mr-3"></i>Earnings & Billing</a></li>
+                    </ul>
+                </div>
+
+                <!-- Developer Tools -->
+                <div class="mb-8">
+                    <h3 class="text-sm font-semibold text-gray-900 uppercase tracking-wide mb-3">Developer Tools</h3>
+                    <ul class="space-y-1">
+                        <li><a href="#cli-setup" class="nav-item flex items-center px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md">
+                            <i class="fas fa-terminal w-5 mr-3"></i>CLI Setup</a></li>
+                        <li><a href="#api-keys" class="nav-item flex items-center px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md">
+                            <i class="fas fa-key w-5 mr-3"></i>API Keys</a></li>
+                        <li><a href="#templates" class="nav-item flex items-center px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md">
+                            <i class="fas fa-code w-5 mr-3"></i>Templates</a></li>
+                    </ul>
+                </div>
+
+                <!-- Account -->
+                <div class="mb-8">
+                    <h3 class="text-sm font-semibold text-gray-900 uppercase tracking-wide mb-3">Account</h3>
+                    <ul class="space-y-1">
+                        <li><a href="#settings" class="nav-item flex items-center px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md">
+                            <i class="fas fa-user-cog w-5 mr-3"></i>Settings</a></li>
+                        <li><a href="#security" class="nav-item flex items-center px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md">
+                            <i class="fas fa-shield-alt w-5 mr-3"></i>Security</a></li>
+                    </ul>
+                </div>
+
+                <!-- Support -->
+                <div class="mb-8">
+                    <h3 class="text-sm font-semibold text-gray-900 uppercase tracking-wide mb-3">Support</h3>
+                    <ul class="space-y-1">
+                        <li><a href="#help" class="nav-item flex items-center px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md">
+                            <i class="fas fa-question-circle w-5 mr-3"></i>Help Center</a></li>
+                        <li><a href="#community" class="nav-item flex items-center px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md">
+                            <i class="fas fa-users w-5 mr-3"></i>Community</a></li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="main-content flex-1 p-8">
+            <!-- Dashboard Section -->
+            <section id="dashboard" class="mb-16">
+                <div class="mb-8">
+                    <h1 class="text-3xl font-bold text-gray-900 mb-2">Creator Dashboard</h1>
+                    <p class="text-gray-600">Manage your API business and track performance at a glance.</p>
+                </div>
+
+                <!-- Key Metrics -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                    <div class="metric-card bg-white p-6 rounded-lg border border-gray-200">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm font-medium text-gray-600">Total Revenue (30 Days)</p>
+                                <p class="text-3xl font-bold text-gray-900">$2,847</p>
+                                <p class="text-sm text-green-600">+23% from last month</p>
+                            </div>
+                            <div class="text-green-600 text-3xl">
+                                <i class="fas fa-chart-line"></i>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="metric-card bg-white p-6 rounded-lg border border-gray-200">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm font-medium text-gray-600">API Calls (30 Days)</p>
+                                <p class="text-3xl font-bold text-gray-900">1.2M</p>
+                                <p class="text-sm text-blue-600">+15% from last month</p>
+                            </div>
+                            <div class="text-blue-600 text-3xl">
+                                <i class="fas fa-exchange-alt"></i>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="metric-card bg-white p-6 rounded-lg border border-gray-200">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm font-medium text-gray-600">Active Deployments</p>
+                                <p class="text-3xl font-bold text-gray-900">5</p>
+                                <p class="text-sm text-gray-500">2 Hosted, 3 BYOA</p>
+                            </div>
+                            <div class="text-indigo-600 text-3xl">
+                                <i class="fas fa-server"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="bg-white rounded-lg border border-gray-200 p-6 mb-8">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <button class="flex flex-col items-center p-6 bg-indigo-50 hover:bg-indigo-100 rounded-lg border border-indigo-200 transition-colors">
+                            <i class="fas fa-plus-circle text-indigo-600 text-2xl mb-2"></i>
+                            <span class="font-medium text-gray-900">Deploy New API</span>
+                            <span class="text-sm text-gray-600">From template or scratch</span>
+                        </button>
+                        
+                        <button class="flex flex-col items-center p-6 bg-green-50 hover:bg-green-100 rounded-lg border border-green-200 transition-colors">
+                            <i class="fas fa-store text-green-600 text-2xl mb-2"></i>
+                            <span class="font-medium text-gray-900">View Marketplace</span>
+                            <span class="text-sm text-gray-600">Browse public APIs</span>
+                        </button>
+                        
+                        <button class="flex flex-col items-center p-6 bg-yellow-50 hover:bg-yellow-100 rounded-lg border border-yellow-200 transition-colors">
+                            <i class="fas fa-chart-bar text-yellow-600 text-2xl mb-2"></i>
+                            <span class="font-medium text-gray-900">View Analytics</span>
+                            <span class="text-sm text-gray-600">Detailed insights</span>
+                        </button>
+                        
+                        <button class="flex flex-col items-center p-6 bg-purple-50 hover:bg-purple-100 rounded-lg border border-purple-200 transition-colors">
+                            <i class="fas fa-dollar-sign text-purple-600 text-2xl mb-2"></i>
+                            <span class="font-medium text-gray-900">Manage Payouts</span>
+                            <span class="text-sm text-gray-600">Banking & earnings</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Recent Deployments -->
+                <div class="bg-white rounded-lg border border-gray-200 p-6 mb-8">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg font-semibold text-gray-900">Recent Deployments</h3>
+                        <a href="#apis" class="text-indigo-600 hover:text-indigo-700 text-sm font-medium">View All</a>
+                    </div>
+                    
+                    <div class="space-y-4">
+                        <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                            <div class="flex items-center">
+                                <div class="w-3 h-3 api-status-running rounded-full mr-4"></div>
+                                <div>
+                                    <div class="font-medium text-gray-900">sentiment-analysis-pro</div>
+                                    <div class="text-sm text-gray-600">Hosted • api.apidirect.dev/sentiment-pro-abc123</div>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-sm font-medium text-gray-900">Running</div>
+                                <div class="text-xs text-gray-500">2 hours ago</div>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                            <div class="flex items-center">
+                                <div class="w-3 h-3 api-status-running rounded-full mr-4"></div>
+                                <div>
+                                    <div class="font-medium text-gray-900">gpt-wrapper-enterprise</div>
+                                    <div class="text-sm text-gray-600">BYOA • gpt-wrapper.mycompany.com</div>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-sm font-medium text-gray-900">Running</div>
+                                <div class="text-xs text-gray-500">1 day ago</div>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                            <div class="flex items-center">
+                                <div class="w-3 h-3 api-status-building rounded-full mr-4"></div>
+                                <div>
+                                    <div class="font-medium text-gray-900">image-classification-v2</div>
+                                    <div class="text-sm text-gray-600">Hosted • Building...</div>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-sm font-medium text-yellow-600">Building</div>
+                                <div class="text-xs text-gray-500">5 minutes ago</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Getting Started Guide -->
+                <div class="bg-gradient-to-r from-indigo-50 to-blue-50 rounded-lg border border-indigo-200 p-6">
+                    <div class="flex items-start">
+                        <div class="flex-shrink-0">
+                            <i class="fas fa-rocket text-indigo-600 text-2xl"></i>
+                        </div>
+                        <div class="ml-4 flex-1">
+                            <h3 class="text-lg font-semibold text-gray-900 mb-2">Getting Started</h3>
+                            <p class="text-gray-600 mb-4">Complete these steps to maximize your API business potential:</p>
+                            
+                            <div class="space-y-3">
+                                <div class="flex items-center">
+                                    <i class="fas fa-check-circle text-green-600 mr-3"></i>
+                                    <span class="text-gray-700">Deploy your first API</span>
+                                </div>
+                                <div class="flex items-center">
+                                    <i class="fas fa-check-circle text-green-600 mr-3"></i>
+                                    <span class="text-gray-700">Set up payouts with Stripe</span>
+                                </div>
+                                <div class="flex items-center">
+                                    <i class="fas fa-circle text-gray-300 mr-3"></i>
+                                    <span class="text-gray-500">Publish to Marketplace</span>
+                                </div>
+                                <div class="flex items-center">
+                                    <i class="fas fa-circle text-gray-300 mr-3"></i>
+                                    <span class="text-gray-500">Set up custom domain</span>
+                                </div>
+                            </div>
+                            
+                            <button class="mt-4 bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors">
+                                Continue Setup
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- APIs & Deployments Section -->
+            <section id="apis" class="mb-16 hidden">
+                <div class="mb-8">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <h2 class="text-2xl font-bold text-gray-900 mb-2">APIs & Deployments</h2>
+                            <p class="text-gray-600">Manage all your deployed APIs and monitor their status.</p>
+                        </div>
+                        <button class="bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 transition-colors">
+                            <i class="fas fa-plus mr-2"></i>Deploy New API
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Filters -->
+                <div class="bg-white rounded-lg border border-gray-200 p-4 mb-6">
+                    <div class="flex flex-wrap gap-4 items-center">
+                        <div class="flex items-center space-x-2">
+                            <label class="text-sm font-medium text-gray-700">Filter:</label>
+                            <select class="border border-gray-300 rounded-md px-3 py-1 text-sm">
+                                <option>All APIs</option>
+                                <option>Hosted</option>
+                                <option>BYOA</option>
+                                <option>Running</option>
+                                <option>Error</option>
+                            </select>
+                        </div>
+                        
+                        <div class="flex items-center space-x-2">
+                            <label class="text-sm font-medium text-gray-700">Sort:</label>
+                            <select class="border border-gray-300 rounded-md px-3 py-1 text-sm">
+                                <option>Recent</option>
+                                <option>Name</option>
+                                <option>Revenue</option>
+                                <option>Calls</option>
+                            </select>
+                        </div>
+                        
+                        <div class="flex items-center space-x-2 ml-auto">
+                            <input type="search" placeholder="Search APIs..." class="border border-gray-300 rounded-md px-3 py-1 text-sm w-64">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- APIs Table -->
+                <div class="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">API Name</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Endpoint</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Revenue (30d)</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Calls (30d)</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Created</th>
+                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            <tr class="hover:bg-gray-50">
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="font-medium text-gray-900">sentiment-analysis-pro</div>
+                                    <div class="text-sm text-gray-500">Advanced sentiment with emotions</div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-sm text-gray-900 font-mono">api.apidirect.dev/sentiment-pro-abc123</div>
+                                    <button class="text-xs text-indigo-600 hover:text-indigo-700">Copy URL</button>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                        Hosted
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="flex items-center">
+                                        <div class="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
+                                        <span class="text-sm text-gray-900">Running</span>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">$1,247</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">847K</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Dec 15, 2024</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                    <button class="text-indigo-600 hover:text-indigo-900 mr-3">View</button>
+                                    <button class="text-gray-600 hover:text-gray-900">⋯</button>
+                                </td>
+                            </tr>
+                            
+                            <tr class="hover:bg-gray-50">
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="font-medium text-gray-900">gpt-wrapper-enterprise</div>
+                                    <div class="text-sm text-gray-500">GPT-4 with custom prompts</div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-sm text-gray-900 font-mono">gpt-wrapper.mycompany.com</div>
+                                    <button class="text-xs text-indigo-600 hover:text-indigo-700">Copy URL</button>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                        BYOA
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="flex items-center">
+                                        <div class="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
+                                        <span class="text-sm text-gray-900">Running</span>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">$897</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">234K</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Dec 10, 2024</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                    <button class="text-indigo-600 hover:text-indigo-900 mr-3">View</button>
+                                    <button class="text-gray-600 hover:text-gray-900">⋯</button>
+                                </td>
+                            </tr>
+                            
+                            <tr class="hover:bg-gray-50">
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="font-medium text-gray-900">image-classification-v2</div>
+                                    <div class="text-sm text-gray-500">Multi-class image recognition</div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-sm text-gray-400 font-mono">Building...</div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                        Hosted
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="flex items-center">
+                                        <div class="w-2 h-2 bg-yellow-500 rounded-full mr-2"></div>
+                                        <span class="text-sm text-gray-900">Building</span>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">$0</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">0</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Jan 8, 2025</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                    <button class="text-gray-400">View</button>
+                                    <button class="text-gray-600 hover:text-gray-900 ml-3">⋯</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Analytics Section -->
+            <section id="analytics" class="mb-16 hidden">
+                <div class="mb-8">
+                    <h2 class="text-2xl font-bold text-gray-900 mb-2">Analytics</h2>
+                    <p class="text-gray-600">Detailed insights into your API usage and performance.</p>
+                </div>
+
+                <!-- Time Range Selector -->
+                <div class="bg-white rounded-lg border border-gray-200 p-4 mb-6">
+                    <div class="flex items-center space-x-4">
+                        <span class="text-sm font-medium text-gray-700">Time Range:</span>
+                        <div class="flex space-x-2">
+                            <button class="px-3 py-1 text-sm bg-indigo-600 text-white rounded-md">7 Days</button>
+                            <button class="px-3 py-1 text-sm text-gray-600 hover:bg-gray-100 rounded-md">30 Days</button>
+                            <button class="px-3 py-1 text-sm text-gray-600 hover:bg-gray-100 rounded-md">90 Days</button>
+                            <button class="px-3 py-1 text-sm text-gray-600 hover:bg-gray-100 rounded-md">1 Year</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Traffic Dashboard -->
+                <div class="bg-white rounded-lg border border-gray-200 p-6 mb-6">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">API Calls Over Time</h3>
+                    <div class="h-64 flex items-center justify-center bg-gray-50 rounded-lg">
+                        <canvas id="trafficChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Performance Metrics -->
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+                    <div class="bg-white p-6 rounded-lg border border-gray-200">
+                        <div class="text-center">
+                            <div class="text-2xl font-bold text-gray-900">342ms</div>
+                            <div class="text-sm text-gray-600">Avg Latency</div>
+                            <div class="text-xs text-green-600 mt-1">-15ms from last week</div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white p-6 rounded-lg border border-gray-200">
+                        <div class="text-center">
+                            <div class="text-2xl font-bold text-gray-900">0.8%</div>
+                            <div class="text-sm text-gray-600">Error Rate</div>
+                            <div class="text-xs text-green-600 mt-1">-0.2% from last week</div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white p-6 rounded-lg border border-gray-200">
+                        <div class="text-center">
+                            <div class="text-2xl font-bold text-gray-900">1.2s</div>
+                            <div class="text-sm text-gray-600">P95 Latency</div>
+                            <div class="text-xs text-yellow-600 mt-1">+0.1s from last week</div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white p-6 rounded-lg border border-gray-200">
+                        <div class="text-center">
+                            <div class="text-2xl font-bold text-gray-900">99.9%</div>
+                            <div class="text-sm text-gray-600">Uptime</div>
+                            <div class="text-xs text-green-600 mt-1">No change</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Endpoint Breakdown -->
+                <div class="bg-white rounded-lg border border-gray-200 p-6">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">Top Endpoints (Last 7 Days)</h3>
+                    
+                    <div class="space-y-4">
+                        <div class="flex justify-between items-center p-4 bg-gray-50 rounded-lg">
+                            <div>
+                                <div class="font-medium text-gray-900">POST /analyze</div>
+                                <div class="text-sm text-gray-600">sentiment-analysis-pro</div>
+                            </div>
+                            <div class="text-right">
+                                <div class="font-bold text-gray-900">847K calls</div>
+                                <div class="text-sm text-green-600">+12% from last week</div>
+                            </div>
+                        </div>
+                        
+                        <div class="flex justify-between items-center p-4 bg-gray-50 rounded-lg">
+                            <div>
+                                <div class="font-medium text-gray-900">POST /chat</div>
+                                <div class="text-sm text-gray-600">gpt-wrapper-enterprise</div>
+                            </div>
+                            <div class="text-right">
+                                <div class="font-bold text-gray-900">234K calls</div>
+                                <div class="text-sm text-green-600">+8% from last week</div>
+                            </div>
+                        </div>
+                        
+                        <div class="flex justify-between items-center p-4 bg-gray-50 rounded-lg">
+                            <div>
+                                <div class="font-medium text-gray-900">GET /health</div>
+                                <div class="text-sm text-gray-600">All APIs</div>
+                            </div>
+                            <div class="text-right">
+                                <div class="font-bold text-gray-900">89K calls</div>
+                                <div class="text-sm text-gray-600">+5% from last week</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Marketplace Section -->
+            <section id="marketplace" class="mb-16 hidden">
+                <div class="mb-8">
+                    <h2 class="text-2xl font-bold text-gray-900 mb-2">Marketplace</h2>
+                    <p class="text-gray-600">Manage your public marketplace presence and customer-facing listings.</p>
+                </div>
+
+                <!-- Published APIs -->
+                <div class="bg-white rounded-lg border border-gray-200 p-6 mb-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg font-semibold text-gray-900">Your Published APIs</h3>
+                        <button class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors">
+                            <i class="fas fa-plus mr-2"></i>Publish API
+                        </button>
+                    </div>
+                    
+                    <div class="space-y-4">
+                        <div class="border border-gray-200 rounded-lg p-6">
+                            <div class="flex justify-between items-start mb-4">
+                                <div class="flex items-start">
+                                    <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mr-4">
+                                        <i class="fas fa-heart text-green-600 text-xl"></i>
+                                    </div>
+                                    <div>
+                                        <h4 class="font-semibold text-gray-900">Sentiment Analysis Pro</h4>
+                                        <p class="text-gray-600 text-sm mb-2">Advanced sentiment analysis with emotion detection and confidence scoring</p>
+                                        <div class="flex items-center space-x-4 text-sm text-gray-500">
+                                            <span><i class="fas fa-star text-yellow-500 mr-1"></i>4.8 (127 reviews)</span>
+                                            <span><i class="fas fa-users mr-1"></i>2,847 users</span>
+                                            <span><i class="fas fa-tag mr-1"></i>AI/ML</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="text-right">
+                                    <div class="text-lg font-bold text-gray-900">$0.001/call</div>
+                                    <div class="text-sm text-green-600">$1,247 revenue (30d)</div>
+                                </div>
+                            </div>
+                            
+                            <div class="flex justify-between items-center">
+                                <div class="flex space-x-2">
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                        Published
+                                    </span>
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                        Featured
+                                    </span>
+                                </div>
+                                <div class="flex space-x-2">
+                                    <button class="text-indigo-600 hover:text-indigo-700 text-sm font-medium">Edit Listing</button>
+                                    <button class="text-gray-600 hover:text-gray-700 text-sm font-medium">View Reviews</button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="border border-gray-200 rounded-lg p-6">
+                            <div class="flex justify-between items-start mb-4">
+                                <div class="flex items-start">
+                                    <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mr-4">
+                                        <i class="fas fa-robot text-blue-600 text-xl"></i>
+                                    </div>
+                                    <div>
+                                        <h4 class="font-semibold text-gray-900">GPT Wrapper Enterprise</h4>
+                                        <p class="text-gray-600 text-sm mb-2">Custom GPT-4 wrapper with prompt engineering and fine-tuning</p>
+                                        <div class="flex items-center space-x-4 text-sm text-gray-500">
+                                            <span><i class="fas fa-star text-yellow-500 mr-1"></i>4.9 (89 reviews)</span>
+                                            <span><i class="fas fa-users mr-1"></i>1,247 users</span>
+                                            <span><i class="fas fa-tag mr-1"></i>Enterprise</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="text-right">
+                                    <div class="text-lg font-bold text-gray-900">$0.05/call</div>
+                                    <div class="text-sm text-green-600">$897 revenue (30d)</div>
+                                </div>
+                            </div>
+                            
+                            <div class="flex justify-between items-center">
+                                <div class="flex space-x-2">
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                        Published
+                                    </span>
+                                </div>
+                                <div class="flex space-x-2">
+                                    <button class="text-indigo-600 hover:text-indigo-700 text-sm font-medium">Edit Listing</button>
+                                    <button class="text-gray-600 hover:text-gray-700 text-sm font-medium">View Reviews</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Marketplace Performance -->
+                <div class="bg-white rounded-lg border border-gray-200 p-6">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">Marketplace Performance</h3>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                        <div class="text-center">
+                            <div class="text-2xl font-bold text-gray-900">4,094</div>
+                            <div class="text-sm text-gray-600">Profile Views</div>
+                            <div class="text-xs text-green-600 mt-1">+18% this month</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-2xl font-bold text-gray-900">2,847</div>
+                            <div class="text-sm text-gray-600">Total Users</div>
+                            <div class="text-xs text-green-600 mt-1">+23% this month</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-2xl font-bold text-gray-900">4.85</div>
+                            <div class="text-sm text-gray-600">Avg Rating</div>
+                            <div class="text-xs text-green-600 mt-1">+0.1 this month</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-2xl font-bold text-gray-900">216</div>
+                            <div class="text-sm text-gray-600">Total Reviews</div>
+                            <div class="text-xs text-green-600 mt-1">+34 this month</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Earnings & Billing Section -->
+            <section id="earnings" class="mb-16 hidden">
+                <div class="mb-8">
+                    <h2 class="text-2xl font-bold text-gray-900 mb-2">Earnings & Billing</h2>
+                    <p class="text-gray-600">Manage your revenue, payouts, and API-Direct subscription.</p>
+                </div>
+
+                <!-- Earnings Overview -->
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                    <div class="bg-white p-6 rounded-lg border border-gray-200">
+                        <div class="flex items-center">
+                            <div class="text-green-600 text-2xl mr-4">
+                                <i class="fas fa-dollar-sign"></i>
+                            </div>
+                            <div>
+                                <div class="text-2xl font-bold text-gray-900">$4,847</div>
+                                <div class="text-gray-600 text-sm">Gross Revenue</div>
+                                <div class="text-xs text-green-600 mt-1">+23% this month</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white p-6 rounded-lg border border-gray-200">
+                        <div class="flex items-center">
+                            <div class="text-red-600 text-2xl mr-4">
+                                <i class="fas fa-percentage"></i>
+                            </div>
+                            <div>
+                                <div class="text-2xl font-bold text-gray-900">$970</div>
+                                <div class="text-gray-600 text-sm">Platform Commission</div>
+                                <div class="text-xs text-gray-500 mt-1">20% of BYOA revenue</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white p-6 rounded-lg border border-gray-200">
+                        <div class="flex items-center">
+                            <div class="text-blue-600 text-2xl mr-4">
+                                <i class="fas fa-hand-holding-usd"></i>
+                            </div>
+                            <div>
+                                <div class="text-2xl font-bold text-gray-900">$3,877</div>
+                                <div class="text-gray-600 text-sm">Net Payouts</div>
+                                <div class="text-xs text-green-600 mt-1">Available for withdrawal</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white p-6 rounded-lg border border-gray-200">
+                        <div class="flex items-center">
+                            <div class="text-yellow-600 text-2xl mr-4">
+                                <i class="fas fa-clock"></i>
+                            </div>
+                            <div>
+                                <div class="text-2xl font-bold text-gray-900">$247</div>
+                                <div class="text-gray-600 text-sm">Pending</div>
+                                <div class="text-xs text-blue-600 mt-1">Next payout: Jan 10</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Payout Setup -->
+                <div class="bg-white rounded-lg border border-gray-200 p-6 mb-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg font-semibold text-gray-900">Payout Setup</h3>
+                        <div class="flex items-center space-x-2">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                <i class="fas fa-check mr-1"></i>Connected
+                            </span>
+                            <button class="text-indigo-600 hover:text-indigo-700 text-sm font-medium">
+                                Update
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="p-4 bg-gray-50 rounded-lg">
+                            <h4 class="font-medium text-gray-900 mb-2">Stripe Account</h4>
+                            <div class="text-sm text-gray-600">
+                                <div>Connected as: john@aicompany.com</div>
+                                <div>Account ID: acct_1A2B3C4D5E</div>
+                                <div class="text-green-600 mt-1">✓ Verified & Active</div>
+                            </div>
+                        </div>
+                        
+                        <div class="p-4 bg-gray-50 rounded-lg">
+                            <h4 class="font-medium text-gray-900 mb-2">Payout Schedule</h4>
+                            <div class="text-sm text-gray-600">
+                                <div>Weekly on Fridays</div>
+                                <div>Minimum: $50</div>
+                                <div class="text-blue-600 mt-1">Next: Jan 10, 2025</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Transaction History -->
+                <div class="bg-white rounded-lg border border-gray-200 p-6 mb-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg font-semibold text-gray-900">Transaction History</h3>
+                        <div class="flex space-x-2">
+                            <select class="border border-gray-300 rounded-md px-3 py-1 text-sm">
+                                <option>All Transactions</option>
+                                <option>Payouts</option>
+                                <option>Charges</option>
+                            </select>
+                            <button class="text-indigo-600 hover:text-indigo-700 text-sm font-medium">
+                                Export CSV
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">API</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200">
+                                <tr>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">Jan 3, 2025</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">Payout</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">-</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">$158.00</td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                            Completed
+                                        </span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">Jan 2, 2025</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">Charge</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">sentiment-analysis-pro</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">$12.47</td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                            Settled
+                                        </span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">Jan 1, 2025</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">Charge</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">gpt-wrapper-enterprise</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">$89.50</td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                            Settled
+                                        </span>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Your Subscription -->
+                <div class="bg-white rounded-lg border border-gray-200 p-6">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">Your API-Direct Subscription</h3>
+                    
+                    <div class="flex justify-between items-center p-4 bg-indigo-50 rounded-lg border border-indigo-200">
+                        <div>
+                            <div class="font-medium text-gray-900">Pro Plan</div>
+                            <div class="text-sm text-gray-600">$99/month • Unlimited APIs • Priority Support</div>
+                            <div class="text-xs text-gray-500 mt-1">Next billing: Jan 15, 2025</div>
+                        </div>
+                        <div class="flex space-x-2">
+                            <button class="text-indigo-600 hover:text-indigo-700 text-sm font-medium">
+                                Change Plan
+                            </button>
+                            <button class="text-gray-600 hover:text-gray-700 text-sm font-medium">
+                                View Invoice
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        // Navigation
+        document.querySelectorAll('.nav-item').forEach(item => {
+            item.addEventListener('click', function(e) {
+                e.preventDefault();
+                
+                // Remove active class from all nav items
+                document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
+                
+                // Add active class to clicked item
+                this.classList.add('active');
+                
+                // Hide all sections
+                document.querySelectorAll('section').forEach(section => section.classList.add('hidden'));
+                
+                // Show target section
+                const targetId = this.getAttribute('href').substring(1);
+                const targetSection = document.getElementById(targetId);
+                if (targetSection) {
+                    targetSection.classList.remove('hidden');
+                }
+            });
+        });
+
+        // Chart initialization (placeholder)
+        document.addEventListener('DOMContentLoaded', function() {
+            const ctx = document.getElementById('trafficChart');
+            if (ctx) {
+                new Chart(ctx.getContext('2d'), {
+                    type: 'line',
+                    data: {
+                        labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                        datasets: [{
+                            label: 'API Calls',
+                            data: [12000, 15000, 13000, 17000, 16000, 14000, 18000],
+                            borderColor: '#4f46e5',
+                            backgroundColor: 'rgba(79, 70, 229, 0.1)',
+                            tension: 0.4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: {
+                                beginAtZero: true
+                            }
+                        }
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>

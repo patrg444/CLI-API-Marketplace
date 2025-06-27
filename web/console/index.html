@@ -1,0 +1,804 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API-Direct Console - AI Agent Ready Dashboard</title>
+    <meta name="description" content="Manage your APIs, view analytics, and access documentation in the API-Direct console.">
+    
+    <!-- Styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet">
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap');
+        
+        body { font-family: 'Inter', sans-serif; }
+        code, pre { font-family: 'JetBrains Mono', monospace; }
+        
+        .sidebar {
+            width: 280px;
+            min-height: calc(100vh - 4rem);
+        }
+        
+        .main-content {
+            max-width: calc(100% - 280px);
+        }
+        
+        .nav-item.active {
+            background: #f3f4f6;
+            color: #4f46e5;
+            border-right: 3px solid #4f46e5;
+        }
+        
+        .stat-card {
+            transition: all 0.3s ease;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Header -->
+    <header class="bg-white border-b border-gray-200 sticky top-0 z-50">
+        <div class="max-w-full mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center">
+                    <a href="https://apidirect.dev" class="text-2xl font-bold text-gray-900">API-Direct</a>
+                    <span class="ml-4 text-gray-500">/</span>
+                    <span class="ml-4 text-gray-700">Console</span>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <div class="flex items-center space-x-2">
+                        <div class="w-8 h-8 bg-indigo-600 rounded-full flex items-center justify-center user-avatar">
+                            <span class="text-white text-sm font-medium">U</span>
+                        </div>
+                        <span class="text-gray-700 user-name">User Account</span>
+                    </div>
+                    <button class="text-gray-500 hover:text-gray-700">
+                        <i class="fas fa-cog"></i>
+                    </button>
+                    <button class="text-gray-500 hover:text-gray-700 ml-2" data-action="logout">
+                        <i class="fas fa-sign-out-alt"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="flex">
+        <!-- Sidebar -->
+        <nav class="sidebar bg-white border-r border-gray-200 overflow-y-auto">
+            <div class="p-6">
+                <!-- Dashboard -->
+                <div class="mb-8">
+                    <h3 class="text-sm font-semibold text-gray-900 uppercase tracking-wide mb-3">Dashboard</h3>
+                    <ul class="space-y-1">
+                        <li><a href="#overview" class="nav-item active block px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md">Overview</a></li>
+                        <li><a href="#apis" class="nav-item block px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md">My APIs</a></li>
+                        <li><a href="#analytics" class="nav-item block px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md">Analytics</a></li>
+                        <li><a href="#billing" class="nav-item block px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md">Billing</a></li>
+                        <li><a href="#payouts" class="nav-item block px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md">Payouts</a></li>
+                    </ul>
+                </div>
+
+                <!-- Developer Tools -->
+                <div class="mb-8">
+                    <h3 class="text-sm font-semibold text-gray-900 uppercase tracking-wide mb-3">Developer Tools</h3>
+                    <ul class="space-y-1">
+                        <li><a href="#cli-setup" class="nav-item block px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md">CLI Setup</a></li>
+                        <li><a href="#api-keys" class="nav-item block px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md">API Keys</a></li>
+                        <li><a href="#templates" class="nav-item block px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md">Templates</a></li>
+                        <li><a href="#logs" class="nav-item block px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md">Logs</a></li>
+                    </ul>
+                </div>
+
+                <!-- Documentation -->
+                <div class="mb-8">
+                    <h3 class="text-sm font-semibold text-gray-900 uppercase tracking-wide mb-3">Documentation</h3>
+                    <ul class="space-y-1">
+                        <li><a href="#quick-start" class="nav-item block px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md">Quick Start</a></li>
+                        <li><a href="#ai-agents" class="nav-item block px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md">AI Agent Guide</a></li>
+                        <li><a href="#cli-reference" class="nav-item block px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md">CLI Reference</a></li>
+                        <li><a href="#api-reference" class="nav-item block px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md">API Reference</a></li>
+                    </ul>
+                </div>
+
+                <!-- Account -->
+                <div class="mb-8">
+                    <h3 class="text-sm font-semibold text-gray-900 uppercase tracking-wide mb-3">Account</h3>
+                    <ul class="space-y-1">
+                        <li><a href="#settings" class="nav-item block px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md">Settings</a></li>
+                        <li><a href="#security" class="nav-item block px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md">Security</a></li>
+                        <li><a href="#notifications" class="nav-item block px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md">Notifications</a></li>
+                    </ul>
+                </div>
+
+                <!-- Support -->
+                <div class="mb-8">
+                    <h3 class="text-sm font-semibold text-gray-900 uppercase tracking-wide mb-3">Support</h3>
+                    <ul class="space-y-1">
+                        <li><a href="#help" class="nav-item block px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md">Help Center</a></li>
+                        <li><a href="#community" class="nav-item block px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md">Community</a></li>
+                        <li><a href="#contact" class="nav-item block px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md">Contact</a></li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="main-content flex-1 p-8">
+            <!-- Overview Section -->
+            <section id="overview" class="mb-16">
+                <div class="mb-8">
+                    <h1 class="text-3xl font-bold text-gray-900 mb-2">Welcome to API-Direct Console</h1>
+                    <p class="text-gray-600">Manage your APIs, monitor performance, and access documentation all in one place.</p>
+                </div>
+
+                <!-- Quick Stats -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                    <div class="stat-card bg-white p-6 rounded-lg border border-gray-200">
+                        <div class="flex items-center">
+                            <div class="text-indigo-600 text-2xl mr-4">
+                                <i class="fas fa-api"></i>
+                            </div>
+                            <div>
+                                <div class="text-2xl font-bold text-gray-900" data-stat="total-apis">
+                                    <span class="inline-block w-16 h-6 bg-gray-200 animate-pulse rounded"></span>
+                                </div>
+                                <div class="text-gray-600 text-sm">Active APIs</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card bg-white p-6 rounded-lg border border-gray-200">
+                        <div class="flex items-center">
+                            <div class="text-green-600 text-2xl mr-4">
+                                <i class="fas fa-chart-line"></i>
+                            </div>
+                            <div>
+                                <div class="text-2xl font-bold text-gray-900" data-stat="api-calls">
+                                    <span class="inline-block w-20 h-6 bg-gray-200 animate-pulse rounded"></span>
+                                </div>
+                                <div class="text-gray-600 text-sm">Requests Today</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card bg-white p-6 rounded-lg border border-gray-200">
+                        <div class="flex items-center">
+                            <div class="text-yellow-600 text-2xl mr-4">
+                                <i class="fas fa-dollar-sign"></i>
+                            </div>
+                            <div>
+                                <div class="text-2xl font-bold text-gray-900" data-stat="monthly-revenue">
+                                    <span class="inline-block w-16 h-6 bg-gray-200 animate-pulse rounded"></span>
+                                </div>
+                                <div class="text-gray-600 text-sm">Revenue Today</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card bg-white p-6 rounded-lg border border-gray-200">
+                        <div class="flex items-center">
+                            <div class="text-blue-600 text-2xl mr-4">
+                                <i class="fas fa-clock"></i>
+                            </div>
+                            <div>
+                                <div class="text-2xl font-bold text-gray-900" data-stat="active-subscriptions">
+                                    <span class="inline-block w-12 h-6 bg-gray-200 animate-pulse rounded"></span>
+                                </div>
+                                <div class="text-gray-600 text-sm">Active Subscriptions</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="bg-white rounded-lg border border-gray-200 p-6 mb-8">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <button class="flex items-center p-4 bg-indigo-50 hover:bg-indigo-100 rounded-lg border border-indigo-200 transition-colors">
+                            <i class="fas fa-plus text-indigo-600 mr-3"></i>
+                            <div class="text-left">
+                                <div class="font-medium text-gray-900">Deploy New API</div>
+                                <div class="text-sm text-gray-600">Create from template</div>
+                            </div>
+                        </button>
+                        
+                        <button class="flex items-center p-4 bg-green-50 hover:bg-green-100 rounded-lg border border-green-200 transition-colors">
+                            <i class="fas fa-terminal text-green-600 mr-3"></i>
+                            <div class="text-left">
+                                <div class="font-medium text-gray-900">CLI Setup</div>
+                                <div class="text-sm text-gray-600">Install & configure CLI</div>
+                            </div>
+                        </button>
+                        
+                        <button class="flex items-center p-4 bg-yellow-50 hover:bg-yellow-100 rounded-lg border border-yellow-200 transition-colors">
+                            <i class="fas fa-book text-yellow-600 mr-3"></i>
+                            <div class="text-left">
+                                <div class="font-medium text-gray-900">View Docs</div>
+                                <div class="text-sm text-gray-600">Get started guide</div>
+                            </div>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Recent Activity -->
+                <div class="bg-white rounded-lg border border-gray-200 p-6">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">Recent Activity</h3>
+                    <div class="space-y-4" data-section="recent-apis">
+                        <div class="flex items-center p-3 bg-gray-50 rounded-lg">
+                            <div class="w-2 h-2 bg-green-500 rounded-full mr-3"></div>
+                            <div class="flex-1">
+                                <div class="text-sm font-medium text-gray-900">sentiment-api deployed successfully</div>
+                                <div class="text-xs text-gray-600">2 hours ago</div>
+                            </div>
+                            <div class="text-xs text-gray-500">DEPLOYED</div>
+                        </div>
+                        
+                        <div class="flex items-center p-3 bg-gray-50 rounded-lg">
+                            <div class="w-2 h-2 bg-blue-500 rounded-full mr-3"></div>
+                            <div class="flex-1">
+                                <div class="text-sm font-medium text-gray-900">New API key generated</div>
+                                <div class="text-xs text-gray-600">5 hours ago</div>
+                            </div>
+                            <div class="text-xs text-gray-500">API_KEY</div>
+                        </div>
+                        
+                        <div class="flex items-center p-3 bg-gray-50 rounded-lg">
+                            <div class="w-2 h-2 bg-yellow-500 rounded-full mr-3"></div>
+                            <div class="flex-1">
+                                <div class="text-sm font-medium text-gray-900">Billing plan upgraded to Pro</div>
+                                <div class="text-xs text-gray-600">1 day ago</div>
+                            </div>
+                            <div class="text-xs text-gray-500">BILLING</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Popular APIs -->
+                <div class="bg-white rounded-lg border border-gray-200 p-6 mt-8">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">Popular APIs</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4" data-section="popular-apis">
+                        <!-- Popular APIs will be loaded dynamically -->
+                        <div class="p-4 bg-gray-50 rounded-lg animate-pulse">
+                            <div class="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+                            <div class="h-3 bg-gray-200 rounded w-1/2"></div>
+                        </div>
+                        <div class="p-4 bg-gray-50 rounded-lg animate-pulse">
+                            <div class="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+                            <div class="h-3 bg-gray-200 rounded w-1/2"></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- CLI Setup Section -->
+            <section id="cli-setup" class="mb-16 hidden">
+                <h2 class="text-2xl font-bold text-gray-900 mb-6">CLI Setup</h2>
+                
+                <div class="bg-blue-50 border-l-4 border-blue-400 p-6 mb-8">
+                    <div class="flex">
+                        <div class="flex-shrink-0">
+                            <i class="fas fa-info-circle text-blue-400 text-xl"></i>
+                        </div>
+                        <div class="ml-3">
+                            <h3 class="text-lg font-medium text-blue-900">AI Agent Ready CLI</h3>
+                            <p class="text-blue-700">
+                                The API-Direct CLI is specifically designed for AI agent automation with non-interactive flags, 
+                                structured output, and machine-readable responses.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-lg border border-gray-200 p-6 mb-6">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">1. Install the CLI</h3>
+                    <div class="bg-gray-900 text-gray-100 p-4 rounded-lg mb-4">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-sm font-medium text-gray-300">Terminal</span>
+                            <button class="text-gray-400 hover:text-white text-sm" onclick="copyToClipboard('install-cmd')">
+                                Copy
+                            </button>
+                        </div>
+                        <pre id="install-cmd" class="text-green-400"><code># macOS/Linux
+curl -fsSL https://cli.apidirect.dev/install.sh | sh
+
+# Windows
+iwr -useb https://cli.apidirect.dev/install.ps1 | iex
+
+# npm
+npm install -g @api-direct/cli</code></pre>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-lg border border-gray-200 p-6 mb-6">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">2. Authenticate</h3>
+                    <div class="bg-gray-900 text-gray-100 p-4 rounded-lg mb-4">
+                        <pre class="text-green-400"><code>apidirect login</code></pre>
+                    </div>
+                    <div class="bg-yellow-50 border border-yellow-200 p-4 rounded-lg">
+                        <p class="text-yellow-800 text-sm">
+                            <strong>Your API Token:</strong> <code class="bg-yellow-100 px-2 py-1 rounded">apid_live_12345abcdef</code>
+                            <br>Use this for automated deployments.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-lg border border-gray-200 p-6">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">3. Deploy Your First API</h3>
+                    <div class="bg-gray-900 text-gray-100 p-4 rounded-lg">
+                        <pre class="text-green-400"><code># Create from template
+apidirect init my-api --template sentiment-analyzer
+
+# Deploy to hosted infrastructure  
+cd my-api
+apidirect deploy --hosted --yes --output json</code></pre>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Billing Section -->
+            <section id="billing" class="mb-16 hidden">
+                <h2 class="text-2xl font-bold text-gray-900 mb-6">Billing & Subscription</h2>
+                
+                <!-- Current Plan -->
+                <div class="bg-white rounded-lg border border-gray-200 p-6 mb-6">
+                    <div class="flex justify-between items-start mb-4">
+                        <div>
+                            <h3 class="text-lg font-semibold text-gray-900">Current Plan: Pro</h3>
+                            <p class="text-gray-600">Unlimited APIs, 1M requests/month</p>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-2xl font-bold text-gray-900" data-billing="balance">
+                                <span class="inline-block w-16 h-8 bg-gray-200 animate-pulse rounded"></span>
+                            </div>
+                            <div class="text-sm text-gray-600">per month</div>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-center justify-between p-4 bg-green-50 rounded-lg border border-green-200">
+                        <div class="flex items-center">
+                            <i class="fas fa-check-circle text-green-600 mr-3"></i>
+                            <span class="text-green-800">Your subscription is active</span>
+                        </div>
+                        <div class="text-sm text-green-700">Next billing: Jan 15, 2025</div>
+                    </div>
+                </div>
+
+                <!-- Usage This Month -->
+                <div class="bg-white rounded-lg border border-gray-200 p-6 mb-6">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">Usage This Month</h3>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div class="text-center">
+                            <div class="text-3xl font-bold text-indigo-600">47,238</div>
+                            <div class="text-sm text-gray-600">API Requests</div>
+                            <div class="text-xs text-gray-500">4.7% of limit</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-3xl font-bold text-green-600">$47.24</div>
+                            <div class="text-sm text-gray-600">Revenue Generated</div>
+                            <div class="text-xs text-gray-500">From your APIs</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-3xl font-bold text-blue-600">99.9%</div>
+                            <div class="text-sm text-gray-600">Uptime</div>
+                            <div class="text-xs text-gray-500">All APIs healthy</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Payment Method -->
+                <div class="bg-white rounded-lg border border-gray-200 p-6 mb-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg font-semibold text-gray-900">Payment Method</h3>
+                        <button class="text-indigo-600 hover:text-indigo-700 text-sm font-medium">
+                            Update
+                        </button>
+                    </div>
+                    
+                    <div class="flex items-center p-4 bg-gray-50 rounded-lg">
+                        <i class="fab fa-cc-visa text-blue-600 text-2xl mr-4"></i>
+                        <div>
+                            <div class="font-medium text-gray-900">Visa ending in 4242</div>
+                            <div class="text-sm text-gray-600">Expires 12/27</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Billing History -->
+                <div class="bg-white rounded-lg border border-gray-200 p-6">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">Billing History</h3>
+                    
+                    <div class="space-y-3">
+                        <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                            <div>
+                                <div class="font-medium text-gray-900">December 2024</div>
+                                <div class="text-sm text-gray-600">Pro Plan</div>
+                            </div>
+                            <div class="text-right">
+                                <div class="font-medium text-gray-900">$99.00</div>
+                                <div class="text-sm text-green-600">Paid</div>
+                            </div>
+                        </div>
+                        
+                        <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                            <div>
+                                <div class="font-medium text-gray-900">November 2024</div>
+                                <div class="text-sm text-gray-600">Pro Plan</div>
+                            </div>
+                            <div class="text-right">
+                                <div class="font-medium text-gray-900">$99.00</div>
+                                <div class="text-sm text-green-600">Paid</div>
+                            </div>
+                        </div>
+                        
+                        <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                            <div>
+                                <div class="font-medium text-gray-900">October 2024</div>
+                                <div class="text-sm text-gray-600">Starter Plan</div>
+                            </div>
+                            <div class="text-right">
+                                <div class="font-medium text-gray-900">$29.00</div>
+                                <div class="text-sm text-green-600">Paid</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Payouts Section -->
+            <section id="payouts" class="mb-16 hidden">
+                <h2 class="text-2xl font-bold text-gray-900 mb-6">Payouts & Revenue</h2>
+                
+                <!-- Revenue Overview -->
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                    <div class="bg-white p-6 rounded-lg border border-gray-200">
+                        <div class="flex items-center">
+                            <div class="text-green-600 text-2xl mr-4">
+                                <i class="fas fa-dollar-sign"></i>
+                            </div>
+                            <div>
+                                <div class="text-2xl font-bold text-gray-900">$1,247</div>
+                                <div class="text-gray-600 text-sm">Total Revenue</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white p-6 rounded-lg border border-gray-200">
+                        <div class="flex items-center">
+                            <div class="text-blue-600 text-2xl mr-4">
+                                <i class="fas fa-calendar-month"></i>
+                            </div>
+                            <div>
+                                <div class="text-2xl font-bold text-gray-900">$247</div>
+                                <div class="text-gray-600 text-sm">This Month</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white p-6 rounded-lg border border-gray-200">
+                        <div class="flex items-center">
+                            <div class="text-yellow-600 text-2xl mr-4">
+                                <i class="fas fa-clock"></i>
+                            </div>
+                            <div>
+                                <div class="text-2xl font-bold text-gray-900">$89</div>
+                                <div class="text-gray-600 text-sm">Pending</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white p-6 rounded-lg border border-gray-200">
+                        <div class="flex items-center">
+                            <div class="text-indigo-600 text-2xl mr-4">
+                                <i class="fas fa-chart-line"></i>
+                            </div>
+                            <div>
+                                <div class="text-2xl font-bold text-gray-900">23%</div>
+                                <div class="text-gray-600 text-sm">Growth</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Payout Settings -->
+                <div class="bg-white rounded-lg border border-gray-200 p-6 mb-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg font-semibold text-gray-900">Payout Settings</h3>
+                        <button class="text-indigo-600 hover:text-indigo-700 text-sm font-medium">
+                            Update
+                        </button>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="p-4 bg-gray-50 rounded-lg">
+                            <h4 class="font-medium text-gray-900 mb-2">Bank Account</h4>
+                            <div class="text-sm text-gray-600">
+                                <div>Chase Bank</div>
+                                <div>Account ending in 7890</div>
+                                <div class="text-green-600 mt-1">✓ Verified</div>
+                            </div>
+                        </div>
+                        
+                        <div class="p-4 bg-gray-50 rounded-lg">
+                            <h4 class="font-medium text-gray-900 mb-2">Payout Schedule</h4>
+                            <div class="text-sm text-gray-600">
+                                <div>Weekly on Fridays</div>
+                                <div>Minimum: $50</div>
+                                <div class="text-blue-600 mt-1">Next: Jan 10, 2025</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Revenue by API -->
+                <div class="bg-white rounded-lg border border-gray-200 p-6 mb-6">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">Revenue by API</h3>
+                    
+                    <div class="space-y-4">
+                        <div class="flex justify-between items-center p-4 bg-gray-50 rounded-lg">
+                            <div class="flex items-center">
+                                <div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center mr-4">
+                                    <i class="fas fa-heart text-green-600"></i>
+                                </div>
+                                <div>
+                                    <div class="font-medium text-gray-900">sentiment-api</div>
+                                    <div class="text-sm text-gray-600">34,567 requests this month</div>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <div class="font-bold text-gray-900">$173.47</div>
+                                <div class="text-sm text-green-600">+12% from last month</div>
+                            </div>
+                        </div>
+                        
+                        <div class="flex justify-between items-center p-4 bg-gray-50 rounded-lg">
+                            <div class="flex items-center">
+                                <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center mr-4">
+                                    <i class="fas fa-robot text-blue-600"></i>
+                                </div>
+                                <div>
+                                    <div class="font-medium text-gray-900">gpt-wrapper</div>
+                                    <div class="text-sm text-gray-600">12,671 requests this month</div>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <div class="font-bold text-gray-900">$73.77</div>
+                                <div class="text-sm text-green-600">+8% from last month</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Payout History -->
+                <div class="bg-white rounded-lg border border-gray-200 p-6">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">Payout History</h3>
+                    
+                    <div class="space-y-3">
+                        <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                            <div>
+                                <div class="font-medium text-gray-900">January 3, 2025</div>
+                                <div class="text-sm text-gray-600">Weekly payout</div>
+                            </div>
+                            <div class="text-right">
+                                <div class="font-medium text-gray-900">$158.00</div>
+                                <div class="text-sm text-green-600">Completed</div>
+                            </div>
+                        </div>
+                        
+                        <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                            <div>
+                                <div class="font-medium text-gray-900">December 27, 2024</div>
+                                <div class="text-sm text-gray-600">Weekly payout</div>
+                            </div>
+                            <div class="text-right">
+                                <div class="font-medium text-gray-900">$142.50</div>
+                                <div class="text-sm text-green-600">Completed</div>
+                            </div>
+                        </div>
+                        
+                        <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                            <div>
+                                <div class="font-medium text-gray-900">December 20, 2024</div>
+                                <div class="text-sm text-gray-600">Weekly payout</div>
+                            </div>
+                            <div class="text-right">
+                                <div class="font-medium text-gray-900">$97.25</div>
+                                <div class="text-sm text-green-600">Completed</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Settings Section -->
+            <section id="settings" class="mb-16 hidden">
+                <h2 class="text-2xl font-bold text-gray-900 mb-6">Account Settings</h2>
+                
+                <!-- Profile Information -->
+                <div class="bg-white rounded-lg border border-gray-200 p-6 mb-6">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">Profile Information</h3>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
+                            <input type="text" value="John Developer" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Email Address</label>
+                            <input type="email" value="john@example.com" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Company</label>
+                            <input type="text" value="AI Startup Inc" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Phone</label>
+                            <input type="tel" value="+1 (555) 123-4567" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                        </div>
+                    </div>
+                    
+                    <div class="mt-6">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Bio</label>
+                        <textarea rows="3" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" placeholder="Tell us about yourself...">Building AI-powered APIs for the future economy.</textarea>
+                    </div>
+                    
+                    <div class="mt-6">
+                        <button class="bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700 transition-colors">
+                            Update Profile
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Plan & Billing -->
+                <div class="bg-white rounded-lg border border-gray-200 p-6 mb-6">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">Plan & Billing</h3>
+                    
+                    <div class="flex justify-between items-center p-4 bg-indigo-50 rounded-lg border border-indigo-200">
+                        <div>
+                            <div class="font-medium text-gray-900">Pro Plan</div>
+                            <div class="text-sm text-gray-600">$99/month • Unlimited APIs</div>
+                        </div>
+                        <div class="flex space-x-2">
+                            <button class="text-indigo-600 hover:text-indigo-700 text-sm font-medium">
+                                Change Plan
+                            </button>
+                            <button class="text-red-600 hover:text-red-700 text-sm font-medium">
+                                Cancel
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Deployment Preferences -->
+                <div class="bg-white rounded-lg border border-gray-200 p-6 mb-6">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">Deployment Preferences</h3>
+                    
+                    <div class="space-y-4">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <div class="font-medium text-gray-900">Default Deployment Type</div>
+                                <div class="text-sm text-gray-600">Choose hosted or BYOA for new APIs</div>
+                            </div>
+                            <select class="p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500">
+                                <option selected>Hosted</option>
+                                <option>BYOA (Bring Your Own AWS)</option>
+                            </select>
+                        </div>
+                        
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <div class="font-medium text-gray-900">Auto-scaling</div>
+                                <div class="text-sm text-gray-600">Automatically scale based on demand</div>
+                            </div>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" checked class="sr-only peer">
+                                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+                            </label>
+                        </div>
+                        
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <div class="font-medium text-gray-900">SSL Certificates</div>
+                                <div class="text-sm text-gray-600">Automatically provision SSL certificates</div>
+                            </div>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" checked class="sr-only peer">
+                                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Danger Zone -->
+                <div class="bg-white rounded-lg border border-red-200 p-6">
+                    <h3 class="text-lg font-semibold text-red-900 mb-4">Danger Zone</h3>
+                    
+                    <div class="space-y-4">
+                        <div class="flex justify-between items-center p-4 bg-red-50 rounded-lg">
+                            <div>
+                                <div class="font-medium text-red-900">Export Account Data</div>
+                                <div class="text-sm text-red-700">Download all your data including APIs, analytics, and billing</div>
+                            </div>
+                            <button class="border border-red-300 text-red-700 px-4 py-2 rounded-lg hover:bg-red-100 transition-colors">
+                                Export Data
+                            </button>
+                        </div>
+                        
+                        <div class="flex justify-between items-center p-4 bg-red-50 rounded-lg">
+                            <div>
+                                <div class="font-medium text-red-900">Delete Account</div>
+                                <div class="text-sm text-red-700">Permanently delete your account and all associated data</div>
+                            </div>
+                            <button class="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors">
+                                Delete Account
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-core.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
+    
+    <script>
+        // Navigation
+        document.querySelectorAll('.nav-item').forEach(item => {
+            item.addEventListener('click', function(e) {
+                e.preventDefault();
+                
+                // Remove active class from all nav items
+                document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
+                
+                // Add active class to clicked item
+                this.classList.add('active');
+                
+                // Hide all sections
+                document.querySelectorAll('section').forEach(section => section.classList.add('hidden'));
+                
+                // Show target section
+                const targetId = this.getAttribute('href').substring(1);
+                const targetSection = document.getElementById(targetId);
+                if (targetSection) {
+                    targetSection.classList.remove('hidden');
+                }
+            });
+        });
+
+        // Copy to clipboard function
+        function copyToClipboard(elementId) {
+            const element = document.getElementById(elementId);
+            const text = element.textContent;
+            navigator.clipboard.writeText(text).then(() => {
+                const button = event.target;
+                const originalText = button.textContent;
+                button.textContent = 'Copied!';
+                setTimeout(() => {
+                    button.textContent = originalText;
+                }, 2000);
+            });
+        }
+
+        // Initialize - show overview by default
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelector('[href="#overview"]').classList.add('active');
+        });
+    </script>
+    
+    <!-- Dashboard JavaScript -->
+    <script src="dashboard.js"></script>
+</body>
+</html>

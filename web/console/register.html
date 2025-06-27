@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Account - API-Direct</title>
+    <meta name="description" content="Create your API-Direct Creator Portal account">
+    
+    <!-- Styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        
+        .auth-gradient {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .auth-card {
+            backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.95);
+        }
+        
+        .input-focus:focus {
+            border-color: #4f46e5;
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #4f46e5, #7c3aed);
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 10px 25px rgba(79, 70, 229, 0.3);
+        }
+        
+        .floating-shapes {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            z-index: 0;
+        }
+        
+        .shape {
+            position: absolute;
+            opacity: 0.1;
+            animation: float 6s ease-in-out infinite;
+        }
+        
+        .shape:nth-child(1) {
+            top: 20%;
+            left: 10%;
+            width: 60px;
+            height: 60px;
+            animation-delay: 0s;
+        }
+        
+        .shape:nth-child(2) {
+            top: 60%;
+            right: 10%;
+            width: 80px;
+            height: 80px;
+            animation-delay: 2s;
+        }
+        
+        .shape:nth-child(3) {
+            bottom: 20%;
+            left: 20%;
+            width: 40px;
+            height: 40px;
+            animation-delay: 4s;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(180deg); }
+        }
+        
+        .notification {
+            transition: all 0.3s ease;
+            transform: translateX(100%);
+        }
+        
+        .notification.show {
+            transform: translateX(0);
+        }
+        
+        .password-strength {
+            height: 4px;
+            background: #e5e7eb;
+            border-radius: 2px;
+            overflow: hidden;
+            margin-top: 8px;
+        }
+        
+        .password-strength-bar {
+            height: 100%;
+            transition: all 0.3s ease;
+            border-radius: 2px;
+        }
+        
+        .strength-weak { background: #ef4444; width: 25%; }
+        .strength-fair { background: #f59e0b; width: 50%; }
+        .strength-good { background: #10b981; width: 75%; }
+        .strength-strong { background: #059669; width: 100%; }
+    </style>
+</head>
+<body class="auth-gradient min-h-screen flex items-center justify-center p-4">
+    <!-- Floating Background Shapes -->
+    <div class="floating-shapes">
+        <div class="shape bg-white rounded-full"></div>
+        <div class="shape bg-white rounded-lg"></div>
+        <div class="shape bg-white rounded-full"></div>
+    </div>
+    
+    <!-- Main Auth Card -->
+    <div class="auth-card rounded-2xl shadow-2xl p-8 w-full max-w-md relative z-10">
+        <!-- Header -->
+        <div class="text-center mb-8">
+            <div class="flex items-center justify-center mb-4">
+                <div class="w-12 h-12 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-xl flex items-center justify-center">
+                    <i class="fas fa-rocket text-white text-xl"></i>
+                </div>
+            </div>
+            <h1 class="text-2xl font-bold text-gray-900 mb-2">Join API-Direct</h1>
+            <p class="text-gray-600">Create your Creator Portal account</p>
+        </div>
+        
+        <!-- Registration Form -->
+        <form id="register-form" class="space-y-6">
+            <div>
+                <label for="name" class="block text-sm font-medium text-gray-700 mb-2">
+                    Full Name
+                </label>
+                <div class="relative">
+                    <input 
+                        type="text" 
+                        id="name" 
+                        name="name"
+                        class="input-focus w-full px-4 py-3 pl-12 border border-gray-300 rounded-lg focus:outline-none transition-all"
+                        placeholder="Enter your full name"
+                        required
+                    >
+                    <i class="fas fa-user absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                </div>
+            </div>
+            
+            <div>
+                <label for="email" class="block text-sm font-medium text-gray-700 mb-2">
+                    Email Address
+                </label>
+                <div class="relative">
+                    <input 
+                        type="email" 
+                        id="email" 
+                        name="email"
+                        class="input-focus w-full px-4 py-3 pl-12 border border-gray-300 rounded-lg focus:outline-none transition-all"
+                        placeholder="Enter your email"
+                        required
+                    >
+                    <i class="fas fa-envelope absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                </div>
+            </div>
+            
+            <div>
+                <label for="company" class="block text-sm font-medium text-gray-700 mb-2">
+                    Company <span class="text-gray-400">(Optional)</span>
+                </label>
+                <div class="relative">
+                    <input 
+                        type="text" 
+                        id="company" 
+                        name="company"
+                        class="input-focus w-full px-4 py-3 pl-12 border border-gray-300 rounded-lg focus:outline-none transition-all"
+                        placeholder="Your company name"
+                    >
+                    <i class="fas fa-building absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                </div>
+            </div>
+            
+            <div>
+                <label for="password" class="block text-sm font-medium text-gray-700 mb-2">
+                    Password
+                </label>
+                <div class="relative">
+                    <input 
+                        type="password" 
+                        id="password" 
+                        name="password"
+                        class="input-focus w-full px-4 py-3 pl-12 pr-12 border border-gray-300 rounded-lg focus:outline-none transition-all"
+                        placeholder="Create a password"
+                        required
+                    >
+                    <i class="fas fa-lock absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                    <button 
+                        type="button" 
+                        id="toggle-password"
+                        class="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    >
+                        <i class="fas fa-eye" id="password-icon"></i>
+                    </button>
+                </div>
+                <!-- Password Strength Indicator -->
+                <div class="password-strength">
+                    <div class="password-strength-bar" id="password-strength-bar"></div>
+                </div>
+                <p class="text-xs text-gray-500 mt-1" id="password-strength-text">
+                    Password must be at least 8 characters long
+                </p>
+            </div>
+            
+            <div>
+                <label for="confirm-password" class="block text-sm font-medium text-gray-700 mb-2">
+                    Confirm Password
+                </label>
+                <div class="relative">
+                    <input 
+                        type="password" 
+                        id="confirm-password" 
+                        name="confirm-password"
+                        class="input-focus w-full px-4 py-3 pl-12 border border-gray-300 rounded-lg focus:outline-none transition-all"
+                        placeholder="Confirm your password"
+                        required
+                    >
+                    <i class="fas fa-lock absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                </div>
+            </div>
+            
+            <div class="flex items-start">
+                <input 
+                    type="checkbox" 
+                    id="terms" 
+                    class="w-4 h-4 mt-1 text-indigo-600 bg-gray-100 border-gray-300 rounded focus:ring-indigo-500"
+                    required
+                >
+                <label for="terms" class="ml-2 text-sm text-gray-700">
+                    I agree to the 
+                    <a href="/terms" class="text-indigo-600 hover:text-indigo-500">Terms of Service</a>
+                    and 
+                    <a href="/privacy" class="text-indigo-600 hover:text-indigo-500">Privacy Policy</a>
+                </label>
+            </div>
+            
+            <div class="flex items-start">
+                <input 
+                    type="checkbox" 
+                    id="marketing" 
+                    class="w-4 h-4 mt-1 text-indigo-600 bg-gray-100 border-gray-300 rounded focus:ring-indigo-500"
+                >
+                <label for="marketing" class="ml-2 text-sm text-gray-700">
+                    Send me updates about new features and API marketplace opportunities
+                </label>
+            </div>
+            
+            <button 
+                type="submit" 
+                class="btn-primary w-full text-white font-medium py-3 px-4 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                id="register-btn"
+            >
+                <span id="register-text">Create Account</span>
+                <i class="fas fa-spinner fa-spin hidden" id="register-spinner"></i>
+            </button>
+        </form>
+        
+        <!-- Divider -->
+        <div class="my-6">
+            <div class="relative">
+                <div class="absolute inset-0 flex items-center">
+                    <div class="w-full border-t border-gray-300"></div>
+                </div>
+                <div class="relative flex justify-center text-sm">
+                    <span class="px-2 bg-white text-gray-500">Or continue with</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Social Registration -->
+        <div class="grid grid-cols-2 gap-3">
+            <button class="w-full inline-flex justify-center py-3 px-4 border border-gray-300 rounded-lg bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 transition-colors">
+                <i class="fab fa-google text-red-500 mr-2"></i>
+                Google
+            </button>
+            <button class="w-full inline-flex justify-center py-3 px-4 border border-gray-300 rounded-lg bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 transition-colors">
+                <i class="fab fa-github text-gray-900 mr-2"></i>
+                GitHub
+            </button>
+        </div>
+        
+        <!-- Sign In Link -->
+        <div class="mt-6 text-center">
+            <p class="text-sm text-gray-600">
+                Already have an account?
+                <a href="/login" class="font-medium text-indigo-600 hover:text-indigo-500">
+                    Sign in
+                </a>
+            </p>
+        </div>
+    </div>
+    
+    <!-- Success/Error Notifications -->
+    <div id="notification" class="notification fixed top-4 right-4 px-6 py-3 rounded-lg shadow-lg z-50 hidden">
+        <span id="notification-text"></span>
+    </div>
+    
+    <script>
+        // Registration JavaScript
+        const API_BASE_URL = 'http://localhost:8000';
+        
+        // Form elements
+        const registerForm = document.getElementById('register-form');
+        const nameInput = document.getElementById('name');
+        const emailInput = document.getElementById('email');
+        const companyInput = document.getElementById('company');
+        const passwordInput = document.getElementById('password');
+        const confirmPasswordInput = document.getElementById('confirm-password');
+        const togglePasswordBtn = document.getElementById('toggle-password');
+        const passwordIcon = document.getElementById('password-icon');
+        const registerBtn = document.getElementById('register-btn');
+        const registerText = document.getElementById('register-text');
+        const registerSpinner = document.getElementById('register-spinner');
+        const termsCheckbox = document.getElementById('terms');
+        const marketingCheckbox = document.getElementById('marketing');
+        const passwordStrengthBar = document.getElementById('password-strength-bar');
+        const passwordStrengthText = document.getElementById('password-strength-text');
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check if already logged in
+            const token = getStoredToken();
+            if (token) {
+                // Verify token is still valid
+                verifyTokenAndRedirect(token);
+            }
+            
+            // Setup event listeners
+            setupEventListeners();
+        });
+        
+        function setupEventListeners() {
+            // Registration form submission
+            registerForm.addEventListener('submit', handleRegister);
+            
+            // Password toggle
+            togglePasswordBtn.addEventListener('click', togglePasswordVisibility);
+            
+            // Password strength checking
+            passwordInput.addEventListener('input', checkPasswordStrength);
+            
+            // Password confirmation validation
+            confirmPasswordInput.addEventListener('input', validatePasswordMatch);
+            
+            // Enter key handling
+            document.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter' && document.activeElement.tagName !== 'BUTTON') {
+                    handleRegister(e);
+                }
+            });
+        }
+        
+        async function handleRegister(e) {
+            e.preventDefault();
+            
+            const name = nameInput.value.trim();
+            const email = emailInput.value.trim();
+            const company = companyInput.value.trim();
+            const password = passwordInput.value;
+            const confirmPassword = confirmPasswordInput.value;
+            const acceptedTerms = termsCheckbox.checked;
+            
+            // Validation
+            if (!name || !email || !password || !confirmPassword) {
+                showNotification('Please fill in all required fields', 'error');
+                return;
+            }
+            
+            if (!acceptedTerms) {
+                showNotification('Please accept the Terms of Service', 'error');
+                return;
+            }
+            
+            if (password !== confirmPassword) {
+                showNotification('Passwords do not match', 'error');
+                return;
+            }
+            
+            if (password.length < 8) {
+                showNotification('Password must be at least 8 characters long', 'error');
+                return;
+            }
+            
+            setLoadingState(true);
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/auth/register`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        name: name,
+                        email: email,
+                        password: password,
+                        company: company || null
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    // Store token
+                    localStorage.setItem('api_token', data.access_token);
+                    
+                    // Store user info
+                    localStorage.setItem('user', JSON.stringify(data.user));
+                    
+                    showNotification('Account created successfully! Redirecting...', 'success');
+                    
+                    // Redirect to dashboard
+                    setTimeout(() => {
+                        window.location.href = '/dashboard';
+                    }, 1000);
+                    
+                } else {
+                    showNotification(data.detail || 'Registration failed', 'error');
+                }
+                
+            } catch (error) {
+                console.error('Registration error:', error);
+                showNotification('Network error. Please try again.', 'error');
+            } finally {
+                setLoadingState(false);
+            }
+        }
+        
+        function togglePasswordVisibility() {
+            const isPassword = passwordInput.type === 'password';
+            passwordInput.type = isPassword ? 'text' : 'password';
+            passwordIcon.className = isPassword ? 'fas fa-eye-slash' : 'fas fa-eye';
+        }
+        
+        function checkPasswordStrength() {
+            const password = passwordInput.value;
+            const strength = calculatePasswordStrength(password);
+            
+            // Update strength bar
+            passwordStrengthBar.className = `password-strength-bar strength-${strength.level}`;
+            passwordStrengthText.textContent = strength.text;
+            passwordStrengthText.className = `text-xs mt-1 ${strength.color}`;
+        }
+        
+        function calculatePasswordStrength(password) {
+            let score = 0;
+            
+            if (password.length >= 8) score++;
+            if (password.length >= 12) score++;
+            if (/[a-z]/.test(password)) score++;
+            if (/[A-Z]/.test(password)) score++;
+            if (/[0-9]/.test(password)) score++;
+            if (/[^A-Za-z0-9]/.test(password)) score++;
+            
+            if (score <= 2) {
+                return { level: 'weak', text: 'Weak password', color: 'text-red-500' };
+            } else if (score <= 3) {
+                return { level: 'fair', text: 'Fair password', color: 'text-orange-500' };
+            } else if (score <= 4) {
+                return { level: 'good', text: 'Good password', color: 'text-green-500' };
+            } else {
+                return { level: 'strong', text: 'Strong password', color: 'text-green-600' };
+            }
+        }
+        
+        function validatePasswordMatch() {
+            const password = passwordInput.value;
+            const confirmPassword = confirmPasswordInput.value;
+            
+            if (confirmPassword && password !== confirmPassword) {
+                confirmPasswordInput.setCustomValidity('Passwords do not match');
+                confirmPasswordInput.style.borderColor = '#ef4444';
+            } else {
+                confirmPasswordInput.setCustomValidity('');
+                confirmPasswordInput.style.borderColor = '';
+            }
+        }
+        
+        function setLoadingState(loading) {
+            if (loading) {
+                registerBtn.disabled = true;
+                registerText.classList.add('hidden');
+                registerSpinner.classList.remove('hidden');
+            } else {
+                registerBtn.disabled = false;
+                registerText.classList.remove('hidden');
+                registerSpinner.classList.add('hidden');
+            }
+        }
+        
+        function getStoredToken() {
+            return localStorage.getItem('api_token') || sessionStorage.getItem('api_token');
+        }
+        
+        async function verifyTokenAndRedirect(token) {
+            try {
+                const response = await fetch(`${API_BASE_URL}/auth/me`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                if (response.ok) {
+                    // Token is valid, redirect to dashboard
+                    window.location.href = '/dashboard';
+                } else {
+                    // Token is invalid, remove it
+                    localStorage.removeItem('api_token');
+                    sessionStorage.removeItem('api_token');
+                }
+            } catch (error) {
+                console.error('Token verification error:', error);
+            }
+        }
+        
+        function showNotification(message, type = 'info') {
+            const notification = document.getElementById('notification');
+            const notificationText = document.getElementById('notification-text');
+            
+            // Set message and style
+            notificationText.textContent = message;
+            notification.className = `notification fixed top-4 right-4 px-6 py-3 rounded-lg shadow-lg z-50 ${
+                type === 'success' ? 'bg-green-500 text-white' : 
+                type === 'error' ? 'bg-red-500 text-white' : 
+                'bg-blue-500 text-white'
+            }`;
+            
+            // Show notification
+            notification.classList.remove('hidden');
+            setTimeout(() => {
+                notification.classList.add('show');
+            }, 100);
+            
+            // Hide after 4 seconds
+            setTimeout(() => {
+                notification.classList.remove('show');
+                setTimeout(() => {
+                    notification.classList.add('hidden');
+                }, 300);
+            }, 4000);
+        }
+    </script>
+</body>
+</html>

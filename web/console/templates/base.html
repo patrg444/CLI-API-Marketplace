@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}API-Direct Creator Portal{% endblock %}</title>
+    <meta name="description" content="{% block description %}Creator Portal for API-Direct. Manage your API business.{% endblock %}">
+    
+    <!-- Styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap');
+        
+        body { font-family: 'Inter', sans-serif; }
+        code, pre { font-family: 'JetBrains Mono', monospace; }
+        
+        .sidebar {
+            width: 280px;
+            min-height: calc(100vh - 4rem);
+        }
+        
+        .main-content {
+            max-width: calc(100% - 280px);
+        }
+        
+        .nav-item.active {
+            background: #f3f4f6;
+            color: #4f46e5;
+            border-right: 3px solid #4f46e5;
+        }
+        
+        .metric-card {
+            transition: all 0.3s ease;
+        }
+        
+        .metric-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+        
+        .api-status-running { background: #10b981; }
+        .api-status-error { background: #ef4444; }
+        .api-status-building { background: #f59e0b; }
+        
+        /* Page-specific styles */
+        {% block styles %}{% endblock %}
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Header -->
+    <header class="bg-white border-b border-gray-200 sticky top-0 z-50">
+        <div class="max-w-full mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center">
+                    <a href="https://apidirect.dev" class="text-2xl font-bold text-gray-900">API-Direct</a>
+                    <span class="ml-4 text-gray-500">/</span>
+                    <span class="ml-4 text-gray-700">Creator Portal</span>
+                </div>
+                <div class="flex items-center space-x-4" id="user-nav">
+                    <!-- User info will be populated by JavaScript -->
+                    <div class="flex items-center space-x-2" id="user-info">
+                        <div class="w-8 h-8 bg-indigo-600 rounded-full flex items-center justify-center" id="user-avatar">
+                            <span class="text-white text-sm font-medium" id="user-initials">--</span>
+                        </div>
+                        <span class="text-gray-700" id="user-name">Loading...</span>
+                    </div>
+                    <div class="relative">
+                        <button class="text-gray-500 hover:text-gray-700" id="notifications-btn">
+                            <i class="fas fa-bell"></i>
+                        </button>
+                        <span class="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full" id="notification-badge"></span>
+                    </div>
+                    <div class="relative">
+                        <button class="text-gray-500 hover:text-gray-700" id="user-menu-btn" onclick="toggleUserMenu()">
+                            <i class="fas fa-chevron-down"></i>
+                        </button>
+                        <!-- User Menu Dropdown -->
+                        <div id="user-menu" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-50">
+                            <div class="py-1">
+                                <a href="/settings" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                    <i class="fas fa-user-cog mr-2"></i>Account Settings
+                                </a>
+                                <a href="/api-keys" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                    <i class="fas fa-key mr-2"></i>API Keys
+                                </a>
+                                <a href="/billing" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                    <i class="fas fa-credit-card mr-2"></i>Billing
+                                </a>
+                                <hr class="my-1">
+                                <button onclick="logout()" class="w-full text-left block px-4 py-2 text-sm text-red-700 hover:bg-red-50">
+                                    <i class="fas fa-sign-out-alt mr-2"></i>Sign Out
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="flex">
+        <!-- Sidebar -->
+        <nav class="sidebar bg-white border-r border-gray-200 overflow-y-auto">
+            <div class="p-6">
+                <!-- Main Navigation -->
+                <div class="mb-8">
+                    <h3 class="text-sm font-semibold text-gray-900 uppercase tracking-wide mb-3">Creator Portal</h3>
+                    <ul class="space-y-1">
+                        <li><a href="/dashboard" class="nav-item {% if current_page == 'dashboard' %}active{% endif %} flex items-center px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md">
+                            <i class="fas fa-tachometer-alt w-5 mr-3"></i>Dashboard</a></li>
+                        <li><a href="/apis" class="nav-item {% if current_page == 'apis' %}active{% endif %} flex items-center px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md">
+                            <i class="fas fa-server w-5 mr-3"></i>APIs & Deployments</a></li>
+                        <li><a href="/analytics" class="nav-item {% if current_page == 'analytics' %}active{% endif %} flex items-center px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md">
+                            <i class="fas fa-chart-line w-5 mr-3"></i>Analytics</a></li>
+                        <li><a href="/marketplace" class="nav-item {% if current_page == 'marketplace' %}active{% endif %} flex items-center px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md">
+                            <i class="fas fa-store w-5 mr-3"></i>Marketplace</a></li>
+                        <li><a href="/earnings" class="nav-item {% if current_page == 'earnings' %}active{% endif %} flex items-center px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md">
+                            <i class="fas fa-dollar-sign w-5 mr-3"></i>Earnings & Billing</a></li>
+                    </ul>
+                </div>
+
+                <!-- Developer Tools -->
+                <div class="mb-8">
+                    <h3 class="text-sm font-semibold text-gray-900 uppercase tracking-wide mb-3">Developer Tools</h3>
+                    <ul class="space-y-1">
+                        <li><a href="/cli-setup" class="nav-item {% if current_page == 'cli-setup' %}active{% endif %} flex items-center px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md">
+                            <i class="fas fa-terminal w-5 mr-3"></i>CLI Setup</a></li>
+                        <li><a href="/api-keys" class="nav-item {% if current_page == 'api-keys' %}active{% endif %} flex items-center px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md">
+                            <i class="fas fa-key w-5 mr-3"></i>API Keys</a></li>
+                        <li><a href="/templates" class="nav-item {% if current_page == 'templates' %}active{% endif %} flex items-center px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md">
+                            <i class="fas fa-code w-5 mr-3"></i>Templates</a></li>
+                    </ul>
+                </div>
+
+                <!-- Account -->
+                <div class="mb-8">
+                    <h3 class="text-sm font-semibold text-gray-900 uppercase tracking-wide mb-3">Account</h3>
+                    <ul class="space-y-1">
+                        <li><a href="/settings" class="nav-item {% if current_page == 'settings' %}active{% endif %} flex items-center px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md">
+                            <i class="fas fa-user-cog w-5 mr-3"></i>Settings</a></li>
+                        <li><a href="/security" class="nav-item {% if current_page == 'security' %}active{% endif %} flex items-center px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md">
+                            <i class="fas fa-shield-alt w-5 mr-3"></i>Security</a></li>
+                    </ul>
+                </div>
+
+                <!-- Support -->
+                <div class="mb-8">
+                    <h3 class="text-sm font-semibold text-gray-900 uppercase tracking-wide mb-3">Support</h3>
+                    <ul class="space-y-1">
+                        <li><a href="/help" class="nav-item {% if current_page == 'help' %}active{% endif %} flex items-center px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md">
+                            <i class="fas fa-question-circle w-5 mr-3"></i>Help Center</a></li>
+                        <li><a href="/community" class="nav-item {% if current_page == 'community' %}active{% endif %} flex items-center px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md">
+                            <i class="fas fa-users w-5 mr-3"></i>Community</a></li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="main-content flex-1 p-8">
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+
+    <!-- Global JavaScript -->
+    <script src="/static/js/api-client.js"></script>
+    <script>
+        // Global WebSocket Manager for Real-time Updates
+        class WebSocketManager {
+            constructor() {
+                this.ws = null;
+                this.reconnectAttempts = 0;
+                this.maxReconnectAttempts = 5;
+                this.reconnectInterval = 5000;
+                this.eventHandlers = new Map();
+                this.connectionStatus = 'disconnected';
+                this.init();
+            }
+
+            init() {
+                this.connect();
+                this.setupConnectionIndicator();
+            }
+
+            connect() {
+                if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+                    return;
+                }
+
+                try {
+                    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+                    const wsUrl = `${protocol}//${window.location.host}/ws`;
+                    
+                    this.ws = new WebSocket(wsUrl);
+                    
+                    this.ws.onopen = () => {
+                        console.log('WebSocket connected');
+                        this.connectionStatus = 'connected';
+                        this.reconnectAttempts = 0;
+                        this.updateConnectionIndicator();
+                        
+                        // Send authentication
+                        const token = localStorage.getItem('api_token');
+                        if (token) {
+                            this.send({
+                                type: 'auth',
+                                token: token
+                            });
+                        }
+                    };
+
+                    this.ws.onmessage = (event) => {
+                        try {
+                            const data = JSON.parse(event.data);
+                            this.handleMessage(data);
+                        } catch (error) {
+                            console.error('Failed to parse WebSocket message:', error);
+                        }
+                    };
+
+                    this.ws.onclose = () => {
+                        console.log('WebSocket disconnected');
+                        this.connectionStatus = 'disconnected';
+                        this.updateConnectionIndicator();
+                        this.scheduleReconnect();
+                    };
+
+                    this.ws.onerror = (error) => {
+                        console.error('WebSocket error:', error);
+                        this.connectionStatus = 'error';
+                        this.updateConnectionIndicator();
+                    };
+
+                } catch (error) {
+                    console.error('Failed to establish WebSocket connection:', error);
+                    this.scheduleReconnect();
+                }
+            }
+
+            scheduleReconnect() {
+                if (this.reconnectAttempts < this.maxReconnectAttempts) {
+                    this.reconnectAttempts++;
+                    this.connectionStatus = 'reconnecting';
+                    this.updateConnectionIndicator();
+                    
+                    console.log(`Attempting to reconnect in ${this.reconnectInterval/1000}s... (${this.reconnectAttempts}/${this.maxReconnectAttempts})`);
+                    
+                    setTimeout(() => {
+                        this.connect();
+                    }, this.reconnectInterval);
+                }
+            }
+
+            send(data) {
+                if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+                    this.ws.send(JSON.stringify(data));
+                }
+            }
+
+            handleMessage(data) {
+                const { type, payload } = data;
+                
+                // Emit to registered handlers
+                if (this.eventHandlers.has(type)) {
+                    this.eventHandlers.get(type).forEach(handler => {
+                        try {
+                            handler(payload);
+                        } catch (error) {
+                            console.error(`Error in WebSocket handler for ${type}:`, error);
+                        }
+                    });
+                }
+
+                // Global handlers for common events
+                switch (type) {
+                    case 'api_status_update':
+                        this.handleAPIStatusUpdate(payload);
+                        break;
+                    case 'analytics_update':
+                        this.handleAnalyticsUpdate(payload);
+                        break;
+                    case 'billing_update':
+                        this.handleBillingUpdate(payload);
+                        break;
+                    case 'notification':
+                        this.handleNotification(payload);
+                        break;
+                }
+            }
+
+            // Event handler registration
+            on(eventType, handler) {
+                if (!this.eventHandlers.has(eventType)) {
+                    this.eventHandlers.set(eventType, []);
+                }
+                this.eventHandlers.get(eventType).push(handler);
+            }
+
+            off(eventType, handler) {
+                if (this.eventHandlers.has(eventType)) {
+                    const handlers = this.eventHandlers.get(eventType);
+                    const index = handlers.indexOf(handler);
+                    if (index > -1) {
+                        handlers.splice(index, 1);
+                    }
+                }
+            }
+
+            // Global event handlers
+            handleAPIStatusUpdate(payload) {
+                console.log('API status update:', payload);
+                
+                // Update API status indicators globally
+                const statusElements = document.querySelectorAll(`[data-api-id="${payload.api_id}"]`);
+                statusElements.forEach(element => {
+                    const statusIndicator = element.querySelector('.status-indicator, [class*="status-indicator"]');
+                    const statusText = element.querySelector('.status-text, [class*="status"]');
+                    
+                    if (statusIndicator) {
+                        statusIndicator.className = statusIndicator.className.replace(/bg-\w+-\d+/, this.getStatusColor(payload.status));
+                    }
+                    
+                    if (statusText) {
+                        statusText.textContent = payload.status;
+                    }
+                });
+
+                // Show notification for important status changes
+                if (payload.status === 'running' || payload.status === 'error') {
+                    showNotification(
+                        `API ${payload.api_name} is now ${payload.status}`, 
+                        payload.status === 'running' ? 'success' : 'error'
+                    );
+                }
+            }
+
+            handleAnalyticsUpdate(payload) {
+                console.log('Analytics update:', payload);
+                // Trigger analytics data refresh on analytics page
+                if (window.location.pathname === '/analytics' && typeof loadAnalyticsData === 'function') {
+                    loadAnalyticsData();
+                }
+            }
+
+            handleBillingUpdate(payload) {
+                console.log('Billing update:', payload);
+                // Trigger earnings data refresh on earnings page
+                if (window.location.pathname === '/earnings' && typeof loadEarningsData === 'function') {
+                    loadEarningsData();
+                }
+                
+                // Update billing indicators globally
+                if (payload.type === 'payout_completed') {
+                    showNotification(`Payout of ${formatCurrency(payload.amount)} completed!`, 'success');
+                }
+            }
+
+            handleNotification(payload) {
+                showNotification(payload.message, payload.type || 'info');
+                
+                // Update notification badge
+                this.updateNotificationBadge();
+            }
+
+            // Helper methods
+            getStatusColor(status) {
+                switch (status) {
+                    case 'running': return 'bg-green-500';
+                    case 'building': return 'bg-yellow-500';
+                    case 'error': return 'bg-red-500';
+                    case 'stopped': return 'bg-gray-500';
+                    default: return 'bg-gray-400';
+                }
+            }
+
+            setupConnectionIndicator() {
+                // Create connection status indicator
+                const indicator = document.createElement('div');
+                indicator.id = 'ws-connection-status';
+                indicator.className = 'fixed bottom-4 right-4 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-300 z-50';
+                indicator.style.display = 'none';
+                document.body.appendChild(indicator);
+            }
+
+            updateConnectionIndicator() {
+                const indicator = document.getElementById('ws-connection-status');
+                if (!indicator) return;
+
+                const statusConfig = {
+                    connected: {
+                        text: 'Connected',
+                        class: 'bg-green-500 text-white',
+                        show: false // Hide when connected
+                    },
+                    disconnected: {
+                        text: 'Disconnected',
+                        class: 'bg-red-500 text-white',
+                        show: true
+                    },
+                    reconnecting: {
+                        text: `Reconnecting... (${this.reconnectAttempts}/${this.maxReconnectAttempts})`,
+                        class: 'bg-yellow-500 text-white',
+                        show: true
+                    },
+                    error: {
+                        text: 'Connection Error',
+                        class: 'bg-red-600 text-white',
+                        show: true
+                    }
+                };
+
+                const config = statusConfig[this.connectionStatus];
+                indicator.textContent = config.text;
+                indicator.className = `fixed bottom-4 right-4 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-300 z-50 ${config.class}`;
+                indicator.style.display = config.show ? 'block' : 'none';
+            }
+
+            updateNotificationBadge() {
+                const badge = document.querySelector('.fa-bell').parentElement.querySelector('.bg-red-500');
+                if (badge) {
+                    badge.style.animation = 'pulse 1s ease-in-out 3';
+                }
+            }
+        }
+
+        // Initialize global WebSocket manager
+        const wsManager = new WebSocketManager();
+
+        // Make it globally available
+        window.wsManager = wsManager;
+
+        // ==================== AUTHENTICATION MANAGEMENT ====================
+        
+        // Check authentication on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            checkAuthentication();
+        });
+
+        async function checkAuthentication() {
+            const token = getStoredToken();
+            
+            if (!token) {
+                redirectToLogin();
+                return;
+            }
+
+            try {
+                const response = await fetch('http://localhost:8000/auth/me', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (response.ok) {
+                    const user = await response.json();
+                    updateUserInterface(user);
+                    localStorage.setItem('user', JSON.stringify(user));
+                } else {
+                    // Token is invalid
+                    clearTokens();
+                    redirectToLogin();
+                }
+            } catch (error) {
+                console.error('Authentication check failed:', error);
+                clearTokens();
+                redirectToLogin();
+            }
+        }
+
+        function updateUserInterface(user) {
+            // Update user name
+            const userNameElement = document.getElementById('user-name');
+            if (userNameElement) {
+                userNameElement.textContent = user.name;
+            }
+
+            // Update user initials
+            const userInitialsElement = document.getElementById('user-initials');
+            if (userInitialsElement) {
+                const initials = user.name.split(' ').map(n => n[0]).join('').toUpperCase();
+                userInitialsElement.textContent = initials;
+            }
+
+            // Update avatar if profile image exists
+            const userAvatarElement = document.getElementById('user-avatar');
+            if (user.profile_image && userAvatarElement) {
+                userAvatarElement.innerHTML = `<img src="${user.profile_image}" alt="${user.name}" class="w-8 h-8 rounded-full object-cover">`;
+            }
+        }
+
+        function getStoredToken() {
+            return localStorage.getItem('api_token') || sessionStorage.getItem('api_token');
+        }
+
+        function clearTokens() {
+            localStorage.removeItem('api_token');
+            sessionStorage.removeItem('api_token');
+            localStorage.removeItem('user');
+        }
+
+        function redirectToLogin() {
+            // Don't redirect if already on login/register pages
+            const currentPath = window.location.pathname;
+            if (currentPath === '/login' || currentPath === '/register' || currentPath === '/forgot-password') {
+                return;
+            }
+            
+            window.location.href = '/login';
+        }
+
+        function toggleUserMenu() {
+            const userMenu = document.getElementById('user-menu');
+            userMenu.classList.toggle('hidden');
+        }
+
+        async function logout() {
+            const token = getStoredToken();
+            
+            if (token) {
+                try {
+                    await fetch('http://localhost:8000/auth/logout', {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${token}`
+                        }
+                    });
+                } catch (error) {
+                    console.error('Logout request failed:', error);
+                }
+            }
+
+            clearTokens();
+            showNotification('Successfully logged out', 'info');
+            
+            setTimeout(() => {
+                window.location.href = '/login';
+            }, 1000);
+        }
+
+        // Close user menu when clicking outside
+        document.addEventListener('click', function(event) {
+            const userMenu = document.getElementById('user-menu');
+            const userMenuBtn = document.getElementById('user-menu-btn');
+            
+            if (!userMenuBtn.contains(event.target) && !userMenu.contains(event.target)) {
+                userMenu.classList.add('hidden');
+            }
+        });
+
+        // Update API client to use stored token
+        if (typeof apiClient !== 'undefined') {
+            const originalGetHeaders = apiClient.getHeaders;
+            apiClient.getHeaders = function() {
+                const headers = originalGetHeaders.call(this);
+                const token = getStoredToken();
+                if (token) {
+                    headers['Authorization'] = `Bearer ${token}`;
+                }
+                return headers;
+            };
+        }
+        
+        // Global utilities and functions
+        {% block scripts %}{% endblock %}
+    </script>
+</body>
+</html>

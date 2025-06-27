@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign In - API-Direct</title>
+    <meta name="description" content="Sign in to your API-Direct Creator Portal account">
+    
+    <!-- Styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        
+        .auth-gradient {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .auth-card {
+            backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.95);
+        }
+        
+        .input-focus:focus {
+            border-color: #4f46e5;
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #4f46e5, #7c3aed);
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 10px 25px rgba(79, 70, 229, 0.3);
+        }
+        
+        .floating-shapes {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            z-index: 0;
+        }
+        
+        .shape {
+            position: absolute;
+            opacity: 0.1;
+            animation: float 6s ease-in-out infinite;
+        }
+        
+        .shape:nth-child(1) {
+            top: 20%;
+            left: 10%;
+            width: 60px;
+            height: 60px;
+            animation-delay: 0s;
+        }
+        
+        .shape:nth-child(2) {
+            top: 60%;
+            right: 10%;
+            width: 80px;
+            height: 80px;
+            animation-delay: 2s;
+        }
+        
+        .shape:nth-child(3) {
+            bottom: 20%;
+            left: 20%;
+            width: 40px;
+            height: 40px;
+            animation-delay: 4s;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(180deg); }
+        }
+        
+        .notification {
+            transition: all 0.3s ease;
+            transform: translateX(100%);
+        }
+        
+        .notification.show {
+            transform: translateX(0);
+        }
+    </style>
+</head>
+<body class="auth-gradient min-h-screen flex items-center justify-center p-4">
+    <!-- Floating Background Shapes -->
+    <div class="floating-shapes">
+        <div class="shape bg-white rounded-full"></div>
+        <div class="shape bg-white rounded-lg"></div>
+        <div class="shape bg-white rounded-full"></div>
+    </div>
+    
+    <!-- Main Auth Card -->
+    <div class="auth-card rounded-2xl shadow-2xl p-8 w-full max-w-md relative z-10">
+        <!-- Header -->
+        <div class="text-center mb-8">
+            <div class="flex items-center justify-center mb-4">
+                <div class="w-12 h-12 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-xl flex items-center justify-center">
+                    <i class="fas fa-rocket text-white text-xl"></i>
+                </div>
+            </div>
+            <h1 class="text-2xl font-bold text-gray-900 mb-2">Welcome to API-Direct</h1>
+            <p class="text-gray-600">Sign in to your Creator Portal</p>
+        </div>
+        
+        <!-- Login Form -->
+        <form id="login-form" class="space-y-6">
+            <div>
+                <label for="email" class="block text-sm font-medium text-gray-700 mb-2">
+                    Email Address
+                </label>
+                <div class="relative">
+                    <input 
+                        type="email" 
+                        id="email" 
+                        name="email"
+                        class="input-focus w-full px-4 py-3 pl-12 border border-gray-300 rounded-lg focus:outline-none transition-all"
+                        placeholder="Enter your email"
+                        required
+                    >
+                    <i class="fas fa-envelope absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                </div>
+            </div>
+            
+            <div>
+                <label for="password" class="block text-sm font-medium text-gray-700 mb-2">
+                    Password
+                </label>
+                <div class="relative">
+                    <input 
+                        type="password" 
+                        id="password" 
+                        name="password"
+                        class="input-focus w-full px-4 py-3 pl-12 pr-12 border border-gray-300 rounded-lg focus:outline-none transition-all"
+                        placeholder="Enter your password"
+                        required
+                    >
+                    <i class="fas fa-lock absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                    <button 
+                        type="button" 
+                        id="toggle-password"
+                        class="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    >
+                        <i class="fas fa-eye" id="password-icon"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="flex items-center justify-between">
+                <div class="flex items-center">
+                    <input 
+                        type="checkbox" 
+                        id="remember-me" 
+                        class="w-4 h-4 text-indigo-600 bg-gray-100 border-gray-300 rounded focus:ring-indigo-500"
+                    >
+                    <label for="remember-me" class="ml-2 text-sm text-gray-700">
+                        Remember me
+                    </label>
+                </div>
+                <a href="/forgot-password" class="text-sm text-indigo-600 hover:text-indigo-500">
+                    Forgot password?
+                </a>
+            </div>
+            
+            <button 
+                type="submit" 
+                class="btn-primary w-full text-white font-medium py-3 px-4 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                id="login-btn"
+            >
+                <span id="login-text">Sign In</span>
+                <i class="fas fa-spinner fa-spin hidden" id="login-spinner"></i>
+            </button>
+        </form>
+        
+        <!-- Divider -->
+        <div class="my-6">
+            <div class="relative">
+                <div class="absolute inset-0 flex items-center">
+                    <div class="w-full border-t border-gray-300"></div>
+                </div>
+                <div class="relative flex justify-center text-sm">
+                    <span class="px-2 bg-white text-gray-500">Or continue with</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Social Login -->
+        <div class="grid grid-cols-2 gap-3">
+            <button class="w-full inline-flex justify-center py-3 px-4 border border-gray-300 rounded-lg bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 transition-colors">
+                <i class="fab fa-google text-red-500 mr-2"></i>
+                Google
+            </button>
+            <button class="w-full inline-flex justify-center py-3 px-4 border border-gray-300 rounded-lg bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 transition-colors">
+                <i class="fab fa-github text-gray-900 mr-2"></i>
+                GitHub
+            </button>
+        </div>
+        
+        <!-- Sign Up Link -->
+        <div class="mt-6 text-center">
+            <p class="text-sm text-gray-600">
+                Don't have an account?
+                <a href="/register" class="font-medium text-indigo-600 hover:text-indigo-500">
+                    Create one now
+                </a>
+            </p>
+        </div>
+    </div>
+    
+    <!-- Success/Error Notifications -->
+    <div id="notification" class="notification fixed top-4 right-4 px-6 py-3 rounded-lg shadow-lg z-50 hidden">
+        <span id="notification-text"></span>
+    </div>
+    
+    <script>
+        // Authentication JavaScript
+        const API_BASE_URL = 'http://localhost:8000';
+        
+        // Form elements
+        const loginForm = document.getElementById('login-form');
+        const emailInput = document.getElementById('email');
+        const passwordInput = document.getElementById('password');
+        const togglePasswordBtn = document.getElementById('toggle-password');
+        const passwordIcon = document.getElementById('password-icon');
+        const loginBtn = document.getElementById('login-btn');
+        const loginText = document.getElementById('login-text');
+        const loginSpinner = document.getElementById('login-spinner');
+        const rememberMeCheckbox = document.getElementById('remember-me');
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check if already logged in
+            const token = getStoredToken();
+            if (token) {
+                // Verify token is still valid
+                verifyTokenAndRedirect(token);
+            }
+            
+            // Setup event listeners
+            setupEventListeners();
+            
+            // Load saved email if remember me was checked
+            loadSavedCredentials();
+        });
+        
+        function setupEventListeners() {
+            // Login form submission
+            loginForm.addEventListener('submit', handleLogin);
+            
+            // Password toggle
+            togglePasswordBtn.addEventListener('click', togglePasswordVisibility);
+            
+            // Enter key handling
+            document.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter' && document.activeElement.tagName !== 'BUTTON') {
+                    handleLogin(e);
+                }
+            });
+        }
+        
+        async function handleLogin(e) {
+            e.preventDefault();
+            
+            const email = emailInput.value.trim();
+            const password = passwordInput.value;
+            const rememberMe = rememberMeCheckbox.checked;
+            
+            if (!email || !password) {
+                showNotification('Please fill in all fields', 'error');
+                return;
+            }
+            
+            setLoadingState(true);
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/auth/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        email: email,
+                        password: password
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    // Store token
+                    storeToken(data.access_token, rememberMe);
+                    
+                    // Store user info
+                    localStorage.setItem('user', JSON.stringify(data.user));
+                    
+                    // Save email if remember me is checked
+                    if (rememberMe) {
+                        localStorage.setItem('rememberedEmail', email);
+                    } else {
+                        localStorage.removeItem('rememberedEmail');
+                    }
+                    
+                    showNotification('Login successful! Redirecting...', 'success');
+                    
+                    // Redirect to dashboard
+                    setTimeout(() => {
+                        window.location.href = '/dashboard';
+                    }, 1000);
+                    
+                } else {
+                    showNotification(data.detail || 'Login failed', 'error');
+                }
+                
+            } catch (error) {
+                console.error('Login error:', error);
+                showNotification('Network error. Please try again.', 'error');
+            } finally {
+                setLoadingState(false);
+            }
+        }
+        
+        function togglePasswordVisibility() {
+            const isPassword = passwordInput.type === 'password';
+            passwordInput.type = isPassword ? 'text' : 'password';
+            passwordIcon.className = isPassword ? 'fas fa-eye-slash' : 'fas fa-eye';
+        }
+        
+        function setLoadingState(loading) {
+            if (loading) {
+                loginBtn.disabled = true;
+                loginText.classList.add('hidden');
+                loginSpinner.classList.remove('hidden');
+            } else {
+                loginBtn.disabled = false;
+                loginText.classList.remove('hidden');
+                loginSpinner.classList.add('hidden');
+            }
+        }
+        
+        function storeToken(token, remember) {
+            if (remember) {
+                localStorage.setItem('api_token', token);
+            } else {
+                sessionStorage.setItem('api_token', token);
+            }
+        }
+        
+        function getStoredToken() {
+            return localStorage.getItem('api_token') || sessionStorage.getItem('api_token');
+        }
+        
+        function loadSavedCredentials() {
+            const rememberedEmail = localStorage.getItem('rememberedEmail');
+            if (rememberedEmail) {
+                emailInput.value = rememberedEmail;
+                rememberMeCheckbox.checked = true;
+            }
+        }
+        
+        async function verifyTokenAndRedirect(token) {
+            try {
+                const response = await fetch(`${API_BASE_URL}/auth/me`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                if (response.ok) {
+                    // Token is valid, redirect to dashboard
+                    window.location.href = '/dashboard';
+                } else {
+                    // Token is invalid, remove it
+                    localStorage.removeItem('api_token');
+                    sessionStorage.removeItem('api_token');
+                }
+            } catch (error) {
+                console.error('Token verification error:', error);
+            }
+        }
+        
+        function showNotification(message, type = 'info') {
+            const notification = document.getElementById('notification');
+            const notificationText = document.getElementById('notification-text');
+            
+            // Set message and style
+            notificationText.textContent = message;
+            notification.className = `notification fixed top-4 right-4 px-6 py-3 rounded-lg shadow-lg z-50 ${
+                type === 'success' ? 'bg-green-500 text-white' : 
+                type === 'error' ? 'bg-red-500 text-white' : 
+                'bg-blue-500 text-white'
+            }`;
+            
+            // Show notification
+            notification.classList.remove('hidden');
+            setTimeout(() => {
+                notification.classList.add('show');
+            }, 100);
+            
+            // Hide after 4 seconds
+            setTimeout(() => {
+                notification.classList.remove('show');
+                setTimeout(() => {
+                    notification.classList.add('hidden');
+                }, 300);
+            }, 4000);
+        }
+    </script>
+</body>
+</html>

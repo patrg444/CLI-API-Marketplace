@@ -1,0 +1,860 @@
+{% extends "templates/base.html" %}
+
+{% block title %}Earnings & Billing - API-Direct Creator Portal{% endblock %}
+{% block description %}Manage your revenue, payouts, and API-Direct subscription with complete financial transparency.{% endblock %}
+
+{% block styles %}
+.earnings-card {
+    transition: all 0.3s ease;
+}
+
+.earnings-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+}
+
+.transaction-row:hover {
+    background-color: #f9fafb;
+}
+
+.revenue-chart {
+    height: 300px;
+}
+
+.payout-status {
+    animation: pulse 2s infinite;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.fade-in {
+    animation: fadeIn 0.5s ease-out;
+}
+{% endblock %}
+
+{% block content %}
+<div class="mb-8">
+    <h2 class="text-2xl font-bold text-gray-900 mb-2">Earnings & Billing</h2>
+    <p class="text-gray-600">Manage your revenue, payouts, and API-Direct subscription with complete transparency.</p>
+</div>
+
+<!-- Earnings Overview -->
+<div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+    <div class="earnings-card bg-white p-6 rounded-lg border border-gray-200 fade-in">
+        <div class="flex items-center">
+            <div class="text-green-600 text-2xl mr-4">
+                <i class="fas fa-dollar-sign"></i>
+            </div>
+            <div>
+                <div class="text-2xl font-bold text-gray-900">$4,847</div>
+                <div class="text-gray-600 text-sm">Gross Revenue</div>
+                <div class="text-xs text-green-600 mt-1">+23% this month</div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="earnings-card bg-white p-6 rounded-lg border border-gray-200 fade-in" style="animation-delay: 0.1s">
+        <div class="flex items-center">
+            <div class="text-red-600 text-2xl mr-4">
+                <i class="fas fa-percentage"></i>
+            </div>
+            <div>
+                <div class="text-2xl font-bold text-gray-900">$970</div>
+                <div class="text-gray-600 text-sm">Platform Commission</div>
+                <div class="text-xs text-gray-500 mt-1">20% of BYOA revenue</div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="earnings-card bg-white p-6 rounded-lg border border-gray-200 fade-in" style="animation-delay: 0.2s">
+        <div class="flex items-center">
+            <div class="text-blue-600 text-2xl mr-4">
+                <i class="fas fa-hand-holding-usd"></i>
+            </div>
+            <div>
+                <div class="text-2xl font-bold text-gray-900">$3,877</div>
+                <div class="text-gray-600 text-sm">Net Payouts</div>
+                <div class="text-xs text-green-600 mt-1">Available for withdrawal</div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="earnings-card bg-white p-6 rounded-lg border border-gray-200 fade-in" style="animation-delay: 0.3s">
+        <div class="flex items-center">
+            <div class="text-yellow-600 text-2xl mr-4">
+                <i class="fas fa-clock"></i>
+            </div>
+            <div>
+                <div class="text-2xl font-bold text-gray-900">$247</div>
+                <div class="text-gray-600 text-sm">Pending</div>
+                <div class="text-xs text-blue-600 mt-1">Next payout: Jan 10</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Revenue Chart -->
+<div class="bg-white rounded-lg border border-gray-200 p-6 mb-6">
+    <div class="flex justify-between items-center mb-4">
+        <h3 class="text-lg font-semibold text-gray-900">Revenue Over Time</h3>
+        <div class="flex space-x-2">
+            <button class="px-3 py-1 text-sm bg-indigo-600 text-white rounded-md" data-period="7d">7 Days</button>
+            <button class="px-3 py-1 text-sm text-gray-600 hover:bg-gray-100 rounded-md" data-period="30d">30 Days</button>
+            <button class="px-3 py-1 text-sm text-gray-600 hover:bg-gray-100 rounded-md" data-period="90d">90 Days</button>
+            <button class="px-3 py-1 text-sm text-gray-600 hover:bg-gray-100 rounded-md" data-period="1y">1 Year</button>
+        </div>
+    </div>
+    <div class="revenue-chart">
+        <canvas id="revenueChart"></canvas>
+    </div>
+</div>
+
+<!-- Payout Setup -->
+<div class="bg-white rounded-lg border border-gray-200 p-6 mb-6">
+    <div class="flex justify-between items-center mb-4">
+        <h3 class="text-lg font-semibold text-gray-900">Payout Setup</h3>
+        <div class="flex items-center space-x-2">
+            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 payout-status">
+                <i class="fas fa-check mr-1"></i>Connected
+            </span>
+            <button class="text-indigo-600 hover:text-indigo-700 text-sm font-medium" onclick="updatePayoutSettings()">
+                Update
+            </button>
+        </div>
+    </div>
+    
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="p-4 bg-gray-50 rounded-lg">
+            <h4 class="font-medium text-gray-900 mb-2">Stripe Account</h4>
+            <div class="text-sm text-gray-600">
+                <div>Connected as: john@aicompany.com</div>
+                <div>Account ID: acct_1A2B3C4D5E</div>
+                <div class="text-green-600 mt-1">✓ Verified & Active</div>
+                <div class="text-xs text-gray-500 mt-2">
+                    Balance: $3,877.00 • Available: $3,877.00
+                </div>
+            </div>
+        </div>
+        
+        <div class="p-4 bg-gray-50 rounded-lg">
+            <h4 class="font-medium text-gray-900 mb-2">Payout Schedule</h4>
+            <div class="text-sm text-gray-600">
+                <div>Weekly on Fridays</div>
+                <div>Minimum: $50.00</div>
+                <div class="text-blue-600 mt-1">Next: Jan 10, 2025</div>
+                <div class="text-xs text-gray-500 mt-2">
+                    Instant payouts available for eligible accounts
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="mt-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
+        <div class="flex items-start">
+            <i class="fas fa-info-circle text-blue-500 mt-1 mr-3"></i>
+            <div class="text-sm text-blue-700">
+                <strong>Instant Payout Available:</strong> You can request instant payouts for amounts up to $1,000 with a 1% fee. 
+                Regular weekly payouts are always free.
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Revenue Breakdown by API -->
+<div class="bg-white rounded-lg border border-gray-200 p-6 mb-6">
+    <h3 class="text-lg font-semibold text-gray-900 mb-4">Revenue by API (Last 30 Days)</h3>
+    
+    <div class="space-y-4">
+        <div class="flex justify-between items-center p-4 bg-gray-50 rounded-lg">
+            <div class="flex items-center">
+                <div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center mr-4">
+                    <i class="fas fa-heart text-green-600"></i>
+                </div>
+                <div>
+                    <div class="font-medium text-gray-900">sentiment-analysis-pro</div>
+                    <div class="text-sm text-gray-600">847,523 requests • $0.001 per request</div>
+                </div>
+            </div>
+            <div class="text-right">
+                <div class="font-bold text-gray-900">$847.52</div>
+                <div class="text-sm text-green-600">+12% from last month</div>
+                <div class="text-xs text-gray-500">68% of total revenue</div>
+            </div>
+        </div>
+        
+        <div class="flex justify-between items-center p-4 bg-gray-50 rounded-lg">
+            <div class="flex items-center">
+                <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center mr-4">
+                    <i class="fas fa-robot text-blue-600"></i>
+                </div>
+                <div>
+                    <div class="font-medium text-gray-900">gpt-wrapper-enterprise</div>
+                    <div class="text-sm text-gray-600">23,456 requests • $0.02 per request</div>
+                </div>
+            </div>
+            <div class="text-right">
+                <div class="font-bold text-gray-900">$469.12</div>
+                <div class="text-sm text-green-600">+8% from last month</div>
+                <div class="text-xs text-gray-500">37% of total revenue</div>
+            </div>
+        </div>
+        
+        <div class="flex justify-between items-center p-4 bg-gray-50 rounded-lg opacity-50">
+            <div class="flex items-center">
+                <div class="w-10 h-10 bg-yellow-100 rounded-lg flex items-center justify-center mr-4">
+                    <i class="fas fa-image text-yellow-600"></i>
+                </div>
+                <div>
+                    <div class="font-medium text-gray-900">image-classification-v2</div>
+                    <div class="text-sm text-gray-600">Building... • Not yet active</div>
+                </div>
+            </div>
+            <div class="text-right">
+                <div class="font-bold text-gray-900">$0.00</div>
+                <div class="text-sm text-gray-500">Pending deployment</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Transaction History -->
+<div class="bg-white rounded-lg border border-gray-200 p-6 mb-6">
+    <div class="flex justify-between items-center mb-4">
+        <h3 class="text-lg font-semibold text-gray-900">Transaction History</h3>
+        <div class="flex space-x-2">
+            <select class="border border-gray-300 rounded-md px-3 py-1 text-sm" id="transaction-filter">
+                <option value="all">All Transactions</option>
+                <option value="payouts">Payouts</option>
+                <option value="charges">API Charges</option>
+                <option value="fees">Platform Fees</option>
+            </select>
+            <button class="text-indigo-600 hover:text-indigo-700 text-sm font-medium" onclick="exportTransactions()">
+                <i class="fas fa-download mr-1"></i>Export CSV
+            </button>
+        </div>
+    </div>
+    
+    <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">API / Description</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fee</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Net</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200" id="transaction-table">
+                <tr class="transaction-row">
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">Jan 3, 2025</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                            Payout
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Weekly payout</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">$158.00</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">$0.00</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">$158.00</td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                            Completed
+                        </span>
+                    </td>
+                </tr>
+                <tr class="transaction-row">
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">Jan 2, 2025</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                            Charge
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">sentiment-analysis-pro</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">$12.47</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">$0.37</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">$12.10</td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                            Settled
+                        </span>
+                    </td>
+                </tr>
+                <tr class="transaction-row">
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">Jan 1, 2025</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                            Charge
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">gpt-wrapper-enterprise</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">$89.50</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">$17.90</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">$71.60</td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                            Settled
+                        </span>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    
+    <!-- Pagination -->
+    <div class="flex items-center justify-between border-t border-gray-200 bg-white px-4 py-3 sm:px-6 mt-4">
+        <div class="flex flex-1 justify-between sm:hidden">
+            <button class="relative inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
+                Previous
+            </button>
+            <button class="relative ml-3 inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
+                Next
+            </button>
+        </div>
+        <div class="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
+            <div>
+                <p class="text-sm text-gray-700">
+                    Showing <span class="font-medium">1</span> to <span class="font-medium">10</span> of
+                    <span class="font-medium">97</span> results
+                </p>
+            </div>
+            <div>
+                <nav class="isolate inline-flex -space-x-px rounded-md shadow-sm" aria-label="Pagination">
+                    <button class="relative inline-flex items-center rounded-l-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50">
+                        Previous
+                    </button>
+                    <button class="relative inline-flex items-center bg-indigo-600 px-4 py-2 text-sm font-semibold text-white">
+                        1
+                    </button>
+                    <button class="relative inline-flex items-center px-4 py-2 text-sm font-semibold text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-50">
+                        2
+                    </button>
+                    <button class="relative inline-flex items-center px-4 py-2 text-sm font-semibold text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-50">
+                        3
+                    </button>
+                    <button class="relative inline-flex items-center rounded-r-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50">
+                        Next
+                    </button>
+                </nav>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Your API-Direct Subscription -->
+<div class="bg-white rounded-lg border border-gray-200 p-6">
+    <h3 class="text-lg font-semibold text-gray-900 mb-4">Your API-Direct Subscription</h3>
+    
+    <div class="flex justify-between items-center p-4 bg-indigo-50 rounded-lg border border-indigo-200 mb-4">
+        <div>
+            <div class="font-medium text-gray-900">Pro Plan</div>
+            <div class="text-sm text-gray-600">$99/month • Unlimited APIs • Priority Support</div>
+            <div class="text-xs text-gray-500 mt-1">Next billing: Jan 15, 2025</div>
+        </div>
+        <div class="flex space-x-2">
+            <button class="text-indigo-600 hover:text-indigo-700 text-sm font-medium" onclick="changePlan()">
+                Change Plan
+            </button>
+            <button class="text-gray-600 hover:text-gray-700 text-sm font-medium">
+                View Invoice
+            </button>
+        </div>
+    </div>
+    
+    <div class="text-sm text-gray-600">
+        <p><strong>What's included:</strong></p>
+        <ul class="mt-2 space-y-1 list-disc list-inside">
+            <li>Unlimited API deployments</li>
+            <li>1M requests per month included</li>
+            <li>Priority email support</li>
+            <li>Advanced analytics and insights</li>
+            <li>Custom domain support</li>
+        </ul>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/api-client.js"></script>
+<script>
+// Earnings page JavaScript with live data
+let revenueChart;
+let currentPeriod = '7d';
+let refreshInterval;
+
+document.addEventListener('DOMContentLoaded', function() {
+    initializeRevenueChart();
+    setupEventListeners();
+    loadEarningsData();
+    setupAutoRefresh();
+    setupWebSocketHandlers();
+});
+
+function initializeRevenueChart() {
+    const ctx = document.getElementById('revenueChart').getContext('2d');
+    
+    revenueChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: ['Jan 1', 'Jan 2', 'Jan 3', 'Jan 4', 'Jan 5', 'Jan 6', 'Jan 7'],
+            datasets: [{
+                label: 'Revenue ($)',
+                data: [120, 190, 170, 220, 280, 250, 310],
+                borderColor: '#4f46e5',
+                backgroundColor: 'rgba(79, 70, 229, 0.1)',
+                tension: 0.4,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: {
+                        color: '#f3f4f6'
+                    }
+                },
+                x: {
+                    grid: {
+                        display: false
+                    }
+                }
+            }
+        }
+    });
+}
+
+function setupEventListeners() {
+    // Period buttons
+    document.querySelectorAll('[data-period]').forEach(button => {
+        button.addEventListener('click', (e) => {
+            // Remove active class from all buttons
+            document.querySelectorAll('[data-period]').forEach(btn => {
+                btn.classList.remove('bg-indigo-600', 'text-white');
+                btn.classList.add('text-gray-600', 'hover:bg-gray-100');
+            });
+            
+            // Add active class to clicked button
+            e.target.classList.add('bg-indigo-600', 'text-white');
+            e.target.classList.remove('text-gray-600', 'hover:bg-gray-100');
+            
+            currentPeriod = e.target.dataset.period;
+            loadEarningsData();
+        });
+    });
+    
+    // Transaction filter
+    document.getElementById('transaction-filter').addEventListener('change', filterTransactions);
+}
+
+async function loadEarningsData() {
+    try {
+        const [billingOverview, transactions, revenueData] = await Promise.all([
+            apiClient.getBillingOverview(),
+            apiClient.getTransactions(50, 0),
+            apiClient.getRevenueData(currentPeriod)
+        ]);
+        
+        updateEarningsMetrics(billingOverview);
+        updateRevenueChart(revenueData);
+        updateRevenueByAPI(billingOverview.revenue_by_api);
+        updateTransactionTable(transactions.transactions);
+        updatePayoutInfo(billingOverview.payout_info);
+        
+    } catch (error) {
+        handleAPIError(error, 'loading earnings data');
+    }
+}
+
+function updateEarningsMetrics(billingData) {
+    const cards = document.querySelectorAll('.earnings-card');
+    
+    if (cards.length >= 4) {
+        // Gross Revenue
+        cards[0].querySelector('.text-2xl').textContent = formatCurrency(billingData.gross_revenue);
+        cards[0].querySelector('.text-green-600').textContent = `${billingData.revenue_change >= 0 ? '+' : ''}${billingData.revenue_change.toFixed(1)}% this month`;
+        
+        // Platform Commission
+        cards[1].querySelector('.text-2xl').textContent = formatCurrency(billingData.platform_commission);
+        const commissionRate = billingData.commission_rate || 20;
+        cards[1].querySelector('.text-gray-500').textContent = `${commissionRate}% of BYOA revenue`;
+        
+        // Net Payouts
+        cards[2].querySelector('.text-2xl').textContent = formatCurrency(billingData.net_payouts);
+        cards[2].querySelector('.text-green-600').textContent = billingData.available_balance > 0 ? 'Available for withdrawal' : 'No balance available';
+        
+        // Pending
+        cards[3].querySelector('.text-2xl').textContent = formatCurrency(billingData.pending_amount);
+        if (billingData.next_payout_date) {
+            const nextPayout = new Date(billingData.next_payout_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+            cards[3].querySelector('.text-blue-600').textContent = `Next payout: ${nextPayout}`;
+        }
+    }
+}
+
+function updateRevenueChart(revenueData) {
+    if (!revenueChart || !revenueData.timeline) return;
+    
+    const labels = revenueData.timeline.map(point => formatChartLabel(point.date, currentPeriod));
+    const data = revenueData.timeline.map(point => point.revenue);
+    
+    revenueChart.data.labels = labels;
+    revenueChart.data.datasets[0].data = data;
+    revenueChart.update();
+}
+
+function updateRevenueByAPI(revenueByAPI) {
+    const container = document.querySelector('.space-y-4');
+    if (!container || !revenueByAPI) return;
+    
+    container.innerHTML = '';
+    
+    revenueByAPI.forEach(api => {
+        const percentage = api.percentage_of_total || 0;
+        const changeIcon = api.change >= 0 ? '+' : '';
+        const changeClass = api.change >= 0 ? 'text-green-600' : 'text-red-600';
+        
+        const apiElement = document.createElement('div');
+        apiElement.className = 'flex justify-between items-center p-4 bg-gray-50 rounded-lg';
+        apiElement.innerHTML = `
+            <div class="flex items-center">
+                <div class="w-10 h-10 ${getAPIIconBg(api.api_type)} rounded-lg flex items-center justify-center mr-4">
+                    <i class="${getAPIIcon(api.api_type)} ${getAPIIconColor(api.api_type)}"></i>
+                </div>
+                <div>
+                    <div class="font-medium text-gray-900">${api.api_name}</div>
+                    <div class="text-sm text-gray-600">${formatNumber(api.request_count)} requests • ${formatCurrency(api.price_per_request)} per request</div>
+                </div>
+            </div>
+            <div class="text-right">
+                <div class="font-bold text-gray-900">${formatCurrency(api.revenue)}</div>
+                <div class="text-sm ${changeClass}">${changeIcon}${api.change.toFixed(0)}% from last month</div>
+                <div class="text-xs text-gray-500">${percentage.toFixed(0)}% of total revenue</div>
+            </div>
+        `;
+        container.appendChild(apiElement);
+    });
+}
+
+function updateTransactionTable(transactions) {
+    const tableBody = document.getElementById('transaction-table');
+    if (!tableBody || !transactions) return;
+    
+    tableBody.innerHTML = '';
+    
+    transactions.forEach(transaction => {
+        const row = document.createElement('tr');
+        row.className = 'transaction-row';
+        
+        const typeClass = getTransactionTypeClass(transaction.type);
+        const statusClass = getTransactionStatusClass(transaction.status);
+        
+        row.innerHTML = `
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${formatDate(transaction.created_at)}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${typeClass}">
+                    ${transaction.type}
+                </span>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${transaction.description}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${formatCurrency(transaction.amount)}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${formatCurrency(transaction.fee || 0)}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${formatCurrency(transaction.net_amount)}</td>
+            <td class="px-6 py-4 whitespace-nowrap">
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusClass}">
+                    ${transaction.status}
+                </span>
+            </td>
+        `;
+        tableBody.appendChild(row);
+    });
+}
+
+function updatePayoutInfo(payoutInfo) {
+    if (!payoutInfo) return;
+    
+    // Update Stripe account info
+    const stripeSection = document.querySelector('.p-4.bg-gray-50.rounded-lg');
+    if (stripeSection && payoutInfo.stripe_account) {
+        const info = payoutInfo.stripe_account;
+        stripeSection.innerHTML = `
+            <h4 class="font-medium text-gray-900 mb-2">Stripe Account</h4>
+            <div class="text-sm text-gray-600">
+                <div>Connected as: ${info.email}</div>
+                <div>Account ID: ${info.account_id}</div>
+                <div class="text-green-600 mt-1">✓ ${info.status}</div>
+                <div class="text-xs text-gray-500 mt-2">
+                    Balance: ${formatCurrency(info.balance)} • Available: ${formatCurrency(info.available)}
+                </div>
+            </div>
+        `;
+    }
+    
+    // Update payout schedule
+    const scheduleSection = document.querySelectorAll('.p-4.bg-gray-50.rounded-lg')[1];
+    if (scheduleSection && payoutInfo.schedule) {
+        const schedule = payoutInfo.schedule;
+        scheduleSection.innerHTML = `
+            <h4 class="font-medium text-gray-900 mb-2">Payout Schedule</h4>
+            <div class="text-sm text-gray-600">
+                <div>${schedule.frequency} on ${schedule.day}</div>
+                <div>Minimum: ${formatCurrency(schedule.minimum)}</div>
+                <div class="text-blue-600 mt-1">Next: ${formatDate(schedule.next_payout)}</div>
+                <div class="text-xs text-gray-500 mt-2">
+                    ${schedule.instant_available ? 'Instant payouts available for eligible accounts' : 'Instant payouts not available'}
+                </div>
+            </div>
+        `;
+    }
+}
+
+function formatChartLabel(dateString, period) {
+    const date = new Date(dateString);
+    
+    switch (period) {
+        case '7d':
+            return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        case '30d':
+            return `Week ${Math.ceil(date.getDate() / 7)}`;
+        case '90d':
+            return date.toLocaleDateString('en-US', { month: 'short' });
+        case '1y':
+            return `Q${Math.ceil((date.getMonth() + 1) / 3)}`;
+        default:
+            return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    }
+}
+
+function getAPIIconBg(apiType) {
+    switch (apiType) {
+        case 'sentiment': return 'bg-green-100';
+        case 'gpt': return 'bg-blue-100';
+        case 'image': return 'bg-yellow-100';
+        default: return 'bg-gray-100';
+    }
+}
+
+function getAPIIcon(apiType) {
+    switch (apiType) {
+        case 'sentiment': return 'fas fa-heart';
+        case 'gpt': return 'fas fa-robot';
+        case 'image': return 'fas fa-image';
+        default: return 'fas fa-cog';
+    }
+}
+
+function getAPIIconColor(apiType) {
+    switch (apiType) {
+        case 'sentiment': return 'text-green-600';
+        case 'gpt': return 'text-blue-600';
+        case 'image': return 'text-yellow-600';
+        default: return 'text-gray-600';
+    }
+}
+
+function getTransactionTypeClass(type) {
+    switch (type.toLowerCase()) {
+        case 'payout': return 'bg-green-100 text-green-800';
+        case 'charge': return 'bg-blue-100 text-blue-800';
+        case 'fee': return 'bg-red-100 text-red-800';
+        default: return 'bg-gray-100 text-gray-800';
+    }
+}
+
+function getTransactionStatusClass(status) {
+    switch (status.toLowerCase()) {
+        case 'completed':
+        case 'settled': return 'bg-green-100 text-green-800';
+        case 'pending': return 'bg-yellow-100 text-yellow-800';
+        case 'failed': return 'bg-red-100 text-red-800';
+        default: return 'bg-gray-100 text-gray-800';
+    }
+}
+
+function formatDate(dateString) {
+    return new Date(dateString).toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric'
+    });
+}
+
+function updatePayoutSettings() {
+    // In a real app, this would open a modal or navigate to settings
+    alert('Payout settings update would open here');
+}
+
+function exportTransactions() {
+    // Mock CSV export
+    const csv = "Date,Type,API,Amount,Fee,Net,Status\n" +
+                "Jan 3 2025,Payout,Weekly payout,$158.00,$0.00,$158.00,Completed\n" +
+                "Jan 2 2025,Charge,sentiment-analysis-pro,$12.47,$0.37,$12.10,Settled\n";
+    
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'api-direct-transactions.csv';
+    a.click();
+    window.URL.revokeObjectURL(url);
+}
+
+function filterTransactions() {
+    const filter = document.getElementById('transaction-filter').value;
+    const rows = document.querySelectorAll('#transaction-table tr');
+    
+    rows.forEach(row => {
+        const type = row.querySelector('.inline-flex').textContent.toLowerCase().trim();
+        
+        let shouldShow = true;
+        if (filter === 'payouts' && !type.includes('payout')) shouldShow = false;
+        if (filter === 'charges' && !type.includes('charge')) shouldShow = false;
+        if (filter === 'fees' && !type.includes('fee')) shouldShow = false;
+        
+        row.style.display = shouldShow ? '' : 'none';
+    });
+}
+
+function changePlan() {
+    // In a real app, this would open a plan selection modal
+    alert('Plan change interface would open here');
+}
+
+function setupAutoRefresh() {
+    // Auto-refresh earnings data every 5 minutes
+    refreshInterval = setInterval(async () => {
+        try {
+            await loadEarningsData();
+            console.log('Earnings data refreshed');
+        } catch (error) {
+            console.error('Failed to refresh earnings:', error);
+        }
+    }, 300000);
+}
+
+function setupWebSocketHandlers() {
+    // Earnings page-specific real-time handlers
+    wsManager.on('billing_update', (payload) => {
+        if (payload.type === 'revenue_update') {
+            loadEarningsData();
+        }
+    });
+
+    wsManager.on('payout_completed', (payload) => {
+        showNotification(`Payout of ${formatCurrency(payload.amount)} completed successfully!`, 'success');
+        
+        // Update payout info and refresh data
+        loadEarningsData();
+        
+        // Animate the payout cards
+        const payoutCard = document.querySelector('.earnings-card:nth-child(3)');
+        if (payoutCard) {
+            payoutCard.style.animation = 'pulse 1s ease-in-out 3';
+        }
+    });
+
+    wsManager.on('payout_initiated', (payload) => {
+        showNotification(`Payout of ${formatCurrency(payload.amount)} initiated`, 'info');
+        loadEarningsData();
+    });
+
+    wsManager.on('transaction_created', (payload) => {
+        // Add new transaction to the top of the table
+        const tableBody = document.getElementById('transaction-table');
+        if (tableBody && payload.transaction) {
+            const newRow = createTransactionRow(payload.transaction);
+            tableBody.insertBefore(newRow, tableBody.firstChild);
+            
+            // Highlight the new row briefly
+            newRow.style.backgroundColor = '#f0f9ff';
+            setTimeout(() => {
+                newRow.style.backgroundColor = '';
+            }, 3000);
+        }
+        
+        // Update earnings metrics
+        setTimeout(loadEarningsData, 1000);
+    });
+
+    wsManager.on('revenue_milestone', (payload) => {
+        showNotification(`🎉 Milestone reached: ${payload.message}`, 'success');
+        
+        // Trigger confetti or celebration animation
+        celebrateRevenueMilestone();
+    });
+
+    wsManager.on('stripe_webhook', (payload) => {
+        // Handle Stripe webhook events
+        if (payload.type === 'payout.paid') {
+            showNotification('Payout successfully sent to your bank account', 'success');
+            loadEarningsData();
+        } else if (payload.type === 'payout.failed') {
+            showNotification('Payout failed. Please check your bank details.', 'error');
+            loadEarningsData();
+        }
+    });
+}
+
+function createTransactionRow(transaction) {
+    const row = document.createElement('tr');
+    row.className = 'transaction-row';
+    
+    const typeClass = getTransactionTypeClass(transaction.type);
+    const statusClass = getTransactionStatusClass(transaction.status);
+    
+    row.innerHTML = `
+        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${formatDate(transaction.created_at)}</td>
+        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${typeClass}">
+                ${transaction.type}
+            </span>
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${transaction.description}</td>
+        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${formatCurrency(transaction.amount)}</td>
+        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${formatCurrency(transaction.fee || 0)}</td>
+        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${formatCurrency(transaction.net_amount)}</td>
+        <td class="px-6 py-4 whitespace-nowrap">
+            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusClass}">
+                ${transaction.status}
+            </span>
+        </td>
+    `;
+    
+    return row;
+}
+
+function celebrateRevenueMilestone() {
+    // Create a simple celebration animation
+    const celebration = document.createElement('div');
+    celebration.className = 'fixed inset-0 pointer-events-none z-50 flex items-center justify-center';
+    celebration.innerHTML = `
+        <div class="text-6xl animate-bounce">🎉</div>
+    `;
+    
+    document.body.appendChild(celebration);
+    
+    setTimeout(() => {
+        celebration.remove();
+    }, 3000);
+}
+
+// Cleanup on page unload
+window.addEventListener('beforeunload', () => {
+    if (refreshInterval) {
+        clearInterval(refreshInterval);
+    }
+});
+</script>
+{% endblock %}

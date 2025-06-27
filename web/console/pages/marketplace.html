@@ -1,0 +1,1133 @@
+{% extends "templates/base.html" %}
+
+{% block title %}Marketplace - API-Direct Creator Portal{% endblock %}
+{% block description %}Discover and publish APIs in the API-Direct marketplace. Connect with other developers and monetize your APIs.{% endblock %}
+
+{% block styles %}
+.marketplace-card {
+    transition: all 0.3s ease;
+    border: 1px solid #e5e7eb;
+}
+
+.marketplace-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+    border-color: #4f46e5;
+}
+
+.api-card {
+    transition: all 0.3s ease;
+}
+
+.api-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+}
+
+.category-chip {
+    transition: all 0.2s ease;
+}
+
+.category-chip:hover {
+    transform: scale(1.05);
+}
+
+.rating-stars {
+    color: #fbbf24;
+}
+
+.pricing-badge {
+    background: linear-gradient(135deg, #4f46e5, #7c3aed);
+}
+
+.featured-gradient {
+    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #a855f7 100%);
+}
+
+.search-filters {
+    backdrop-filter: blur(10px);
+    background: rgba(255, 255, 255, 0.9);
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.fade-in-up {
+    animation: fadeInUp 0.6s ease-out;
+}
+
+.tab-active {
+    background: #4f46e5;
+    color: white;
+}
+
+.publish-modal {
+    backdrop-filter: blur(8px);
+}
+{% endblock %}
+
+{% block content %}
+<div class="mb-8">
+    <div class="flex justify-between items-center mb-4">
+        <div>
+            <h2 class="text-3xl font-bold text-gray-900 mb-2">API Marketplace</h2>
+            <p class="text-gray-600">Discover powerful APIs and share your creations with the community</p>
+        </div>
+        <button class="bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 transition-colors flex items-center" onclick="openPublishModal()">
+            <i class="fas fa-plus mr-2"></i>
+            Publish API
+        </button>
+    </div>
+    
+    <!-- Marketplace Stats -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+        <div class="bg-white p-4 rounded-lg border border-gray-200 text-center">
+            <div class="text-2xl font-bold text-indigo-600" id="total-apis">847</div>
+            <div class="text-sm text-gray-600">Total APIs</div>
+        </div>
+        <div class="bg-white p-4 rounded-lg border border-gray-200 text-center">
+            <div class="text-2xl font-bold text-green-600" id="active-developers">2.3K</div>
+            <div class="text-sm text-gray-600">Active Developers</div>
+        </div>
+        <div class="bg-white p-4 rounded-lg border border-gray-200 text-center">
+            <div class="text-2xl font-bold text-purple-600" id="monthly-calls">45M</div>
+            <div class="text-sm text-gray-600">Monthly Calls</div>
+        </div>
+        <div class="bg-white p-4 rounded-lg border border-gray-200 text-center">
+            <div class="text-2xl font-bold text-yellow-600" id="avg-rating">4.8</div>
+            <div class="text-sm text-gray-600">Avg Rating</div>
+        </div>
+    </div>
+</div>
+
+<!-- Navigation Tabs -->
+<div class="bg-white rounded-lg border border-gray-200 mb-6">
+    <div class="flex space-x-0">
+        <button class="tab-button flex-1 px-6 py-4 text-center font-medium rounded-l-lg tab-active" data-tab="discover">
+            <i class="fas fa-search mr-2"></i>Discover APIs
+        </button>
+        <button class="tab-button flex-1 px-6 py-4 text-center font-medium text-gray-600 hover:bg-gray-50" data-tab="my-listings">
+            <i class="fas fa-store mr-2"></i>My Listings
+        </button>
+        <button class="tab-button flex-1 px-6 py-4 text-center font-medium text-gray-600 hover:bg-gray-50" data-tab="analytics">
+            <i class="fas fa-chart-bar mr-2"></i>Analytics
+        </button>
+        <button class="tab-button flex-1 px-6 py-4 text-center font-medium rounded-r-lg text-gray-600 hover:bg-gray-50" data-tab="revenue">
+            <i class="fas fa-dollar-sign mr-2"></i>Revenue
+        </button>
+    </div>
+</div>
+
+<!-- Discover APIs Tab -->
+<div id="discover-tab" class="tab-content">
+    <!-- Search and Filters -->
+    <div class="search-filters sticky top-20 z-10 bg-white rounded-lg border border-gray-200 p-6 mb-6">
+        <div class="grid grid-cols-1 lg:grid-cols-4 gap-4 items-end">
+            <div class="lg:col-span-2">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Search APIs</label>
+                <div class="relative">
+                    <input type="text" id="search-input" placeholder="Search by name, description, or technology..." 
+                           class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                    <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                </div>
+            </div>
+            
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Category</label>
+                <select id="category-filter" class="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500">
+                    <option value="">All Categories</option>
+                    <option value="ai-ml">AI & Machine Learning</option>
+                    <option value="data">Data & Analytics</option>
+                    <option value="communication">Communication</option>
+                    <option value="finance">Finance & Payments</option>
+                    <option value="productivity">Productivity</option>
+                    <option value="media">Media & Content</option>
+                </select>
+            </div>
+            
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Sort By</label>
+                <select id="sort-filter" class="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500">
+                    <option value="popular">Most Popular</option>
+                    <option value="newest">Newest</option>
+                    <option value="rating">Highest Rated</option>
+                    <option value="price-low">Price: Low to High</option>
+                    <option value="price-high">Price: High to Low</option>
+                </select>
+            </div>
+        </div>
+        
+        <!-- Quick Category Filters -->
+        <div class="mt-4">
+            <div class="flex flex-wrap gap-2">
+                <button class="category-chip px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm hover:bg-indigo-100 hover:text-indigo-700" data-category="">
+                    All
+                </button>
+                <button class="category-chip px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm hover:bg-indigo-100 hover:text-indigo-700" data-category="ai-ml">
+                    🤖 AI & ML
+                </button>
+                <button class="category-chip px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm hover:bg-indigo-100 hover:text-indigo-700" data-category="data">
+                    📊 Data
+                </button>
+                <button class="category-chip px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm hover:bg-indigo-100 hover:text-indigo-700" data-category="communication">
+                    💬 Communication
+                </button>
+                <button class="category-chip px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm hover:bg-indigo-100 hover:text-indigo-700" data-category="finance">
+                    💰 Finance
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Featured APIs Section -->
+    <div class="mb-8">
+        <h3 class="text-xl font-semibold text-gray-900 mb-4">🌟 Featured APIs</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="featured-apis">
+            <!-- Featured APIs will be loaded here -->
+        </div>
+    </div>
+
+    <!-- All APIs Grid -->
+    <div class="mb-6">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-xl font-semibold text-gray-900">All APIs</h3>
+            <div class="flex items-center space-x-2">
+                <span class="text-sm text-gray-600">View:</span>
+                <button class="p-2 text-gray-400 hover:text-gray-600" id="grid-view" onclick="setViewMode('grid')">
+                    <i class="fas fa-th-large"></i>
+                </button>
+                <button class="p-2 text-gray-400 hover:text-gray-600" id="list-view" onclick="setViewMode('list')">
+                    <i class="fas fa-list"></i>
+                </button>
+            </div>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="apis-grid">
+            <!-- APIs will be loaded here -->
+        </div>
+        
+        <!-- Pagination -->
+        <div class="flex justify-center mt-8">
+            <nav class="flex space-x-2" id="pagination">
+                <!-- Pagination buttons will be generated here -->
+            </nav>
+        </div>
+    </div>
+</div>
+
+<!-- My Listings Tab -->
+<div id="my-listings-tab" class="tab-content hidden">
+    <div class="bg-white rounded-lg border border-gray-200 p-6 mb-6">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-lg font-semibold text-gray-900">Your Published APIs</h3>
+            <button class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors" onclick="openPublishModal()">
+                <i class="fas fa-plus mr-2"></i>Publish New API
+            </button>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="my-listings-grid">
+            <!-- User's APIs will be loaded here -->
+        </div>
+    </div>
+</div>
+
+<!-- Analytics Tab -->
+<div id="analytics-tab" class="tab-content hidden">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div class="bg-white rounded-lg border border-gray-200 p-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Marketplace Performance</h3>
+            <div class="h-64">
+                <canvas id="marketplace-performance-chart"></canvas>
+            </div>
+        </div>
+        
+        <div class="bg-white rounded-lg border border-gray-200 p-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Category Distribution</h3>
+            <div class="h-64">
+                <canvas id="category-distribution-chart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Revenue Tab -->
+<div id="revenue-tab" class="tab-content hidden">
+    <div class="bg-white rounded-lg border border-gray-200 p-6">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4">Marketplace Revenue</h3>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+            <div class="text-center">
+                <div class="text-2xl font-bold text-green-600">$2,847</div>
+                <div class="text-sm text-gray-600">This Month</div>
+            </div>
+            <div class="text-center">
+                <div class="text-2xl font-bold text-blue-600">$8,392</div>
+                <div class="text-sm text-gray-600">Total Earned</div>
+            </div>
+            <div class="text-center">
+                <div class="text-2xl font-bold text-purple-600">4.2%</div>
+                <div class="text-sm text-gray-600">Commission Rate</div>
+            </div>
+        </div>
+        
+        <div class="h-64">
+            <canvas id="marketplace-revenue-chart"></canvas>
+        </div>
+    </div>
+</div>
+
+<!-- Publish API Modal -->
+<div id="publish-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 publish-modal">
+    <div class="flex items-center justify-center min-h-screen p-4">
+        <div class="bg-white rounded-lg max-w-2xl w-full max-h-screen overflow-y-auto">
+            <div class="p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-xl font-semibold text-gray-900">Publish API to Marketplace</h3>
+                    <button onclick="closePublishModal()" class="text-gray-400 hover:text-gray-600">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+                
+                <form id="publish-form" class="space-y-6">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Select API to Publish</label>
+                        <select id="api-select" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500" required>
+                            <option value="">Choose an API...</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Marketplace Title</label>
+                        <input type="text" id="marketplace-title" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500" 
+                               placeholder="A catchy title for your API" required>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Description</label>
+                        <textarea id="marketplace-description" rows="4" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500" 
+                                  placeholder="Describe what your API does and its benefits..." required></textarea>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Category</label>
+                            <select id="marketplace-category" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500" required>
+                                <option value="">Select category...</option>
+                                <option value="ai-ml">AI & Machine Learning</option>
+                                <option value="data">Data & Analytics</option>
+                                <option value="communication">Communication</option>
+                                <option value="finance">Finance & Payments</option>
+                                <option value="productivity">Productivity</option>
+                                <option value="media">Media & Content</option>
+                            </select>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Pricing Model</label>
+                            <select id="pricing-model" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500" required>
+                                <option value="">Select pricing...</option>
+                                <option value="free">Free</option>
+                                <option value="freemium">Freemium</option>
+                                <option value="per-call">Per Call</option>
+                                <option value="subscription">Subscription</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div id="pricing-details" class="hidden">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Price per Call ($)</label>
+                        <input type="number" id="price-per-call" step="0.001" min="0" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500" 
+                               placeholder="0.001">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Tags</label>
+                        <input type="text" id="marketplace-tags" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500" 
+                               placeholder="machine-learning, nlp, sentiment (comma-separated)">
+                    </div>
+                    
+                    <div class="flex items-center">
+                        <input type="checkbox" id="featured-request" class="mr-2">
+                        <label for="featured-request" class="text-sm text-gray-700">Request featured placement (+$50/month)</label>
+                    </div>
+                    
+                    <div class="flex space-x-4 pt-4">
+                        <button type="submit" class="flex-1 bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 transition-colors">
+                            Publish to Marketplace
+                        </button>
+                        <button type="button" onclick="closePublishModal()" class="flex-1 border border-gray-300 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-50 transition-colors">
+                            Cancel
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- API Detail Modal -->
+<div id="api-detail-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50">
+    <div class="flex items-center justify-center min-h-screen p-4">
+        <div class="bg-white rounded-lg max-w-4xl w-full max-h-screen overflow-y-auto">
+            <div id="api-detail-content">
+                <!-- API detail content will be loaded here -->
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/api-client.js"></script>
+<script>
+// Marketplace functionality with live data
+let currentTab = 'discover';
+let currentPage = 1;
+let itemsPerPage = 12;
+let currentFilters = {
+    search: '',
+    category: '',
+    sort: 'popular'
+};
+let allAPIs = [];
+let myListings = [];
+let refreshInterval;
+
+document.addEventListener('DOMContentLoaded', function() {
+    initializeMarketplace();
+    setupEventListeners();
+    loadMarketplaceData();
+    setupAutoRefresh();
+    setupWebSocketHandlers();
+});
+
+function initializeMarketplace() {
+    // Initialize charts
+    initializeMarketplaceCharts();
+    
+    // Set active view mode
+    setViewMode('grid');
+}
+
+function setupEventListeners() {
+    // Tab switching
+    document.querySelectorAll('.tab-button').forEach(button => {
+        button.addEventListener('click', (e) => {
+            const tab = e.target.dataset.tab;
+            switchTab(tab);
+        });
+    });
+    
+    // Search and filters
+    document.getElementById('search-input').addEventListener('input', debounce(handleSearch, 300));
+    document.getElementById('category-filter').addEventListener('change', handleFilterChange);
+    document.getElementById('sort-filter').addEventListener('change', handleFilterChange);
+    
+    // Category chips
+    document.querySelectorAll('.category-chip').forEach(chip => {
+        chip.addEventListener('click', (e) => {
+            const category = e.target.dataset.category;
+            selectCategory(category);
+        });
+    });
+    
+    // Pricing model change
+    document.getElementById('pricing-model').addEventListener('change', handlePricingModelChange);
+    
+    // Publish form
+    document.getElementById('publish-form').addEventListener('submit', handlePublishSubmit);
+}
+
+function switchTab(tab) {
+    currentTab = tab;
+    
+    // Update tab buttons
+    document.querySelectorAll('.tab-button').forEach(btn => {
+        btn.classList.remove('tab-active');
+        btn.classList.add('text-gray-600', 'hover:bg-gray-50');
+    });
+    
+    const activeButton = document.querySelector(`[data-tab="${tab}"]`);
+    activeButton.classList.add('tab-active');
+    activeButton.classList.remove('text-gray-600', 'hover:bg-gray-50');
+    
+    // Show/hide tab content
+    document.querySelectorAll('.tab-content').forEach(content => {
+        content.classList.add('hidden');
+    });
+    
+    document.getElementById(`${tab}-tab`).classList.remove('hidden');
+    
+    // Load tab-specific data
+    switch(tab) {
+        case 'discover':
+            loadMarketplaceData();
+            break;
+        case 'my-listings':
+            loadMyListings();
+            break;
+        case 'analytics':
+            loadMarketplaceAnalytics();
+            break;
+        case 'revenue':
+            loadMarketplaceRevenue();
+            break;
+    }
+}
+
+async function loadMarketplaceData() {
+    try {
+        const [marketplaceData, featuredAPIs] = await Promise.all([
+            apiClient.getMarketplaceListings(),
+            apiClient.getFeaturedAPIs()
+        ]);
+        
+        allAPIs = marketplaceData.apis || [];
+        
+        updateMarketplaceStats(marketplaceData.stats);
+        displayFeaturedAPIs(featuredAPIs);
+        filterAndDisplayAPIs();
+        
+    } catch (error) {
+        handleAPIError(error, 'loading marketplace data');
+    }
+}
+
+function updateMarketplaceStats(stats) {
+    if (!stats) return;
+    
+    document.getElementById('total-apis').textContent = formatNumber(stats.total_apis);
+    document.getElementById('active-developers').textContent = formatNumber(stats.active_developers);
+    document.getElementById('monthly-calls').textContent = formatNumber(stats.monthly_calls);
+    document.getElementById('avg-rating').textContent = stats.avg_rating.toFixed(1);
+}
+
+function displayFeaturedAPIs(featuredAPIs) {
+    const container = document.getElementById('featured-apis');
+    container.innerHTML = '';
+    
+    if (!featuredAPIs || featuredAPIs.length === 0) {
+        container.innerHTML = '<p class="text-gray-500 col-span-full text-center py-8">No featured APIs available</p>';
+        return;
+    }
+    
+    featuredAPIs.forEach(api => {
+        const apiCard = createAPICard(api, true);
+        container.appendChild(apiCard);
+    });
+}
+
+function filterAndDisplayAPIs() {
+    let filteredAPIs = [...allAPIs];
+    
+    // Apply search filter
+    if (currentFilters.search) {
+        const searchTerm = currentFilters.search.toLowerCase();
+        filteredAPIs = filteredAPIs.filter(api => 
+            api.name.toLowerCase().includes(searchTerm) ||
+            api.description.toLowerCase().includes(searchTerm) ||
+            (api.tags && api.tags.some(tag => tag.toLowerCase().includes(searchTerm)))
+        );
+    }
+    
+    // Apply category filter
+    if (currentFilters.category) {
+        filteredAPIs = filteredAPIs.filter(api => api.category === currentFilters.category);
+    }
+    
+    // Apply sorting
+    filteredAPIs.sort((a, b) => {
+        switch(currentFilters.sort) {
+            case 'newest':
+                return new Date(b.created_at) - new Date(a.created_at);
+            case 'rating':
+                return (b.rating || 0) - (a.rating || 0);
+            case 'price-low':
+                return (a.price_per_call || 0) - (b.price_per_call || 0);
+            case 'price-high':
+                return (b.price_per_call || 0) - (a.price_per_call || 0);
+            case 'popular':
+            default:
+                return (b.monthly_calls || 0) - (a.monthly_calls || 0);
+        }
+    });
+    
+    displayAPIs(filteredAPIs);
+    updatePagination(filteredAPIs.length);
+}
+
+function displayAPIs(apis) {
+    const container = document.getElementById('apis-grid');
+    container.innerHTML = '';
+    
+    if (apis.length === 0) {
+        container.innerHTML = `
+            <div class="col-span-full text-center py-12">
+                <i class="fas fa-search text-4xl text-gray-300 mb-4"></i>
+                <p class="text-gray-500 text-lg">No APIs found matching your criteria</p>
+                <p class="text-gray-400 text-sm">Try adjusting your search or filters</p>
+            </div>
+        `;
+        return;
+    }
+    
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    const pageAPIs = apis.slice(startIndex, endIndex);
+    
+    pageAPIs.forEach((api, index) => {
+        const apiCard = createAPICard(api);
+        apiCard.classList.add('fade-in-up');
+        apiCard.style.animationDelay = `${index * 100}ms`;
+        container.appendChild(apiCard);
+    });
+}
+
+function createAPICard(api, featured = false) {
+    const card = document.createElement('div');
+    card.className = `${featured ? 'marketplace-card featured-gradient text-white' : 'marketplace-card bg-white'} rounded-lg p-6 cursor-pointer`;
+    card.onclick = () => openAPIDetail(api.id);
+    
+    const ratingStars = generateStarRating(api.rating || 0);
+    const priceDisplay = formatPricing(api.pricing_model, api.price_per_call);
+    
+    card.innerHTML = `
+        <div class="flex justify-between items-start mb-4">
+            <div class="flex items-center space-x-3">
+                <div class="w-12 h-12 ${featured ? 'bg-white bg-opacity-20' : 'bg-indigo-100'} rounded-lg flex items-center justify-center">
+                    <i class="fas ${getCategoryIcon(api.category)} ${featured ? 'text-white' : 'text-indigo-600'} text-lg"></i>
+                </div>
+                <div>
+                    <h4 class="font-semibold ${featured ? 'text-white' : 'text-gray-900'}">${api.name}</h4>
+                    <p class="text-sm ${featured ? 'text-white text-opacity-80' : 'text-gray-600'}">by ${api.creator_name}</p>
+                </div>
+            </div>
+            ${featured ? '<span class="text-xs bg-yellow-400 text-yellow-900 px-2 py-1 rounded-full font-medium">FEATURED</span>' : ''}
+        </div>
+        
+        <p class="text-sm ${featured ? 'text-white text-opacity-90' : 'text-gray-600'} mb-4 line-clamp-2">${api.description}</p>
+        
+        <div class="flex items-center justify-between mb-4">
+            <div class="flex items-center space-x-1">
+                ${ratingStars}
+                <span class="text-sm ${featured ? 'text-white text-opacity-80' : 'text-gray-600'} ml-1">(${api.review_count || 0})</span>
+            </div>
+            <span class="text-sm font-medium ${featured ? 'text-white' : 'text-gray-900'}">${formatNumber(api.monthly_calls || 0)} calls/mo</span>
+        </div>
+        
+        <div class="flex items-center justify-between">
+            <div class="flex flex-wrap gap-1">
+                ${api.tags ? api.tags.slice(0, 2).map(tag => 
+                    `<span class="text-xs ${featured ? 'bg-white bg-opacity-20 text-white' : 'bg-gray-100 text-gray-600'} px-2 py-1 rounded-full">${tag}</span>`
+                ).join('') : ''}
+            </div>
+            <div class="text-right">
+                <div class="text-lg font-bold ${featured ? 'text-white' : 'text-gray-900'}">${priceDisplay}</div>
+                <div class="text-xs ${featured ? 'text-white text-opacity-70' : 'text-gray-500'}">${api.pricing_model}</div>
+            </div>
+        </div>
+    `;
+    
+    return card;
+}
+
+function generateStarRating(rating) {
+    const fullStars = Math.floor(rating);
+    const hasHalfStar = rating % 1 >= 0.5;
+    const emptyStars = 5 - fullStars - (hasHalfStar ? 1 : 0);
+    
+    let stars = '';
+    
+    // Full stars
+    for (let i = 0; i < fullStars; i++) {
+        stars += '<i class="fas fa-star rating-stars text-sm"></i>';
+    }
+    
+    // Half star
+    if (hasHalfStar) {
+        stars += '<i class="fas fa-star-half-alt rating-stars text-sm"></i>';
+    }
+    
+    // Empty stars
+    for (let i = 0; i < emptyStars; i++) {
+        stars += '<i class="far fa-star text-gray-300 text-sm"></i>';
+    }
+    
+    return stars;
+}
+
+function formatPricing(model, pricePerCall) {
+    switch(model) {
+        case 'free':
+            return 'Free';
+        case 'freemium':
+            return 'Freemium';
+        case 'per-call':
+            return `$${(pricePerCall || 0).toFixed(3)}`;
+        case 'subscription':
+            return 'Subscription';
+        default:
+            return 'Contact';
+    }
+}
+
+function getCategoryIcon(category) {
+    const icons = {
+        'ai-ml': 'fa-robot',
+        'data': 'fa-chart-bar',
+        'communication': 'fa-comments',
+        'finance': 'fa-dollar-sign',
+        'productivity': 'fa-tasks',
+        'media': 'fa-photo-video'
+    };
+    return icons[category] || 'fa-cog';
+}
+
+function handleSearch() {
+    currentFilters.search = document.getElementById('search-input').value;
+    currentPage = 1;
+    filterAndDisplayAPIs();
+}
+
+function handleFilterChange() {
+    currentFilters.category = document.getElementById('category-filter').value;
+    currentFilters.sort = document.getElementById('sort-filter').value;
+    currentPage = 1;
+    filterAndDisplayAPIs();
+}
+
+function selectCategory(category) {
+    currentFilters.category = category;
+    document.getElementById('category-filter').value = category;
+    
+    // Update active category chip
+    document.querySelectorAll('.category-chip').forEach(chip => {
+        chip.classList.remove('bg-indigo-100', 'text-indigo-700');
+        chip.classList.add('bg-gray-100', 'text-gray-700');
+    });
+    
+    const activeChip = document.querySelector(`[data-category="${category}"]`);
+    if (activeChip) {
+        activeChip.classList.remove('bg-gray-100', 'text-gray-700');
+        activeChip.classList.add('bg-indigo-100', 'text-indigo-700');
+    }
+    
+    currentPage = 1;
+    filterAndDisplayAPIs();
+}
+
+function setViewMode(mode) {
+    const gridView = document.getElementById('grid-view');
+    const listView = document.getElementById('list-view');
+    const apisGrid = document.getElementById('apis-grid');
+    
+    if (mode === 'grid') {
+        gridView.classList.add('text-indigo-600');
+        gridView.classList.remove('text-gray-400');
+        listView.classList.remove('text-indigo-600');
+        listView.classList.add('text-gray-400');
+        apisGrid.className = 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6';
+    } else {
+        listView.classList.add('text-indigo-600');
+        listView.classList.remove('text-gray-400');
+        gridView.classList.remove('text-indigo-600');
+        gridView.classList.add('text-gray-400');
+        apisGrid.className = 'space-y-4';
+    }
+}
+
+function updatePagination(totalItems) {
+    const totalPages = Math.ceil(totalItems / itemsPerPage);
+    const pagination = document.getElementById('pagination');
+    
+    if (totalPages <= 1) {
+        pagination.innerHTML = '';
+        return;
+    }
+    
+    let paginationHTML = '';
+    
+    // Previous button
+    if (currentPage > 1) {
+        paginationHTML += `<button onclick="changePage(${currentPage - 1})" class="px-3 py-2 bg-white border border-gray-300 rounded-md hover:bg-gray-50">Previous</button>`;
+    }
+    
+    // Page numbers
+    for (let i = 1; i <= totalPages; i++) {
+        if (i === currentPage) {
+            paginationHTML += `<button class="px-3 py-2 bg-indigo-600 text-white rounded-md">${i}</button>`;
+        } else {
+            paginationHTML += `<button onclick="changePage(${i})" class="px-3 py-2 bg-white border border-gray-300 rounded-md hover:bg-gray-50">${i}</button>`;
+        }
+    }
+    
+    // Next button
+    if (currentPage < totalPages) {
+        paginationHTML += `<button onclick="changePage(${currentPage + 1})" class="px-3 py-2 bg-white border border-gray-300 rounded-md hover:bg-gray-50">Next</button>`;
+    }
+    
+    pagination.innerHTML = paginationHTML;
+}
+
+function changePage(page) {
+    currentPage = page;
+    filterAndDisplayAPIs();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+async function openAPIDetail(apiId) {
+    try {
+        const apiDetail = await apiClient.getMarketplaceAPI(apiId);
+        displayAPIDetail(apiDetail);
+        document.getElementById('api-detail-modal').classList.remove('hidden');
+    } catch (error) {
+        handleAPIError(error, 'loading API details');
+    }
+}
+
+function displayAPIDetail(api) {
+    const content = document.getElementById('api-detail-content');
+    const ratingStars = generateStarRating(api.rating || 0);
+    const priceDisplay = formatPricing(api.pricing_model, api.price_per_call);
+    
+    content.innerHTML = `
+        <div class="p-6">
+            <div class="flex justify-between items-start mb-6">
+                <div class="flex items-center space-x-4">
+                    <div class="w-16 h-16 bg-indigo-100 rounded-lg flex items-center justify-center">
+                        <i class="fas ${getCategoryIcon(api.category)} text-indigo-600 text-2xl"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-2xl font-bold text-gray-900">${api.name}</h2>
+                        <p class="text-gray-600">by ${api.creator_name}</p>
+                        <div class="flex items-center mt-1">
+                            ${ratingStars}
+                            <span class="text-sm text-gray-600 ml-2">(${api.review_count || 0} reviews)</span>
+                        </div>
+                    </div>
+                </div>
+                <button onclick="closeAPIDetail()" class="text-gray-400 hover:text-gray-600">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div class="lg:col-span-2">
+                    <div class="prose max-w-none">
+                        <h3>Description</h3>
+                        <p>${api.description}</p>
+                        
+                        <h3>Features</h3>
+                        <ul>
+                            ${api.features ? api.features.map(feature => `<li>${feature}</li>`).join('') : '<li>No features listed</li>'}
+                        </ul>
+                        
+                        <h3>Use Cases</h3>
+                        <p>${api.use_cases || 'Use cases not provided'}</p>
+                    </div>
+                </div>
+                
+                <div class="space-y-6">
+                    <div class="bg-gray-50 rounded-lg p-4">
+                        <h4 class="font-semibold text-gray-900 mb-2">Pricing</h4>
+                        <div class="text-2xl font-bold text-gray-900">${priceDisplay}</div>
+                        <div class="text-sm text-gray-600">${api.pricing_model}</div>
+                        <button class="w-full mt-4 bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700">
+                            Try API
+                        </button>
+                    </div>
+                    
+                    <div class="bg-gray-50 rounded-lg p-4">
+                        <h4 class="font-semibold text-gray-900 mb-2">Stats</h4>
+                        <div class="space-y-2 text-sm">
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Monthly Calls:</span>
+                                <span class="font-medium">${formatNumber(api.monthly_calls || 0)}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Uptime:</span>
+                                <span class="font-medium">${api.uptime || 99.9}%</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Avg Response:</span>
+                                <span class="font-medium">${api.avg_response_time || 250}ms</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <h4 class="font-semibold text-gray-900 mb-2">Tags</h4>
+                        <div class="flex flex-wrap gap-1">
+                            ${api.tags ? api.tags.map(tag => 
+                                `<span class="bg-gray-100 text-gray-600 px-2 py-1 rounded-full text-xs">${tag}</span>`
+                            ).join('') : 'No tags'}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+function closeAPIDetail() {
+    document.getElementById('api-detail-modal').classList.add('hidden');
+}
+
+async function openPublishModal() {
+    // Load user's APIs for selection
+    try {
+        const userAPIs = await apiClient.getAPIs();
+        const apiSelect = document.getElementById('api-select');
+        
+        apiSelect.innerHTML = '<option value="">Choose an API...</option>';
+        userAPIs.apis.forEach(api => {
+            if (api.status === 'running') {
+                apiSelect.innerHTML += `<option value="${api.id}">${api.name}</option>`;
+            }
+        });
+        
+        document.getElementById('publish-modal').classList.remove('hidden');
+    } catch (error) {
+        handleAPIError(error, 'loading user APIs');
+    }
+}
+
+function closePublishModal() {
+    document.getElementById('publish-modal').classList.add('hidden');
+    document.getElementById('publish-form').reset();
+    document.getElementById('pricing-details').classList.add('hidden');
+}
+
+function handlePricingModelChange() {
+    const pricingModel = document.getElementById('pricing-model').value;
+    const pricingDetails = document.getElementById('pricing-details');
+    
+    if (pricingModel === 'per-call') {
+        pricingDetails.classList.remove('hidden');
+    } else {
+        pricingDetails.classList.add('hidden');
+    }
+}
+
+async function handlePublishSubmit(e) {
+    e.preventDefault();
+    
+    const formData = {
+        api_id: document.getElementById('api-select').value,
+        title: document.getElementById('marketplace-title').value,
+        description: document.getElementById('marketplace-description').value,
+        category: document.getElementById('marketplace-category').value,
+        pricing_model: document.getElementById('pricing-model').value,
+        price_per_call: document.getElementById('price-per-call').value || null,
+        tags: document.getElementById('marketplace-tags').value.split(',').map(tag => tag.trim()).filter(tag => tag),
+        featured_request: document.getElementById('featured-request').checked
+    };
+    
+    try {
+        await apiClient.publishToMarketplace(formData.api_id, formData);
+        showNotification('API published to marketplace successfully!', 'success');
+        closePublishModal();
+        
+        // Refresh marketplace data
+        if (currentTab === 'discover') {
+            loadMarketplaceData();
+        } else if (currentTab === 'my-listings') {
+            loadMyListings();
+        }
+        
+    } catch (error) {
+        handleAPIError(error, 'publishing API');
+    }
+}
+
+async function loadMyListings() {
+    try {
+        const listings = await apiClient.getMyMarketplaceListings();
+        myListings = listings.apis || [];
+        displayMyListings();
+    } catch (error) {
+        handleAPIError(error, 'loading your listings');
+    }
+}
+
+function displayMyListings() {
+    const container = document.getElementById('my-listings-grid');
+    container.innerHTML = '';
+    
+    if (myListings.length === 0) {
+        container.innerHTML = `
+            <div class="col-span-full text-center py-12">
+                <i class="fas fa-store text-4xl text-gray-300 mb-4"></i>
+                <p class="text-gray-500 text-lg">No published APIs yet</p>
+                <p class="text-gray-400 text-sm mb-4">Share your APIs with the community</p>
+                <button onclick="openPublishModal()" class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700">
+                    Publish Your First API
+                </button>
+            </div>
+        `;
+        return;
+    }
+    
+    myListings.forEach(api => {
+        const apiCard = createMyListingCard(api);
+        container.appendChild(apiCard);
+    });
+}
+
+function createMyListingCard(api) {
+    const card = document.createElement('div');
+    card.className = 'bg-white rounded-lg border border-gray-200 p-6';
+    
+    const statusBadge = getListingStatusBadge(api.marketplace_status);
+    const ratingStars = generateStarRating(api.rating || 0);
+    
+    card.innerHTML = `
+        <div class="flex justify-between items-start mb-4">
+            <div>
+                <h4 class="font-semibold text-gray-900">${api.name}</h4>
+                <p class="text-sm text-gray-600">${api.category}</p>
+            </div>
+            ${statusBadge}
+        </div>
+        
+        <p class="text-sm text-gray-600 mb-4 line-clamp-2">${api.description}</p>
+        
+        <div class="grid grid-cols-2 gap-4 mb-4 text-sm">
+            <div>
+                <span class="text-gray-500">Monthly Calls:</span>
+                <div class="font-medium">${formatNumber(api.monthly_calls || 0)}</div>
+            </div>
+            <div>
+                <span class="text-gray-500">Revenue:</span>
+                <div class="font-medium">${formatCurrency(api.monthly_revenue || 0)}</div>
+            </div>
+        </div>
+        
+        <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-1">
+                ${ratingStars}
+                <span class="text-sm text-gray-600 ml-1">(${api.review_count || 0})</span>
+            </div>
+            <div class="flex space-x-2">
+                <button onclick="editListing('${api.id}')" class="text-indigo-600 hover:text-indigo-700 text-sm">Edit</button>
+                <button onclick="viewListingAnalytics('${api.id}')" class="text-gray-600 hover:text-gray-700 text-sm">Analytics</button>
+            </div>
+        </div>
+    `;
+    
+    return card;
+}
+
+function getListingStatusBadge(status) {
+    const badges = {
+        'active': '<span class="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-medium">Active</span>',
+        'pending': '<span class="bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full text-xs font-medium">Pending Review</span>',
+        'rejected': '<span class="bg-red-100 text-red-800 px-2 py-1 rounded-full text-xs font-medium">Rejected</span>',
+        'paused': '<span class="bg-gray-100 text-gray-800 px-2 py-1 rounded-full text-xs font-medium">Paused</span>'
+    };
+    return badges[status] || badges['pending'];
+}
+
+function editListing(apiId) {
+    // Open edit modal - simplified for demo
+    showNotification('Edit functionality would open here', 'info');
+}
+
+function viewListingAnalytics(apiId) {
+    // Switch to analytics tab with API filter
+    showNotification('Listing-specific analytics would load here', 'info');
+}
+
+function initializeMarketplaceCharts() {
+    // Initialize Chart.js charts for analytics
+    // Simplified implementation
+}
+
+async function loadMarketplaceAnalytics() {
+    // Load marketplace analytics data
+    showNotification('Marketplace analytics loading...', 'info');
+}
+
+async function loadMarketplaceRevenue() {
+    // Load marketplace revenue data  
+    showNotification('Marketplace revenue loading...', 'info');
+}
+
+function setupAutoRefresh() {
+    // Auto-refresh marketplace data every 2 minutes
+    refreshInterval = setInterval(async () => {
+        if (currentTab === 'discover') {
+            await loadMarketplaceData();
+        } else if (currentTab === 'my-listings') {
+            await loadMyListings();
+        }
+    }, 120000);
+}
+
+function setupWebSocketHandlers() {
+    // Marketplace-specific WebSocket handlers
+    wsManager.on('marketplace_update', (payload) => {
+        if (currentTab === 'discover') {
+            loadMarketplaceData();
+        }
+    });
+    
+    wsManager.on('api_published', (payload) => {
+        showNotification(`API "${payload.api_name}" published to marketplace!`, 'success');
+        if (currentTab === 'my-listings') {
+            loadMyListings();
+        }
+    });
+    
+    wsManager.on('marketplace_review', (payload) => {
+        showNotification(`Your API "${payload.api_name}" received a new review!`, 'info');
+        if (currentTab === 'my-listings') {
+            loadMyListings();
+        }
+    });
+}
+
+// API Publishing and Subscription Functions for Testing
+async function publishAPI(apiId, listingData) {
+    return await apiClient.publishAPI(apiId, listingData);
+}
+
+async function subscribeToAPI(apiId, plan = 'basic') {
+    try {
+        await apiClient.subscribeToAPI(apiId, plan);
+        showNotification('Successfully subscribed to API!', 'success');
+        loadMarketplaceData(); // Refresh to show subscription status
+    } catch (error) {
+        console.error('Error subscribing to API:', error);
+        showNotification('Failed to subscribe: ' + error.message, 'error');
+    }
+}
+
+// Utility functions
+function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+        const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
+}
+
+// Cleanup on page unload
+window.addEventListener('beforeunload', () => {
+    if (refreshInterval) {
+        clearInterval(refreshInterval);
+    }
+});
+</script>
+{% endblock %}
