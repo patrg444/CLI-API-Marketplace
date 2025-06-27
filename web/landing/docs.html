@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Documentation - API-Direct</title>
+    <meta name="description" content="Complete documentation for API-Direct - Deploy production APIs with AI agents in 2 minutes">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        pre {
+            background: #1a1a1a;
+            color: #4ade80;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            overflow-x: auto;
+        }
+        code {
+            background: #f3f4f6;
+            padding: 0.125rem 0.25rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+        pre code {
+            background: none;
+            padding: 0;
+        }
+    </style>
+</head>
+<body class="bg-white">
+    <!-- Navigation -->
+    <nav class="bg-white border-b border-gray-200 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center">
+                    <a href="/" class="flex items-center">
+                        <svg class="w-8 h-8 mr-2 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                        </svg>
+                        <h1 class="text-2xl font-bold text-gray-900">API-Direct</h1>
+                    </a>
+                </div>
+                <div class="hidden md:flex items-center space-x-8">
+                    <a href="/#features" class="text-gray-700 hover:text-gray-900 transition-colors">Features</a>
+                    <a href="/#pricing" class="text-gray-700 hover:text-gray-900 transition-colors">Pricing</a>
+                    <a href="/docs.html" class="text-gray-700 hover:text-gray-900 transition-colors font-semibold">Docs</a>
+                    <a href="/#waitlist" class="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 transition-colors">Get Started</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero -->
+    <section class="gradient-bg py-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h1 class="text-4xl font-bold text-white mb-4">Documentation</h1>
+            <p class="text-xl text-blue-100">Everything you need to deploy production APIs with AI agents</p>
+        </div>
+    </section>
+
+    <!-- Content -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+            <!-- Sidebar -->
+            <div class="lg:col-span-1">
+                <div class="sticky top-20">
+                    <h3 class="font-semibold text-gray-900 mb-4">Quick Links</h3>
+                    <nav class="space-y-2">
+                        <a href="#getting-started" class="block text-gray-600 hover:text-indigo-600 py-1">Getting Started</a>
+                        <a href="#installation" class="block text-gray-600 hover:text-indigo-600 py-1">Installation</a>
+                        <a href="#cli-reference" class="block text-gray-600 hover:text-indigo-600 py-1">CLI Reference</a>
+                        <a href="#api-reference" class="block text-gray-600 hover:text-indigo-600 py-1">API Reference</a>
+                        <a href="#examples" class="block text-gray-600 hover:text-indigo-600 py-1">Examples</a>
+                        <a href="#templates" class="block text-gray-600 hover:text-indigo-600 py-1">Templates</a>
+                    </nav>
+                </div>
+            </div>
+
+            <!-- Main Content -->
+            <div class="lg:col-span-3 space-y-12">
+                <!-- Getting Started -->
+                <section id="getting-started">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-6">Getting Started</h2>
+                    <p class="text-gray-600 mb-4">
+                        API-Direct is the fastest way to deploy production APIs. Built specifically for AI agents, 
+                        our platform handles all the infrastructure, billing, and scaling automatically.
+                    </p>
+                    <div class="bg-gray-50 p-6 rounded-lg">
+                        <h3 class="font-semibold text-gray-900 mb-3">Quick Start</h3>
+                        <pre><code># Install the CLI
+npm install -g apidirect
+
+# Initialize a new API
+apidirect init my-api --template sentiment-analyzer
+
+# Deploy to production
+apidirect deploy --hosted</code></pre>
+                    </div>
+                </section>
+
+                <!-- Installation -->
+                <section id="installation">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-6">Installation</h2>
+                    
+                    <h3 class="text-xl font-semibold text-gray-900 mb-3">System Requirements</h3>
+                    <ul class="list-disc list-inside text-gray-600 mb-6 space-y-1">
+                        <li>Node.js 16.x or higher</li>
+                        <li>npm or yarn package manager</li>
+                        <li>Git (for version control)</li>
+                    </ul>
+
+                    <h3 class="text-xl font-semibold text-gray-900 mb-3">Install via npm</h3>
+                    <pre><code>npm install -g apidirect</code></pre>
+
+                    <h3 class="text-xl font-semibold text-gray-900 mb-3 mt-6">Install via yarn</h3>
+                    <pre><code>yarn global add apidirect</code></pre>
+
+                    <h3 class="text-xl font-semibold text-gray-900 mb-3 mt-6">Verify Installation</h3>
+                    <pre><code>apidirect --version</code></pre>
+                </section>
+
+                <!-- CLI Reference -->
+                <section id="cli-reference">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-6">CLI Reference</h2>
+                    
+                    <div class="space-y-6">
+                        <div class="border-l-4 border-indigo-500 pl-4">
+                            <h3 class="font-mono text-lg font-semibold text-gray-900">apidirect init</h3>
+                            <p class="text-gray-600 mb-2">Initialize a new API project</p>
+                            <pre><code>apidirect init &lt;project-name&gt; [options]
+
+Options:
+  --template &lt;name&gt;    Use a specific template
+  --yes               Skip interactive prompts
+  --force             Overwrite existing directory</code></pre>
+                        </div>
+
+                        <div class="border-l-4 border-indigo-500 pl-4">
+                            <h3 class="font-mono text-lg font-semibold text-gray-900">apidirect deploy</h3>
+                            <p class="text-gray-600 mb-2">Deploy your API to production</p>
+                            <pre><code>apidirect deploy [options]
+
+Options:
+  --hosted            Deploy to API-Direct infrastructure
+  --byoa             Deploy to your own AWS account
+  --yes              Skip confirmation prompts
+  --output json      Return deployment info as JSON</code></pre>
+                        </div>
+
+                        <div class="border-l-4 border-indigo-500 pl-4">
+                            <h3 class="font-mono text-lg font-semibold text-gray-900">apidirect list</h3>
+                            <p class="text-gray-600 mb-2">List all deployed APIs</p>
+                            <pre><code>apidirect list [options]
+
+Options:
+  --output json      Output as JSON
+  --filter &lt;status&gt;  Filter by status (active, paused)</code></pre>
+                        </div>
+
+                        <div class="border-l-4 border-indigo-500 pl-4">
+                            <h3 class="font-mono text-lg font-semibold text-gray-900">apidirect logs</h3>
+                            <p class="text-gray-600 mb-2">View API logs in real-time</p>
+                            <pre><code>apidirect logs &lt;api-name&gt; [options]
+
+Options:
+  --tail &lt;n&gt;         Show last n lines
+  --follow          Stream logs in real-time
+  --filter &lt;term&gt;   Filter log entries</code></pre>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- API Reference -->
+                <section id="api-reference">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-6">API Reference</h2>
+                    
+                    <h3 class="text-xl font-semibold text-gray-900 mb-4">Base URL</h3>
+                    <code class="text-lg">https://api.apidirect.dev/v1</code>
+
+                    <h3 class="text-xl font-semibold text-gray-900 mb-4 mt-8">Authentication</h3>
+                    <p class="text-gray-600 mb-4">All API requests require authentication via API key:</p>
+                    <pre><code>Authorization: Bearer YOUR_API_KEY</code></pre>
+
+                    <h3 class="text-xl font-semibold text-gray-900 mb-4 mt-8">Endpoints</h3>
+                    
+                    <div class="space-y-6">
+                        <div class="bg-gray-50 p-4 rounded-lg">
+                            <h4 class="font-mono font-semibold">POST /apis</h4>
+                            <p class="text-gray-600 mb-2">Create a new API</p>
+                            <pre><code>{
+  "name": "sentiment-api",
+  "template": "sentiment-analyzer",
+  "config": {
+    "pricing": {
+      "pricePerCall": 0.001
+    }
+  }
+}</code></pre>
+                        </div>
+
+                        <div class="bg-gray-50 p-4 rounded-lg">
+                            <h4 class="font-mono font-semibold">GET /apis/{id}</h4>
+                            <p class="text-gray-600 mb-2">Get API details</p>
+                            <pre><code>GET /apis/api_abc123
+
+Response:
+{
+  "id": "api_abc123",
+  "name": "sentiment-api",
+  "status": "active",
+  "endpoint": "https://sentiment-api.apidirect.dev",
+  "requests": 145289,
+  "revenue": "$145.29"
+}</code></pre>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Examples -->
+                <section id="examples">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-6">Examples</h2>
+                    
+                    <h3 class="text-xl font-semibold text-gray-900 mb-4">Deploy a Sentiment Analysis API</h3>
+                    <pre><code># Initialize project
+apidirect init sentiment-api --template sentiment-analyzer
+
+# Configure pricing
+cd sentiment-api
+echo "PRICE_PER_CALL=0.001" >> .env
+
+# Deploy to production
+apidirect deploy --hosted --yes
+
+# Output:
+# ✓ API deployed successfully!
+# Endpoint: https://sentiment-api-abc123.apidirect.dev
+# API Key: key_xyz789...</code></pre>
+
+                    <h3 class="text-xl font-semibold text-gray-900 mb-4 mt-8">Using the Deployed API</h3>
+                    <pre><code># Make a request
+curl -X POST https://sentiment-api-abc123.apidirect.dev/analyze \
+  -H "Authorization: Bearer key_xyz789..." \
+  -H "Content-Type: application/json" \
+  -d '{
+    "text": "I love this product! It works perfectly."
+  }'
+
+# Response:
+{
+  "sentiment": "positive",
+  "confidence": 0.98,
+  "emotions": ["joy", "satisfaction"]
+}</code></pre>
+                </section>
+
+                <!-- Templates -->
+                <section id="templates">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-6">Available Templates</h2>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="border rounded-lg p-4">
+                            <h3 class="font-semibold text-gray-900 mb-2">sentiment-analyzer</h3>
+                            <p class="text-gray-600 text-sm mb-2">Multi-language sentiment analysis with emotion detection</p>
+                            <code class="text-xs">apidirect init my-api --template sentiment-analyzer</code>
+                        </div>
+                        
+                        <div class="border rounded-lg p-4">
+                            <h3 class="font-semibold text-gray-900 mb-2">gpt-wrapper</h3>
+                            <p class="text-gray-600 text-sm mb-2">Production-ready OpenAI wrapper with caching</p>
+                            <code class="text-xs">apidirect init my-api --template gpt-wrapper</code>
+                        </div>
+                        
+                        <div class="border rounded-lg p-4">
+                            <h3 class="font-semibold text-gray-900 mb-2">data-enrichment</h3>
+                            <p class="text-gray-600 text-sm mb-2">Enrich company data with multiple sources</p>
+                            <code class="text-xs">apidirect init my-api --template data-enrichment</code>
+                        </div>
+                        
+                        <div class="border rounded-lg p-4">
+                            <h3 class="font-semibold text-gray-900 mb-2">web-scraper</h3>
+                            <p class="text-gray-600 text-sm mb-2">Headless browser scraping with proxy rotation</p>
+                            <code class="text-xs">apidirect init my-api --template web-scraper</code>
+                        </div>
+                    </div>
+                    
+                    <p class="text-gray-600 mt-6">
+                        <a href="/templates.html" class="text-indigo-600 hover:text-indigo-700 font-semibold">
+                            View all 50+ templates →
+                        </a>
+                    </p>
+                </section>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 text-white py-12 mt-20">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center">
+                <p>© 2025 API-Direct. Built for the AI Agent Economy.</p>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>
