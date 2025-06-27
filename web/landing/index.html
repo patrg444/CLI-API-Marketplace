@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API-Direct: Infrastructure for the AI Agent Economy</title>
+    <meta name="description" content="The only platform where AI agents can deploy production APIs in 2 minutes. Zero configuration, instant revenue. Built for the AI agent economy.">
+    
+    <!-- Open Graph / Social Media -->
+    <meta property="og:title" content="API-Direct: AI Agents Building Production Businesses">
+    <meta property="og:description" content="Watch AI agents deploy $10K/month APIs in 2 minutes. Zero AWS setup required.">
+    <meta property="og:image" content="https://api-direct.io/social-preview.png">
+    <meta property="og:url" content="https://api-direct.io">
+    <meta property="og:type" content="website">
+    
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="API-Direct: AI Agents Building Production Businesses">
+    <meta name="twitter:description" content="Watch AI agents deploy $10K/month APIs in 2 minutes">
+    <meta name="twitter:image" content="https://api-direct.io/social-preview.png">
+    
+    <!-- Styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+        
+        body { font-family: 'Inter', sans-serif; }
+        
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .ai-gradient {
+            background: linear-gradient(135deg, #ff6b6b 0%, #4ecdc4 50%, #45b7d1 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .terminal-window {
+            background: #1a1a1a;
+            border-radius: 8px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        
+        .terminal-header {
+            background: #2d2d2d;
+            padding: 12px;
+            border-radius: 8px 8px 0 0;
+            display: flex;
+            align-items: center;
+        }
+        
+        .terminal-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        
+        .typing-animation {
+            overflow: hidden;
+            border-right: 2px solid #4ade80;
+            white-space: nowrap;
+            animation: typing 3s steps(40, end), blink-caret 0.75s step-end infinite;
+        }
+        
+        @keyframes typing {
+            from { width: 0; }
+            to { width: 100%; }
+        }
+        
+        @keyframes blink-caret {
+            from, to { border-color: transparent; }
+            50% { border-color: #4ade80; }
+        }
+        
+        .feature-card {
+            transition: all 0.3s ease;
+            border: 1px solid #e5e7eb;
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            border-color: #4f46e5;
+        }
+        
+        .stats-counter {
+            font-weight: 800;
+            font-size: 3rem;
+        }
+    </style>
+</head>
+<body class="bg-white">
+    <!-- Navigation -->
+    <nav class="bg-white border-b border-gray-200 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <h1 class="text-2xl font-bold text-gray-900">API-Direct</h1>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-8">
+                    <a href="#features" class="text-gray-700 hover:text-gray-900">Features</a>
+                    <a href="#pricing" class="text-gray-700 hover:text-gray-900">Pricing</a>
+                    <a href="#docs" class="text-gray-700 hover:text-gray-900">Docs</a>
+                    <a href="https://console.api-direct.io" class="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700">Get Started</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="gradient-bg py-20">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+                <div>
+                    <div class="mb-6">
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                            AI Agent Ready
+                        </span>
+                    </div>
+                    
+                    <h1 class="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-6 leading-tight">
+                        <span class="block sm:inline">Infrastructure for the</span>
+                        <span class="ai-gradient block">AI Agent Economy</span>
+                    </h1>
+                    
+                    <p class="text-xl text-blue-100 mb-8">
+                        The only platform where AI agents can deploy production APIs in 2 minutes. 
+                        Zero AWS setup. Instant revenue. Built for autonomous entrepreneurship.
+                    </p>
+                    
+                    <div class="flex flex-col sm:flex-row gap-4">
+                        <a href="#demo" class="bg-white text-indigo-600 px-8 py-4 rounded-lg font-semibold hover:bg-gray-50 transition-colors">
+                            Watch AI Deploy API
+                        </a>
+                        <a href="https://console.api-direct.io" class="border-2 border-white text-white px-8 py-4 rounded-lg font-semibold hover:bg-white hover:text-indigo-600 transition-colors">
+                            Start Building Now
+                        </a>
+                    </div>
+                    
+                    <!-- Quick Stats -->
+                    <div class="grid grid-cols-3 gap-4 mt-12 pt-8 border-t border-blue-300">
+                        <div class="text-center">
+                            <div class="stats-counter text-white">2min</div>
+                            <div class="text-blue-200">Deploy Time</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="stats-counter text-white">$0</div>
+                            <div class="text-blue-200">AWS Setup</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="stats-counter text-white">100%</div>
+                            <div class="text-blue-200">AI Compatible</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Terminal Demo -->
+                <div class="terminal-window">
+                    <div class="terminal-header">
+                        <div class="terminal-dot bg-red-500"></div>
+                        <div class="terminal-dot bg-yellow-500"></div>
+                        <div class="terminal-dot bg-green-500"></div>
+                        <span class="text-gray-400 ml-4 text-sm">AI Agent Terminal</span>
+                    </div>
+                    <div class="p-6 text-green-400 font-mono text-sm">
+                        <div class="mb-4">
+                            <span class="text-blue-400">human$</span> Claude, build me a sentiment analysis API that charges per request
+                        </div>
+                        <div class="mb-4">
+                            <span class="text-purple-400">claude$</span> <span class="typing-animation">apidirect init sentiment-api --template sentiment-analyzer</span>
+                        </div>
+                        <div class="text-gray-400 mb-2">Generated production-ready sentiment analysis API</div>
+                        <div class="text-gray-400 mb-2">Included: Multi-language support, emotion detection</div>
+                        <div class="text-gray-400 mb-4">Configured: Auto-scaling, payment processing</div>
+                        
+                        <div class="mb-4">
+                            <span class="text-purple-400">claude$</span> apidirect deploy --hosted --output json
+                        </div>
+                        <div class="text-gray-400 mb-2">Deploying to hosted infrastructure...</div>
+                        <div class="text-gray-400 mb-2">Building container image...</div>
+                        <div class="text-gray-400 mb-2">Provisioning auto-scaling infrastructure...</div>
+                        <div class="text-gray-400 mb-4">Deployment successful!</div>
+                        
+                        <div class="bg-gray-800 p-3 rounded text-xs">
+                            <div class="text-green-400">{</div>
+                            <div class="ml-4 text-white">"api_url": "https://sentiment-api-abc123.api-direct.io",</div>
+                            <div class="ml-4 text-white">"status": "success",</div>
+                            <div class="ml-4 text-white">"deployment_type": "hosted"</div>
+                            <div class="text-green-400">}</div>
+                        </div>
+                        
+                        <div class="mt-4 text-yellow-400">
+                            AI agent just built a complete business in 2 minutes!
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Problem Section -->
+    <section class="py-20 bg-gray-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl font-bold text-gray-900 mb-6">
+                    The AI Agent Economy Has a Problem
+                </h2>
+                <p class="text-xl text-gray-600 max-w-3xl mx-auto">
+                    Existing platforms require complex AWS setup, have unclear errors, and break AI automation. 
+                    AI agents need infrastructure designed for autonomous operation.
+                </p>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-12">
+                <!-- Problem: Other Platforms -->
+                <div class="bg-white p-8 rounded-lg border-l-4 border-red-500">
+                    <h3 class="text-2xl font-bold text-gray-900 mb-4">
+                        Other Platforms
+                    </h3>
+                    <ul class="space-y-3 text-gray-700">
+                        <li class="flex items-start">
+                            <span class="text-red-500 mr-3 mt-1 font-bold">×</span>
+                            Require AWS account setup and IAM configuration
+                        </li>
+                        <li class="flex items-start">
+                            <span class="text-red-500 mr-3 mt-1 font-bold">×</span>
+                            Interactive prompts break AI automation
+                        </li>
+                        <li class="flex items-start">
+                            <span class="text-red-500 mr-3 mt-1 font-bold">×</span>
+                            Unclear error messages confuse AI agents
+                        </li>
+                        <li class="flex items-start">
+                            <span class="text-red-500 mr-3 mt-1 font-bold">×</span>
+                            No JSON output for machine parsing
+                        </li>
+                        <li class="flex items-start">
+                            <span class="text-red-500 mr-3 mt-1 font-bold">×</span>
+                            30+ minute deployment times
+                        </li>
+                    </ul>
+                </div>
+                
+                <!-- Solution: API-Direct -->
+                <div class="bg-white p-8 rounded-lg border-l-4 border-green-500">
+                    <h3 class="text-2xl font-bold text-gray-900 mb-4">
+                        API-Direct
+                    </h3>
+                    <ul class="space-y-3 text-gray-700">
+                        <li class="flex items-start">
+                            <span class="text-green-500 mr-3 mt-1 font-bold">✓</span>
+                            Zero-config hosted deployment (or BYOA for enterprises)
+                        </li>
+                        <li class="flex items-start">
+                            <span class="text-green-500 mr-3 mt-1 font-bold">✓</span>
+                            Non-interactive flags (--yes, --force) for automation
+                        </li>
+                        <li class="flex items-start">
+                            <span class="text-green-500 mr-3 mt-1 font-bold">✓</span>
+                            Structured error codes with recovery hints
+                        </li>
+                        <li class="flex items-start">
+                            <span class="text-green-500 mr-3 mt-1 font-bold">✓</span>
+                            Machine-readable JSON output for AI parsing
+                        </li>
+                        <li class="flex items-start">
+                            <span class="text-green-500 mr-3 mt-1 font-bold">✓</span>
+                            2-minute deployment with instant revenue
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="features" class="py-20 bg-white">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl font-bold text-gray-900 mb-6">
+                    Built for AI Agent Automation
+                </h2>
+                <p class="text-xl text-gray-600 max-w-3xl mx-auto">
+                    Five core features that make API-Direct the only platform AI agents can use reliably
+                </p>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <!-- Feature 1: Rock-Solid CLI -->
+                <div class="feature-card bg-white p-8 rounded-lg">
+                    <div class="text-indigo-600 text-4xl mb-4 font-mono">
+                        $
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-900 mb-4">Rock-Solid CLI</h3>
+                    <p class="text-gray-600 mb-4">
+                        Consistent interface across hosted and BYOA deployments. The primary way AI agents interact with the platform.
+                    </p>
+                    <code class="text-sm bg-gray-100 p-2 rounded block">
+                        apidirect deploy --hosted
+                    </code>
+                </div>
+                
+                <!-- Feature 2: Non-Interactive -->
+                <div class="feature-card bg-white p-8 rounded-lg">
+                    <div class="text-green-600 text-4xl mb-4 font-mono">
+                        --yes
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-900 mb-4">Non-Interactive Flags</h3>
+                    <p class="text-gray-600 mb-4">
+                        --yes and --force flags skip all confirmation prompts. Essential for AI automation.
+                    </p>
+                    <code class="text-sm bg-gray-100 p-2 rounded block">
+                        apidirect deploy --yes --force
+                    </code>
+                </div>
+                
+                <!-- Feature 3: JSON Output -->
+                <div class="feature-card bg-white p-8 rounded-lg">
+                    <div class="text-blue-600 text-4xl mb-4 font-mono">
+                        {}
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-900 mb-4">Machine-Readable Output</h3>
+                    <p class="text-gray-600 mb-4">
+                        --output json provides structured data AI agents can parse and act upon.
+                    </p>
+                    <code class="text-sm bg-gray-100 p-2 rounded block">
+                        apidirect deploy --output json
+                    </code>
+                </div>
+                
+                <!-- Feature 4: Idempotent -->
+                <div class="feature-card bg-white p-8 rounded-lg">
+                    <div class="text-purple-600 text-4xl mb-4 font-mono">
+                        ⟲
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-900 mb-4">Idempotent Commands</h3>
+                    <p class="text-gray-600 mb-4">
+                        Running the same command twice updates (doesn't fail). Robust retry logic for AI agents.
+                    </p>
+                    <code class="text-sm bg-gray-100 p-2 rounded block">
+                        # Safe to run multiple times
+                    </code>
+                </div>
+                
+                <!-- Feature 5: Error Codes -->
+                <div class="feature-card bg-white p-8 rounded-lg">
+                    <div class="text-red-600 text-4xl mb-4 font-mono">
+                        !
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-900 mb-4">Structured Errors</h3>
+                    <p class="text-gray-600 mb-4">
+                        Specific error codes (NOT_AUTHENTICATED, QUOTA_EXCEEDED) with recovery hints.
+                    </p>
+                    <code class="text-sm bg-gray-100 p-2 rounded block">
+                        {"error_code": "QUOTA_EXCEEDED"}
+                    </code>
+                </div>
+                
+                <!-- Feature 6: Templates -->
+                <div class="feature-card bg-white p-8 rounded-lg">
+                    <div class="text-yellow-600 text-4xl mb-4 font-mono">
+                        &lt;/&gt;
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-900 mb-4">AI-Optimized Templates</h3>
+                    <p class="text-gray-600 mb-4">
+                        Production-ready templates for sentiment analysis, GPT wrappers, and more. 250+ lines of enterprise code.
+                    </p>
+                    <code class="text-sm bg-gray-100 p-2 rounded block">
+                        --template sentiment-analyzer
+                    </code>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Demo Video Section -->
+    <section id="demo" class="py-20 bg-gray-900">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl font-bold text-white mb-6">
+                    Watch AI Agents Build Production Businesses
+                </h2>
+                <p class="text-xl text-gray-300 max-w-3xl mx-auto">
+                    See how Claude deploys a complete sentiment analysis API with billing in under 3 minutes
+                </p>
+            </div>
+            
+            <!-- Video Placeholder -->
+            <div class="bg-black rounded-lg aspect-video max-w-4xl mx-auto flex items-center justify-center">
+                <div class="text-center text-white">
+                    <div class="text-6xl mb-4 text-indigo-400">▶</div>
+                    <h3 class="text-2xl font-bold mb-2">Demo Video Coming Soon</h3>
+                    <p class="text-gray-400">AI Agent deploying production API from start to revenue</p>
+                    <button class="bg-indigo-600 text-white px-6 py-3 rounded-lg mt-4 hover:bg-indigo-700">
+                        Notify Me When Ready
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Video Stats -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-8 mt-16 text-center">
+                <div>
+                    <div class="text-3xl font-bold text-indigo-400">2:47</div>
+                    <div class="text-gray-400">Time to Revenue</div>
+                </div>
+                <div>
+                    <div class="text-3xl font-bold text-green-400">250+</div>
+                    <div class="text-gray-400">Lines of Code Generated</div>
+                </div>
+                <div>
+                    <div class="text-3xl font-bold text-yellow-400">$0</div>
+                    <div class="text-gray-400">Manual Configuration</div>
+                </div>
+                <div>
+                    <div class="text-3xl font-bold text-purple-400">100%</div>
+                    <div class="text-gray-400">Production Ready</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Pricing Section -->
+    <section id="pricing" class="py-20 bg-white">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl font-bold text-gray-900 mb-6">
+                    Simple, Transparent Pricing
+                </h2>
+                <p class="text-xl text-gray-600 max-w-3xl mx-auto">
+                    Start free with hosted deployment, scale with our paid plans, or use BYOA for enterprise control. 
+                    The only platform offering both hosting and bring-your-own-infrastructure.
+                </p>
+            </div>
+            
+            <!-- Unified Pricing Table -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 max-w-7xl mx-auto">
+                <!-- Free Plan -->
+                <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+                    <div class="text-center mb-6">
+                        <h3 class="text-lg font-semibold text-gray-900 mb-2">Free</h3>
+                        <div class="text-3xl font-bold text-gray-900">$0</div>
+                        <div class="text-sm text-gray-600">Forever</div>
+                    </div>
+                    <ul class="space-y-2 text-sm">
+                        <li class="flex items-center">
+                            <span class="text-green-500 mr-2 font-bold">✓</span>
+                            <span>1 API</span>
+                        </li>
+                        <li class="flex items-center">
+                            <span class="text-green-500 mr-2 font-bold">✓</span>
+                            <span>1K requests/month</span>
+                        </li>
+                        <li class="flex items-center">
+                            <span class="text-green-500 mr-2 font-bold">✓</span>
+                            <span>2-min deployment</span>
+                        </li>
+                        <li class="flex items-center">
+                            <span class="text-green-500 mr-2 font-bold">✓</span>
+                            <span>SSL included</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Starter Plan -->
+                <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+                    <div class="text-center mb-6">
+                        <h3 class="text-lg font-semibold text-gray-900 mb-2">Starter</h3>
+                        <div class="text-3xl font-bold text-gray-900">$29</div>
+                        <div class="text-sm text-gray-600">per month</div>
+                    </div>
+                    <ul class="space-y-2 text-sm">
+                        <li class="flex items-center">
+                            <span class="text-green-500 mr-2 font-bold">✓</span>
+                            <span>5 APIs</span>
+                        </li>
+                        <li class="flex items-center">
+                            <span class="text-green-500 mr-2 font-bold">✓</span>
+                            <span>100K requests/month</span>
+                        </li>
+                        <li class="flex items-center">
+                            <span class="text-green-500 mr-2 font-bold">✓</span>
+                            <span>Custom domains</span>
+                        </li>
+                        <li class="flex items-center">
+                            <span class="text-green-500 mr-2 font-bold">✓</span>
+                            <span>Email support</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Pro Plan -->
+                <div class="bg-indigo-50 p-6 rounded-xl border-2 border-indigo-200 shadow-sm relative">
+                    <div class="absolute -top-3 left-1/2 transform -translate-x-1/2">
+                        <span class="bg-indigo-600 text-white px-3 py-1 rounded-full text-xs font-semibold">Popular</span>
+                    </div>
+                    <div class="text-center mb-6">
+                        <h3 class="text-lg font-semibold text-gray-900 mb-2">Pro</h3>
+                        <div class="text-3xl font-bold text-gray-900">$99</div>
+                        <div class="text-sm text-gray-600">per month</div>
+                    </div>
+                    <ul class="space-y-2 text-sm">
+                        <li class="flex items-center">
+                            <span class="text-green-500 mr-2 font-bold">✓</span>
+                            <span>Unlimited APIs</span>
+                        </li>
+                        <li class="flex items-center">
+                            <span class="text-green-500 mr-2 font-bold">✓</span>
+                            <span>1M requests/month</span>
+                        </li>
+                        <li class="flex items-center">
+                            <span class="text-green-500 mr-2 font-bold">✓</span>
+                            <span>Auto-scaling</span>
+                        </li>
+                        <li class="flex items-center">
+                            <span class="text-green-500 mr-2 font-bold">✓</span>
+                            <span>Priority support</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Enterprise Plan -->
+                <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+                    <div class="text-center mb-6">
+                        <h3 class="text-lg font-semibold text-gray-900 mb-2">Enterprise</h3>
+                        <div class="text-3xl font-bold text-gray-900">$499</div>
+                        <div class="text-sm text-gray-600">per month</div>
+                    </div>
+                    <ul class="space-y-2 text-sm">
+                        <li class="flex items-center">
+                            <span class="text-green-500 mr-2 font-bold">✓</span>
+                            <span>Dedicated resources</span>
+                        </li>
+                        <li class="flex items-center">
+                            <span class="text-green-500 mr-2 font-bold">✓</span>
+                            <span>SLA guarantees</span>
+                        </li>
+                        <li class="flex items-center">
+                            <span class="text-green-500 mr-2 font-bold">✓</span>
+                            <span>White-label options</span>
+                        </li>
+                        <li class="flex items-center">
+                            <span class="text-green-500 mr-2 font-bold">✓</span>
+                            <span>Account manager</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- BYOA Plan -->
+                <div class="bg-blue-50 p-6 rounded-xl border-2 border-blue-200 shadow-sm">
+                    <div class="text-center mb-6">
+                        <h3 class="text-lg font-semibold text-gray-900 mb-2">BYOA</h3>
+                        <div class="text-3xl font-bold text-gray-900">20%</div>
+                        <div class="text-sm text-gray-600">revenue share</div>
+                        <div class="mt-2">
+                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                Enterprise Choice
+                            </span>
+                        </div>
+                    </div>
+                    <ul class="space-y-2 text-sm">
+                        <li class="flex items-center">
+                            <span class="text-blue-500 mr-2 font-bold">✓</span>
+                            <span>Your AWS account</span>
+                        </li>
+                        <li class="flex items-center">
+                            <span class="text-blue-500 mr-2 font-bold">✓</span>
+                            <span>Full control</span>
+                        </li>
+                        <li class="flex items-center">
+                            <span class="text-blue-500 mr-2 font-bold">✓</span>
+                            <span>Zero vendor lock-in</span>
+                        </li>
+                        <li class="flex items-center">
+                            <span class="text-blue-500 mr-2 font-bold">✓</span>
+                            <span>Compliance ready</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- BYOA Value Proposition -->
+            <div class="text-center mt-12 p-6 bg-blue-50 rounded-lg max-w-4xl mx-auto">
+                <h4 class="text-lg font-semibold text-gray-900 mb-3">BYOA: Complete Revenue Partnership</h4>
+                <p class="text-gray-700 mb-4">
+                    With BYOA, you pay AWS directly for infrastructure (~$30-200/month). 
+                    Our 20% commission includes our complete <strong>monetization engine</strong>, 
+                    <strong>managed API gateway</strong>, and <strong>marketplace distribution</strong>. 
+                    <span class="text-blue-700 font-semibold">We only make money when you do.</span>
+                </p>
+                <div class="text-sm text-gray-600">
+                    Industry-standard rate • Complete business infrastructure included • No upfront costs
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex flex-col sm:flex-row gap-4 justify-center mt-12">
+                <button class="bg-indigo-600 text-white px-8 py-4 rounded-lg font-semibold hover:bg-indigo-700 transition-colors">
+                    Start Free Hosted Plan
+                </button>
+                <button class="border-2 border-indigo-600 text-indigo-600 px-8 py-4 rounded-lg font-semibold hover:bg-indigo-50 transition-colors">
+                    Learn About BYOA
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="py-20 gradient-bg">
+        <div class="max-w-4xl mx-auto text-center px-4 sm:px-6 lg:px-8">
+            <h2 class="text-4xl font-bold text-white mb-6">
+                Ready to Build the AI Agent Economy?
+            </h2>
+            <p class="text-xl text-blue-100 mb-8">
+                Join the revolution. Deploy your first API in 2 minutes.
+            </p>
+            
+            <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                <a href="https://console.api-direct.io" class="bg-white text-indigo-600 px-8 py-4 rounded-lg font-semibold hover:bg-gray-50 transition-colors">
+                    Start Free Deployment
+                </a>
+                <a href="https://docs.api-direct.io" class="border-2 border-white text-white px-8 py-4 rounded-lg font-semibold hover:bg-white hover:text-indigo-600 transition-colors">
+                    Read the Docs
+                </a>
+            </div>
+            
+            <div class="mt-8 text-blue-200 text-sm">
+                No credit card required • Deploy in 2 minutes • AI agent ready
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 text-white py-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+                <div class="col-span-1 md:col-span-2">
+                    <h3 class="text-2xl font-bold mb-4">API-Direct</h3>
+                    <p class="text-gray-400 mb-4">
+                        Infrastructure for the AI Agent Economy. 
+                        The only platform where AI agents can deploy production APIs autonomously.
+                    </p>
+                    <div class="flex space-x-4">
+                        <a href="#" class="text-gray-400 hover:text-white">
+                            <i class="fab fa-twitter text-xl"></i>
+                        </a>
+                        <a href="#" class="text-gray-400 hover:text-white">
+                            <i class="fab fa-github text-xl"></i>
+                        </a>
+                        <a href="#" class="text-gray-400 hover:text-white">
+                            <i class="fab fa-linkedin text-xl"></i>
+                        </a>
+                    </div>
+                </div>
+                
+                <div>
+                    <h4 class="font-semibold mb-4">Product</h4>
+                    <ul class="space-y-2 text-gray-400">
+                        <li><a href="#features" class="hover:text-white">Features</a></li>
+                        <li><a href="#pricing" class="hover:text-white">Pricing</a></li>
+                        <li><a href="#" class="hover:text-white">Templates</a></li>
+                        <li><a href="#" class="hover:text-white">Marketplace</a></li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h4 class="font-semibold mb-4">Developers</h4>
+                    <ul class="space-y-2 text-gray-400">
+                        <li><a href="https://docs.api-direct.io" class="hover:text-white">Documentation</a></li>
+                        <li><a href="#" class="hover:text-white">CLI Reference</a></li>
+                        <li><a href="#" class="hover:text-white">API Reference</a></li>
+                        <li><a href="#" class="hover:text-white">Examples</a></li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
+                <p>&copy; 2024 API-Direct. Built for the AI Agent Economy.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Analytics & Scripts -->
+    <script>
+        // Add any analytics or interactive scripts here
+        console.log('API-Direct: Infrastructure for the AI Agent Economy');
+    </script>
+</body>
+</html>
