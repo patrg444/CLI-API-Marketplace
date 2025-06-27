@@ -68,9 +68,8 @@
         
         .typing-animation {
             overflow: hidden;
-            border-right: 2px solid #4ade80;
             white-space: nowrap;
-            animation: typing 3s steps(40, end), blink-caret 0.75s step-end infinite;
+            animation: typing 3s steps(40, end);
         }
         
         @keyframes typing {
@@ -309,10 +308,6 @@
                     </div>
                     <div class="p-6 text-green-400 font-mono text-sm" id="terminal-content">
                         <div id="terminal-output"></div>
-                        <div class="flex items-center mt-2">
-                            <span class="text-purple-400">claude$</span>
-                            <span class="ml-2 terminal-cursor"></span>
-                        </div>
                     </div>
                 </div>
             </div>
