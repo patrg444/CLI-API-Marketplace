@@ -54,8 +54,9 @@ export default defineConfig({
 
   webServer: [
     {
-      command: 'cd ../.. && docker-compose up -d',
-      timeout: 120000,
+      command: 'cd ../../web/marketplace && npm run dev',
+      port: 3001,
+      timeout: 60000,
       reuseExistingServer: !process.env.CI,
     },
   ],

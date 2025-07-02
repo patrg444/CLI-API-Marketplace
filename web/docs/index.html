@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API-Direct Documentation - AI Agent Ready CLI</title>
+    <meta name="description" content="Complete documentation for API-Direct CLI. Deploy production APIs in 2 minutes with AI agent automation support.">
+    
+    <!-- Styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet">
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap');
+        
+        body { font-family: 'Inter', sans-serif; }
+        code, pre { font-family: 'JetBrains Mono', monospace; }
+        
+        .docs-sidebar {
+            width: 280px;
+            min-height: calc(100vh - 4rem);
+        }
+        
+        .docs-content {
+            max-width: calc(100% - 280px);
+        }
+        
+        .code-block {
+            background: #1e1e1e;
+            border-radius: 8px;
+            padding: 1rem;
+            margin: 1rem 0;
+            overflow-x: auto;
+        }
+        
+        .nav-link.active {
+            background: #f3f4f6;
+            color: #4f46e5;
+            border-right: 3px solid #4f46e5;
+        }
+        
+        .section-header {
+            border-bottom: 2px solid #e5e7eb;
+            padding-bottom: 0.5rem;
+            margin-bottom: 1.5rem;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Header -->
+    <header class="bg-white border-b border-gray-200 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center">
+                    <a href="/" class="text-2xl font-bold text-gray-900">API-Direct</a>
+                    <span class="ml-4 text-gray-500">/</span>
+                    <span class="ml-4 text-gray-700">Documentation</span>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <a href="https://console.api-direct.io" class="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700">
+                        Get Started
+                    </a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="flex">
+        <!-- Sidebar -->
+        <nav class="docs-sidebar bg-white border-r border-gray-200 overflow-y-auto">
+            <div class="p-6">
+                <!-- Getting Started -->
+                <div class="mb-8">
+                    <h3 class="text-sm font-semibold text-gray-900 uppercase tracking-wide mb-3">Getting Started</h3>
+                    <ul class="space-y-1">
+                        <li><a href="#overview" class="nav-link block px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md">Overview</a></li>
+                        <li><a href="#installation" class="nav-link block px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md">Installation</a></li>
+                        <li><a href="#quick-start" class="nav-link block px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md">Quick Start</a></li>
+                        <li><a href="#ai-agents" class="nav-link block px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md">AI Agent Guide</a></li>
+                    </ul>
+                </div>
+
+                <!-- CLI Reference -->
+                <div class="mb-8">
+                    <h3 class="text-sm font-semibold text-gray-900 uppercase tracking-wide mb-3">CLI Reference</h3>
+                    <ul class="space-y-1">
+                        <li><a href="#cli-overview" class="nav-link block px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md">CLI Overview</a></li>
+                        <li><a href="#deploy" class="nav-link block px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md">apidirect deploy</a></li>
+                        <li><a href="#init" class="nav-link block px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md">apidirect init</a></li>
+                        <li><a href="#login" class="nav-link block px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md">apidirect login</a></li>
+                        <li><a href="#publish" class="nav-link block px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md">apidirect publish</a></li>
+                        <li><a href="#logs" class="nav-link block px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md">apidirect logs</a></li>
+                    </ul>
+                </div>
+
+                <!-- Templates -->
+                <div class="mb-8">
+                    <h3 class="text-sm font-semibold text-gray-900 uppercase tracking-wide mb-3">Templates</h3>
+                    <ul class="space-y-1">
+                        <li><a href="#templates-overview" class="nav-link block px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md">Template System</a></li>
+                        <li><a href="#gpt-wrapper" class="nav-link block px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md">GPT Wrapper</a></li>
+                        <li><a href="#sentiment-analysis" class="nav-link block px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md">Sentiment Analysis</a></li>
+                        <li><a href="#custom-templates" class="nav-link block px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md">Custom Templates</a></li>
+                    </ul>
+                </div>
+
+                <!-- Deployment -->
+                <div class="mb-8">
+                    <h3 class="text-sm font-semibold text-gray-900 uppercase tracking-wide mb-3">Deployment</h3>
+                    <ul class="space-y-1">
+                        <li><a href="#hosted-deployment" class="nav-link block px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md">Hosted Deployment</a></li>
+                        <li><a href="#byoa-deployment" class="nav-link block px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md">BYOA Deployment</a></li>
+                        <li><a href="#environment-config" class="nav-link block px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md">Configuration</a></li>
+                        <li><a href="#scaling" class="nav-link block px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md">Scaling</a></li>
+                    </ul>
+                </div>
+
+                <!-- API Reference -->
+                <div class="mb-8">
+                    <h3 class="text-sm font-semibold text-gray-900 uppercase tracking-wide mb-3">API Reference</h3>
+                    <ul class="space-y-1">
+                        <li><a href="#rest-api" class="nav-link block px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md">REST API</a></li>
+                        <li><a href="#authentication" class="nav-link block px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md">Authentication</a></li>
+                        <li><a href="#error-codes" class="nav-link block px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md">Error Codes</a></li>
+                        <li><a href="#webhooks" class="nav-link block px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md">Webhooks</a></li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="docs-content flex-1 p-8">
+            <!-- Overview Section -->
+            <section id="overview" class="mb-16">
+                <h1 class="section-header text-4xl font-bold text-gray-900">API-Direct Documentation</h1>
+                <p class="text-xl text-gray-600 mb-8">
+                    Infrastructure for the AI Agent Economy. Deploy production APIs in 2 minutes with zero configuration.
+                </p>
+
+                <div class="bg-blue-50 border-l-4 border-blue-400 p-6 mb-8">
+                    <div class="flex">
+                        <div class="flex-shrink-0">
+                            <div class="text-blue-400 text-xl">ℹ</div>
+                        </div>
+                        <div class="ml-3">
+                            <h3 class="text-lg font-medium text-blue-900">AI Agent Ready</h3>
+                            <p class="text-blue-700">
+                                API-Direct is specifically designed for AI agent automation with non-interactive flags, 
+                                structured error codes, and machine-readable JSON output.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <h2 class="text-2xl font-bold text-gray-900 mb-4">What is API-Direct?</h2>
+                <p class="text-gray-700 mb-6">
+                    API-Direct is the only platform where AI agents can autonomously deploy production APIs with built-in 
+                    monetization, scaling, and marketplace distribution. Choose between our zero-config hosted infrastructure 
+                    or bring-your-own-AWS (BYOA) for enterprise control.
+                </p>
+
+                <h3 class="text-xl font-semibold text-gray-900 mb-4">Key Features</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                    <div class="bg-white p-6 rounded-lg border border-gray-200">
+                        <h4 class="font-semibold text-gray-900 mb-2">AI Agent Automation</h4>
+                        <p class="text-gray-600">Non-interactive CLI flags, structured errors, and JSON output perfect for AI agents.</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg border border-gray-200">
+                        <h4 class="font-semibold text-gray-900 mb-2">Dual Deployment</h4>
+                        <p class="text-gray-600">Choose hosted (2-min deploy) or BYOA (enterprise control) deployment models.</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg border border-gray-200">
+                        <h4 class="font-semibold text-gray-900 mb-2">Production Templates</h4>
+                        <p class="text-gray-600">AI-optimized templates for GPT wrappers, sentiment analysis, and more.</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg border border-gray-200">
+                        <h4 class="font-semibold text-gray-900 mb-2">Built-in Monetization</h4>
+                        <p class="text-gray-600">Automatic billing, marketplace listing, and revenue sharing.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Installation Section -->
+            <section id="installation" class="mb-16">
+                <h2 class="section-header text-3xl font-bold text-gray-900">Installation</h2>
+
+                <h3 class="text-xl font-semibold text-gray-900 mb-4">Install the CLI</h3>
+                
+                <div class="bg-gray-900 text-gray-100 p-6 rounded-lg mb-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <span class="text-sm font-medium">Terminal</span>
+                        <button class="text-gray-400 hover:text-white" onclick="copyToClipboard('install-cmd')">
+                            Copy
+                        </button>
+                    </div>
+                    <pre id="install-cmd" class="text-green-400"><code># macOS/Linux
+curl -fsSL https://cli.api-direct.io/install.sh | sh
+
+# Windows
+iwr -useb https://cli.api-direct.io/install.ps1 | iex
+
+# npm
+npm install -g @api-direct/cli
+
+# Go
+go install github.com/api-direct/cli@latest</code></pre>
+                </div>
+
+                <h3 class="text-xl font-semibold text-gray-900 mb-4">Verify Installation</h3>
+                <div class="bg-gray-900 text-gray-100 p-6 rounded-lg mb-6">
+                    <pre class="text-green-400"><code>apidirect --version
+# Output: apidirect version 1.0.0</code></pre>
+                </div>
+            </section>
+
+            <!-- Quick Start Section -->
+            <section id="quick-start" class="mb-16">
+                <h2 class="section-header text-3xl font-bold text-gray-900">Quick Start</h2>
+                <p class="text-gray-700 mb-6">Deploy your first API in under 3 minutes.</p>
+
+                <h3 class="text-xl font-semibold text-gray-900 mb-4">1. Login to API-Direct</h3>
+                <div class="bg-gray-900 text-gray-100 p-6 rounded-lg mb-6">
+                    <pre class="text-green-400"><code>apidirect login</code></pre>
+                </div>
+
+                <h3 class="text-xl font-semibold text-gray-900 mb-4">2. Create a New API</h3>
+                <div class="bg-gray-900 text-gray-100 p-6 rounded-lg mb-6">
+                    <pre class="text-green-400"><code>apidirect init my-sentiment-api --template sentiment-analyzer
+cd my-sentiment-api</code></pre>
+                </div>
+
+                <h3 class="text-xl font-semibold text-gray-900 mb-4">3. Deploy to Hosted Infrastructure</h3>
+                <div class="bg-gray-900 text-gray-100 p-6 rounded-lg mb-6">
+                    <pre class="text-green-400"><code>apidirect deploy --hosted</code></pre>
+                </div>
+
+                <div class="bg-green-50 border-l-4 border-green-400 p-6 mb-6">
+                    <h4 class="font-medium text-green-900 mb-2">Success!</h4>
+                    <p class="text-green-700">
+                        Your API is now live at <code class="bg-green-100 px-2 py-1 rounded">https://my-sentiment-api-abc123.api-direct.io</code>
+                    </p>
+                </div>
+
+                <h3 class="text-xl font-semibold text-gray-900 mb-4">4. Test Your API</h3>
+                <div class="bg-gray-900 text-gray-100 p-6 rounded-lg mb-6">
+                    <pre class="text-green-400"><code>curl -X POST https://my-sentiment-api-abc123.api-direct.io/analyze \
+  -H "Content-Type: application/json" \
+  -H "X-API-Key: your_api_key" \
+  -d '{"text": "This is amazing!"}'</code></pre>
+                </div>
+
+                <h3 class="text-xl font-semibold text-gray-900 mb-4">5. Publish to Marketplace</h3>
+                <div class="bg-gray-900 text-gray-100 p-6 rounded-lg mb-6">
+                    <pre class="text-green-400"><code>apidirect publish --price 0.05</code></pre>
+                </div>
+            </section>
+
+            <!-- AI Agents Section -->
+            <section id="ai-agents" class="mb-16">
+                <h2 class="section-header text-3xl font-bold text-gray-900">AI Agent Guide</h2>
+                <p class="text-gray-700 mb-6">
+                    API-Direct is specifically designed for AI agent automation. This guide shows how AI agents 
+                    can deploy and manage APIs autonomously.
+                </p>
+
+                <h3 class="text-xl font-semibold text-gray-900 mb-4">Non-Interactive Automation</h3>
+                <p class="text-gray-700 mb-4">
+                    All commands support <code class="bg-gray-100 px-2 py-1 rounded">--yes</code> and 
+                    <code class="bg-gray-100 px-2 py-1 rounded">--force</code> flags to skip confirmation prompts:
+                </p>
+                <div class="bg-gray-900 text-gray-100 p-6 rounded-lg mb-6">
+                    <pre class="text-green-400"><code># Deploy without any prompts
+apidirect deploy --hosted --yes --force
+
+# Publish without confirmation
+apidirect publish --price 0.05 --yes
+
+# Delete API without "Are you sure?"
+apidirect delete my-api --yes</code></pre>
+                </div>
+
+                <h3 class="text-xl font-semibold text-gray-900 mb-4">Machine-Readable Output</h3>
+                <p class="text-gray-700 mb-4">
+                    Use <code class="bg-gray-100 px-2 py-1 rounded">--output json</code> for structured data that AI agents can parse:
+                </p>
+                <div class="bg-gray-900 text-gray-100 p-6 rounded-lg mb-6">
+                    <pre class="text-green-400"><code>apidirect deploy --hosted --output json</code></pre>
+                </div>
+                <p class="text-gray-700 mb-4">Returns:</p>
+                <div class="bg-gray-900 text-gray-100 p-6 rounded-lg mb-6">
+                    <pre class="text-blue-400"><code>{
+  "success": true,
+  "api_url": "https://my-api-abc123.api-direct.io",
+  "deployment_id": "deploy-1703123456",
+  "api_name": "my-api",
+  "status": "success",
+  "deployment_type": "hosted",
+  "features": ["auto-scaling", "ssl", "monitoring"],
+  "endpoints": ["POST /analyze", "GET /health"]
+}</code></pre>
+                </div>
+
+                <h3 class="text-xl font-semibold text-gray-900 mb-4">Structured Error Handling</h3>
+                <p class="text-gray-700 mb-4">All errors include specific error codes for programmatic handling:</p>
+                <div class="bg-gray-900 text-gray-100 p-6 rounded-lg mb-6">
+                    <pre class="text-red-400"><code>{
+  "success": false,
+  "error": {
+    "error_code": "QUOTA_EXCEEDED",
+    "message": "You have reached your plan limit of 5 APIs",
+    "suggestion": "Upgrade your plan at https://console.api-direct.io/billing",
+    "recoverable": true
+  }
+}</code></pre>
+                </div>
+
+                <h3 class="text-xl font-semibold text-gray-900 mb-4">Complete AI Agent Workflow</h3>
+                <div class="bg-gray-900 text-gray-100 p-6 rounded-lg mb-6">
+                    <pre class="text-green-400"><code># AI agent executes this workflow autonomously:
+
+# 1. Check authentication status
+apidirect auth status --output json
+
+# 2. Create and deploy API
+apidirect init sentiment-api --template sentiment-analyzer
+cd sentiment-api
+apidirect deploy --hosted --yes --output json
+
+# 3. Test the deployed API
+curl -X POST $API_URL/analyze \
+  -H "Content-Type: application/json" \
+  -d '{"text": "Test message"}'
+
+# 4. Publish to marketplace
+apidirect publish --price 0.05 --yes --output json
+
+# 5. Monitor and scale
+apidirect logs sentiment-api --tail
+apidirect scale sentiment-api --replicas 3</code></pre>
+                </div>
+            </section>
+
+            <!-- CLI Commands -->
+            <section id="deploy" class="mb-16">
+                <h2 class="section-header text-3xl font-bold text-gray-900">apidirect deploy</h2>
+                <p class="text-gray-700 mb-6">Deploy your API to hosted infrastructure or your own AWS account.</p>
+
+                <h3 class="text-xl font-semibold text-gray-900 mb-4">Usage</h3>
+                <div class="bg-gray-900 text-gray-100 p-6 rounded-lg mb-6">
+                    <pre class="text-green-400"><code>apidirect deploy [api-name] [flags]</code></pre>
+                </div>
+
+                <h3 class="text-xl font-semibold text-gray-900 mb-4">Flags</h3>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full bg-white border border-gray-200 rounded-lg">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Flag</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Description</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Default</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-200">
+                            <tr>
+                                <td class="px-6 py-4 text-sm font-mono text-gray-900">--hosted</td>
+                                <td class="px-6 py-4 text-sm text-gray-700">Deploy to API-Direct hosted infrastructure</td>
+                                <td class="px-6 py-4 text-sm text-gray-700">true</td>
+                            </tr>
+                            <tr>
+                                <td class="px-6 py-4 text-sm font-mono text-gray-900">--yes</td>
+                                <td class="px-6 py-4 text-sm text-gray-700">Skip all confirmation prompts</td>
+                                <td class="px-6 py-4 text-sm text-gray-700">false</td>
+                            </tr>
+                            <tr>
+                                <td class="px-6 py-4 text-sm font-mono text-gray-900">--force</td>
+                                <td class="px-6 py-4 text-sm text-gray-700">Force deployment even if API exists</td>
+                                <td class="px-6 py-4 text-sm text-gray-700">false</td>
+                            </tr>
+                            <tr>
+                                <td class="px-6 py-4 text-sm font-mono text-gray-900">--output</td>
+                                <td class="px-6 py-4 text-sm text-gray-700">Output format (json)</td>
+                                <td class="px-6 py-4 text-sm text-gray-700">text</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <h3 class="text-xl font-semibold text-gray-900 mb-4 mt-8">Examples</h3>
+                <div class="space-y-4">
+                    <div>
+                        <h4 class="font-medium text-gray-900 mb-2">Basic hosted deployment:</h4>
+                        <div class="bg-gray-900 text-gray-100 p-4 rounded-lg">
+                            <pre class="text-green-400"><code>apidirect deploy</code></pre>
+                        </div>
+                    </div>
+                    <div>
+                        <h4 class="font-medium text-gray-900 mb-2">AI agent deployment (non-interactive):</h4>
+                        <div class="bg-gray-900 text-gray-100 p-4 rounded-lg">
+                            <pre class="text-green-400"><code>apidirect deploy --hosted --yes --force --output json</code></pre>
+                        </div>
+                    </div>
+                    <div>
+                        <h4 class="font-medium text-gray-900 mb-2">BYOA deployment:</h4>
+                        <div class="bg-gray-900 text-gray-100 p-4 rounded-lg">
+                            <pre class="text-green-400"><code>apidirect deploy --byoa</code></pre>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-core.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
+    
+    <script>
+        // Copy to clipboard function
+        function copyToClipboard(elementId) {
+            const element = document.getElementById(elementId);
+            const text = element.textContent;
+            navigator.clipboard.writeText(text).then(() => {
+                // Visual feedback
+                const button = event.target;
+                const originalText = button.textContent;
+                button.textContent = 'Copied!';
+                setTimeout(() => {
+                    button.textContent = originalText;
+                }, 2000);
+            });
+        }
+
+        // Smooth scrolling for navigation links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const targetId = this.getAttribute('href');
+                const targetElement = document.querySelector(targetId);
+                if (targetElement) {
+                    targetElement.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                    
+                    // Update active state
+                    document.querySelectorAll('.nav-link').forEach(link => {
+                        link.classList.remove('active');
+                    });
+                    this.classList.add('active');
+                }
+            });
+        });
+
+        // Update active nav on scroll
+        window.addEventListener('scroll', () => {
+            const sections = document.querySelectorAll('section[id]');
+            let current = '';
+            
+            sections.forEach(section => {
+                const sectionTop = section.offsetTop - 100;
+                if (window.scrollY >= sectionTop) {
+                    current = section.getAttribute('id');
+                }
+            });
+            
+            document.querySelectorAll('.nav-link').forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === `#${current}`) {
+                    link.classList.add('active');
+                }
+            });
+        });
+    </script>
+</body>
+</html>

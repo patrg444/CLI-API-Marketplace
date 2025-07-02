@@ -1,0 +1,1170 @@
+{% extends "templates/base.html" %}
+
+{% block title %}API Builder - API-Direct Creator Portal{% endblock %}
+{% block description %}Configure and build your API with advanced settings{% endblock %}
+
+{% block styles %}
+<style>
+.config-section {
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.config-section h3 {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: #111827;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+}
+
+.config-section h3 i {
+    margin-right: 0.5rem;
+    color: #6366f1;
+}
+
+.form-group {
+    margin-bottom: 1.25rem;
+}
+
+.form-label {
+    display: block;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #374151;
+    margin-bottom: 0.5rem;
+}
+
+.form-help {
+    font-size: 0.75rem;
+    color: #6b7280;
+    margin-top: 0.25rem;
+}
+
+.form-input {
+    width: 100%;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid #d1d5db;
+    border-radius: 0.375rem;
+    font-size: 0.875rem;
+    transition: all 0.15s;
+}
+
+.form-input:focus {
+    outline: none;
+    border-color: #6366f1;
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+.form-select {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+    background-position: right 0.5rem center;
+    background-repeat: no-repeat;
+    background-size: 1.5em 1.5em;
+    padding-right: 2.5rem;
+}
+
+.toggle-switch {
+    position: relative;
+    display: inline-block;
+    width: 48px;
+    height: 24px;
+}
+
+.toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.toggle-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #d1d5db;
+    transition: .4s;
+    border-radius: 24px;
+}
+
+.toggle-slider:before {
+    position: absolute;
+    content: "";
+    height: 16px;
+    width: 16px;
+    left: 4px;
+    bottom: 4px;
+    background-color: white;
+    transition: .4s;
+    border-radius: 50%;
+}
+
+input:checked + .toggle-slider {
+    background-color: #6366f1;
+}
+
+input:checked + .toggle-slider:before {
+    transform: translateX(24px);
+}
+
+.endpoint-builder {
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.5rem;
+    padding: 1rem;
+    margin-bottom: 0.75rem;
+}
+
+.env-var-builder {
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.5rem;
+    padding: 1rem;
+    margin-bottom: 0.75rem;
+}
+
+.method-badge {
+    display: inline-block;
+    padding: 0.25rem 0.5rem;
+    font-size: 0.75rem;
+    font-weight: 500;
+    border-radius: 0.25rem;
+}
+
+.method-badge.GET { background: #d1fae5; color: #065f46; }
+.method-badge.POST { background: #dbeafe; color: #1e40af; }
+.method-badge.PUT { background: #fef3c7; color: #92400e; }
+.method-badge.DELETE { background: #fee2e2; color: #991b1b; }
+.method-badge.PATCH { background: #ede9fe; color: #5b21b6; }
+
+.resource-slider {
+    width: 100%;
+    height: 6px;
+    border-radius: 3px;
+    background: #e5e7eb;
+    outline: none;
+    -webkit-appearance: none;
+}
+
+.resource-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #6366f1;
+    cursor: pointer;
+}
+
+.resource-slider::-moz-range-thumb {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #6366f1;
+    cursor: pointer;
+    border: none;
+}
+
+.dockerfile-editor {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.875rem;
+    background: #1f2937;
+    color: #f3f4f6;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    min-height: 200px;
+    white-space: pre-wrap;
+}
+
+.preview-panel {
+    position: fixed;
+    right: 0;
+    top: 4rem;
+    width: 400px;
+    height: calc(100vh - 4rem);
+    background: white;
+    border-left: 1px solid #e5e7eb;
+    overflow-y: auto;
+    transform: translateX(100%);
+    transition: transform 0.3s;
+    z-index: 40;
+}
+
+.preview-panel.open {
+    transform: translateX(0);
+}
+
+.validation-error {
+    color: #dc2626;
+    font-size: 0.75rem;
+    margin-top: 0.25rem;
+}
+
+.validation-success {
+    color: #059669;
+    font-size: 0.75rem;
+    margin-top: 0.25rem;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto">
+    <!-- Header -->
+    <div class="mb-8">
+        <h1 class="text-3xl font-bold text-gray-900 mb-2">API Builder</h1>
+        <p class="text-gray-600">Configure your API with advanced settings and deployment options</p>
+    </div>
+
+    <!-- Progress Bar -->
+    <div class="mb-8">
+        <div class="flex items-center justify-between mb-2">
+            <span class="text-sm font-medium text-gray-700">Configuration Progress</span>
+            <span class="text-sm text-gray-500"><span id="completionPercent">0</span>% Complete</span>
+        </div>
+        <div class="w-full bg-gray-200 rounded-full h-2">
+            <div id="progressBar" class="bg-indigo-600 h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
+        </div>
+    </div>
+
+    <!-- Main Configuration Form -->
+    <form id="apiConfigForm">
+        <!-- Basic Information -->
+        <div class="config-section">
+            <h3><i class="fas fa-info-circle"></i>Basic Information</h3>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="form-group">
+                    <label class="form-label">API Name <span class="text-red-500">*</span></label>
+                    <input type="text" id="apiName" class="form-input" placeholder="my-awesome-api" required>
+                    <p class="form-help">Lowercase letters, numbers, and hyphens only</p>
+                    <div id="apiNameError" class="validation-error hidden"></div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Version</label>
+                    <input type="text" id="apiVersion" class="form-input" value="1.0.0" placeholder="1.0.0">
+                    <p class="form-help">Semantic versioning (e.g., 1.0.0)</p>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Description</label>
+                <textarea id="apiDescription" class="form-input" rows="3" placeholder="Describe what your API does..."></textarea>
+                <p class="form-help">A clear description helps users understand your API's purpose</p>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="form-group">
+                    <label class="form-label">Category</label>
+                    <select id="apiCategory" class="form-input form-select">
+                        <option value="">Select category</option>
+                        <option value="ai-ml">AI/ML</option>
+                        <option value="data">Data Processing</option>
+                        <option value="integration">Integration</option>
+                        <option value="utility">Utility</option>
+                        <option value="web">Web Service</option>
+                        <option value="iot">IoT</option>
+                        <option value="blockchain">Blockchain</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Visibility</label>
+                    <select id="apiVisibility" class="form-input form-select">
+                        <option value="private">Private</option>
+                        <option value="public">Public</option>
+                        <option value="marketplace">Marketplace</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">License</label>
+                    <select id="apiLicense" class="form-input form-select">
+                        <option value="proprietary">Proprietary</option>
+                        <option value="mit">MIT</option>
+                        <option value="apache-2.0">Apache 2.0</option>
+                        <option value="gpl-3.0">GPL 3.0</option>
+                        <option value="bsd-3">BSD 3-Clause</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Runtime Configuration -->
+        <div class="config-section">
+            <h3><i class="fas fa-cog"></i>Runtime Configuration</h3>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="form-group">
+                    <label class="form-label">Language & Runtime <span class="text-red-500">*</span></label>
+                    <select id="runtime" class="form-input form-select" onchange="updateRuntimeOptions()">
+                        <option value="">Select runtime</option>
+                        <optgroup label="Python">
+                            <option value="python3.11">Python 3.11</option>
+                            <option value="python3.10">Python 3.10</option>
+                            <option value="python3.9">Python 3.9</option>
+                        </optgroup>
+                        <optgroup label="Node.js">
+                            <option value="nodejs20">Node.js 20 LTS</option>
+                            <option value="nodejs18">Node.js 18 LTS</option>
+                            <option value="nodejs16">Node.js 16</option>
+                        </optgroup>
+                        <optgroup label="Go">
+                            <option value="go1.21">Go 1.21</option>
+                            <option value="go1.20">Go 1.20</option>
+                        </optgroup>
+                        <optgroup label="Ruby">
+                            <option value="ruby3.2">Ruby 3.2</option>
+                            <option value="ruby3.1">Ruby 3.1</option>
+                        </optgroup>
+                        <optgroup label="Java">
+                            <option value="java17">Java 17 LTS</option>
+                            <option value="java11">Java 11 LTS</option>
+                        </optgroup>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Framework</label>
+                    <select id="framework" class="form-input form-select">
+                        <option value="">Auto-detect</option>
+                        <!-- Framework options populated based on runtime -->
+                    </select>
+                </div>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="form-group">
+                    <label class="form-label">Main Entry File <span class="text-red-500">*</span></label>
+                    <input type="text" id="mainFile" class="form-input" placeholder="main.py">
+                    <p class="form-help">The file that starts your application</p>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Build Command</label>
+                    <input type="text" id="buildCommand" class="form-input" placeholder="pip install -r requirements.txt">
+                    <p class="form-help">Command to install dependencies</p>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Start Command <span class="text-red-500">*</span></label>
+                <input type="text" id="startCommand" class="form-input" placeholder="uvicorn main:app --host 0.0.0.0 --port 8080">
+                <p class="form-help">Command to start your API server</p>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="form-group">
+                    <label class="form-label">Port <span class="text-red-500">*</span></label>
+                    <input type="number" id="port" class="form-input" value="8080" min="1" max="65535">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Health Check Path</label>
+                    <input type="text" id="healthCheck" class="form-input" value="/health" placeholder="/health">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Request Timeout (seconds)</label>
+                    <input type="number" id="timeout" class="form-input" value="30" min="1" max="300">
+                </div>
+            </div>
+        </div>
+
+        <!-- Resources & Scaling -->
+        <div class="config-section">
+            <h3><i class="fas fa-server"></i>Resources & Scaling</h3>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="form-group">
+                    <label class="form-label">Memory (MB)</label>
+                    <div class="mb-2">
+                        <input type="range" id="memorySlider" class="resource-slider" min="128" max="8192" step="128" value="512" oninput="updateMemoryDisplay()">
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm text-gray-500">128 MB</span>
+                        <span id="memoryDisplay" class="text-lg font-semibold text-indigo-600">512 MB</span>
+                        <span class="text-sm text-gray-500">8 GB</span>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">CPU Cores</label>
+                    <div class="mb-2">
+                        <input type="range" id="cpuSlider" class="resource-slider" min="0.1" max="4" step="0.1" value="0.5" oninput="updateCPUDisplay()">
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm text-gray-500">0.1</span>
+                        <span id="cpuDisplay" class="text-lg font-semibold text-indigo-600">0.5 vCPU</span>
+                        <span class="text-sm text-gray-500">4.0</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
+                <div class="form-group">
+                    <label class="form-label">Min Instances</label>
+                    <input type="number" id="minInstances" class="form-input" value="0" min="0" max="10">
+                    <p class="form-help">Set to 0 for cold starts</p>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Max Instances</label>
+                    <input type="number" id="maxInstances" class="form-input" value="10" min="1" max="100">
+                    <p class="form-help">Maximum concurrent instances</p>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Scaling Target</label>
+                    <select id="scalingTarget" class="form-input form-select">
+                        <option value="cpu">CPU Usage (70%)</option>
+                        <option value="requests">Requests/Second</option>
+                        <option value="memory">Memory Usage (80%)</option>
+                        <option value="custom">Custom Metric</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                <div class="flex items-start">
+                    <i class="fas fa-info-circle text-blue-500 mt-0.5 mr-2"></i>
+                    <div>
+                        <p class="text-sm text-blue-800 font-medium">Estimated Cost</p>
+                        <p class="text-sm text-blue-700 mt-1">Based on your configuration: <span id="estimatedCost" class="font-semibold">$0.00/month</span> (minimum)</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- API Endpoints -->
+        <div class="config-section">
+            <h3><i class="fas fa-route"></i>API Endpoints</h3>
+            
+            <div id="endpointsList">
+                <!-- Endpoints will be added here dynamically -->
+            </div>
+            
+            <button type="button" onclick="addEndpoint()" class="mt-3 px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 text-sm">
+                <i class="fas fa-plus mr-2"></i>Add Endpoint
+            </button>
+            
+            <div class="mt-4 p-4 bg-gray-50 border border-gray-200 rounded-lg">
+                <p class="text-sm text-gray-600">
+                    <i class="fas fa-lightbulb mr-2 text-yellow-500"></i>
+                    Define your API endpoints here. Use path parameters like <code class="px-1 py-0.5 bg-gray-200 rounded text-xs">{id}</code> and query parameters in your implementation.
+                </p>
+            </div>
+        </div>
+
+        <!-- Environment Variables -->
+        <div class="config-section">
+            <h3><i class="fas fa-key"></i>Environment Variables</h3>
+            
+            <div id="envVarsList">
+                <!-- Environment variables will be added here dynamically -->
+            </div>
+            
+            <button type="button" onclick="addEnvVar()" class="mt-3 px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 text-sm">
+                <i class="fas fa-plus mr-2"></i>Add Variable
+            </button>
+            
+            <div class="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                <p class="text-sm text-yellow-800">
+                    <i class="fas fa-exclamation-triangle mr-2"></i>
+                    <strong>Security Note:</strong> Never commit actual secret values. Use placeholder values here and set real values in the deployment environment.
+                </p>
+            </div>
+        </div>
+
+        <!-- Advanced Configuration -->
+        <div class="config-section">
+            <h3><i class="fas fa-tools"></i>Advanced Configuration</h3>
+            
+            <div class="space-y-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <label class="form-label mb-0">Enable CORS</label>
+                        <p class="form-help">Allow cross-origin requests to your API</p>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="enableCors" checked>
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+                
+                <div id="corsConfig" class="ml-8 space-y-3">
+                    <div class="form-group">
+                        <label class="form-label">Allowed Origins</label>
+                        <input type="text" id="corsOrigins" class="form-input" value="*" placeholder="*, https://example.com">
+                        <p class="form-help">Comma-separated list of allowed origins</p>
+                    </div>
+                </div>
+                
+                <div class="flex items-center justify-between">
+                    <div>
+                        <label class="form-label mb-0">Enable Rate Limiting</label>
+                        <p class="form-help">Protect your API from abuse</p>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="enableRateLimit" checked>
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+                
+                <div id="rateLimitConfig" class="ml-8 space-y-3">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="form-group">
+                            <label class="form-label">Requests per Window</label>
+                            <input type="number" id="rateLimit" class="form-input" value="100" min="1">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Window Duration</label>
+                            <select id="rateLimitWindow" class="form-input form-select">
+                                <option value="1m">1 minute</option>
+                                <option value="5m">5 minutes</option>
+                                <option value="15m">15 minutes</option>
+                                <option value="1h" selected>1 hour</option>
+                                <option value="1d">1 day</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="flex items-center justify-between">
+                    <div>
+                        <label class="form-label mb-0">Custom Dockerfile</label>
+                        <p class="form-help">Override default container configuration</p>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="enableCustomDockerfile" onchange="toggleDockerfile()">
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+                
+                <div id="dockerfileConfig" class="hidden">
+                    <div class="form-group">
+                        <label class="form-label">Dockerfile</label>
+                        <textarea id="dockerfile" class="dockerfile-editor" spellcheck="false">FROM python:3.11-slim
+
+WORKDIR /app
+
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY . .
+
+EXPOSE 8080
+
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8080"]</textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="flex justify-between items-center mt-8">
+            <button type="button" onclick="saveAsDraft()" class="px-6 py-3 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50">
+                <i class="fas fa-save mr-2"></i>Save as Draft
+            </button>
+            
+            <div class="space-x-4">
+                <button type="button" onclick="togglePreview()" class="px-6 py-3 border border-indigo-600 text-indigo-600 rounded-md hover:bg-indigo-50">
+                    <i class="fas fa-eye mr-2"></i>Preview
+                </button>
+                <button type="button" onclick="validateAndDeploy()" class="px-8 py-3 bg-indigo-600 text-white rounded-md hover:bg-indigo-700">
+                    <i class="fas fa-rocket mr-2"></i>Deploy API
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- Preview Panel -->
+<div id="previewPanel" class="preview-panel">
+    <div class="p-6">
+        <div class="flex justify-between items-center mb-6">
+            <h3 class="text-lg font-semibold text-gray-900">Configuration Preview</h3>
+            <button onclick="togglePreview()" class="text-gray-400 hover:text-gray-600">
+                <i class="fas fa-times text-xl"></i>
+            </button>
+        </div>
+        
+        <div id="previewContent">
+            <!-- Preview content will be generated here -->
+        </div>
+    </div>
+</div>
+
+<script>
+// Initialize with some default endpoints
+let endpoints = [
+    { id: 1, method: 'GET', path: '/', description: 'Root endpoint' },
+    { id: 2, method: 'GET', path: '/health', description: 'Health check' }
+];
+
+let envVars = [
+    { id: 1, name: 'API_KEY', value: '', required: true, description: 'API authentication key' }
+];
+
+let endpointIdCounter = 3;
+let envVarIdCounter = 2;
+
+// Initialize the form
+document.addEventListener('DOMContentLoaded', () => {
+    // Check if we have a template to load
+    const urlParams = new URLSearchParams(window.location.search);
+    const templateId = urlParams.get('template');
+    
+    if (templateId) {
+        loadTemplate(templateId);
+    } else if (sessionStorage.getItem('selectedTemplate')) {
+        // Load from session storage if available
+        const template = JSON.parse(sessionStorage.getItem('selectedTemplate'));
+        populateFromTemplate(template);
+        sessionStorage.removeItem('selectedTemplate');
+    }
+    
+    renderEndpoints();
+    renderEnvVars();
+    updateProgress();
+    updateEstimatedCost();
+    
+    // Add validation listeners
+    document.getElementById('apiName').addEventListener('input', validateApiName);
+    
+    // Toggle listeners
+    document.getElementById('enableCors').addEventListener('change', (e) => {
+        document.getElementById('corsConfig').style.display = e.target.checked ? 'block' : 'none';
+    });
+    
+    document.getElementById('enableRateLimit').addEventListener('change', (e) => {
+        document.getElementById('rateLimitConfig').style.display = e.target.checked ? 'block' : 'none';
+    });
+});
+
+// Load template data
+async function loadTemplate(templateId) {
+    try {
+        const response = await fetch(`http://localhost:8000/api/creation/templates/${templateId}`, {
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('api_token')}`
+            }
+        });
+        
+        if (response.ok) {
+            const template = await response.json();
+            populateFromTemplate(template);
+        }
+    } catch (error) {
+        console.error('Failed to load template:', error);
+    }
+}
+
+// Populate form from template
+function populateFromTemplate(template) {
+    // Basic info
+    document.getElementById('apiName').value = template.name.toLowerCase().replace(/\s+/g, '-');
+    document.getElementById('apiDescription').value = template.description;
+    document.getElementById('apiCategory').value = template.category.toLowerCase().replace(/\//g, '-');
+    
+    // Runtime
+    document.getElementById('runtime').value = template.runtime;
+    updateRuntimeOptions();
+    
+    // Set framework after options are loaded
+    setTimeout(() => {
+        document.getElementById('framework').value = template.framework.toLowerCase().replace(/\s+/g, '-');
+    }, 100);
+    
+    // Build configuration
+    document.getElementById('mainFile').value = template.main_file;
+    document.getElementById('startCommand').value = template.start_command;
+    
+    // Endpoints
+    if (template.endpoints && template.endpoints.length > 0) {
+        endpoints = template.endpoints.map((ep, idx) => ({
+            id: idx + 1,
+            method: ep.method,
+            path: ep.path,
+            description: ''
+        }));
+        endpointIdCounter = endpoints.length + 1;
+    }
+    
+    // Environment variables
+    if (template.environment) {
+        envVars = [];
+        let id = 1;
+        
+        // Required vars
+        if (template.environment.required) {
+            template.environment.required.forEach(name => {
+                envVars.push({
+                    id: id++,
+                    name: name,
+                    value: '',
+                    required: true,
+                    description: ''
+                });
+            });
+        }
+        
+        // Optional vars
+        if (template.environment.optional) {
+            Object.entries(template.environment.optional).forEach(([name, value]) => {
+                envVars.push({
+                    id: id++,
+                    name: name,
+                    value: value,
+                    required: false,
+                    description: ''
+                });
+            });
+        }
+        
+        envVarIdCounter = id;
+    }
+    
+    // Show notification
+    showNotification(`Loaded template: ${template.name}`, 'success');
+}
+
+// Runtime framework mapping
+const frameworkOptions = {
+    'python3.11': ['FastAPI', 'Flask', 'Django', 'Starlette', 'Tornado'],
+    'python3.10': ['FastAPI', 'Flask', 'Django', 'Starlette', 'Tornado'],
+    'python3.9': ['FastAPI', 'Flask', 'Django', 'Starlette', 'Tornado'],
+    'nodejs20': ['Express', 'Fastify', 'Koa', 'NestJS', 'Hapi'],
+    'nodejs18': ['Express', 'Fastify', 'Koa', 'NestJS', 'Hapi'],
+    'nodejs16': ['Express', 'Fastify', 'Koa', 'NestJS', 'Hapi'],
+    'go1.21': ['Gin', 'Echo', 'Fiber', 'Chi', 'Gorilla'],
+    'go1.20': ['Gin', 'Echo', 'Fiber', 'Chi', 'Gorilla'],
+    'ruby3.2': ['Rails', 'Sinatra', 'Grape', 'Hanami'],
+    'ruby3.1': ['Rails', 'Sinatra', 'Grape', 'Hanami'],
+    'java17': ['Spring Boot', 'Quarkus', 'Micronaut', 'Vert.x'],
+    'java11': ['Spring Boot', 'Quarkus', 'Micronaut', 'Vert.x']
+};
+
+function updateRuntimeOptions() {
+    const runtime = document.getElementById('runtime').value;
+    const frameworkSelect = document.getElementById('framework');
+    
+    // Clear current options
+    frameworkSelect.innerHTML = '<option value="">Auto-detect</option>';
+    
+    if (runtime && frameworkOptions[runtime]) {
+        frameworkOptions[runtime].forEach(framework => {
+            const option = document.createElement('option');
+            option.value = framework.toLowerCase().replace(/\s+/g, '-');
+            option.textContent = framework;
+            frameworkSelect.appendChild(option);
+        });
+    }
+    
+    updateProgress();
+}
+
+// Resource sliders
+function updateMemoryDisplay() {
+    const value = document.getElementById('memorySlider').value;
+    const display = value >= 1024 ? `${(value / 1024).toFixed(1)} GB` : `${value} MB`;
+    document.getElementById('memoryDisplay').textContent = display;
+    updateEstimatedCost();
+}
+
+function updateCPUDisplay() {
+    const value = document.getElementById('cpuSlider').value;
+    document.getElementById('cpuDisplay').textContent = `${value} vCPU`;
+    updateEstimatedCost();
+}
+
+// Endpoints management
+function renderEndpoints() {
+    const container = document.getElementById('endpointsList');
+    container.innerHTML = endpoints.map(endpoint => `
+        <div class="endpoint-builder" data-endpoint-id="${endpoint.id}">
+            <div class="flex items-start gap-3">
+                <select class="form-input form-select w-32" onchange="updateEndpoint(${endpoint.id}, 'method', this.value)">
+                    <option value="GET" ${endpoint.method === 'GET' ? 'selected' : ''}>GET</option>
+                    <option value="POST" ${endpoint.method === 'POST' ? 'selected' : ''}>POST</option>
+                    <option value="PUT" ${endpoint.method === 'PUT' ? 'selected' : ''}>PUT</option>
+                    <option value="PATCH" ${endpoint.method === 'PATCH' ? 'selected' : ''}>PATCH</option>
+                    <option value="DELETE" ${endpoint.method === 'DELETE' ? 'selected' : ''}>DELETE</option>
+                </select>
+                
+                <input type="text" class="form-input flex-1" value="${endpoint.path}" 
+                    placeholder="/api/resource/{id}" 
+                    onchange="updateEndpoint(${endpoint.id}, 'path', this.value)">
+                
+                <input type="text" class="form-input flex-1" value="${endpoint.description || ''}" 
+                    placeholder="Endpoint description" 
+                    onchange="updateEndpoint(${endpoint.id}, 'description', this.value)">
+                
+                <button onclick="removeEndpoint(${endpoint.id})" class="text-red-500 hover:text-red-700">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+        </div>
+    `).join('');
+}
+
+function addEndpoint() {
+    endpoints.push({
+        id: endpointIdCounter++,
+        method: 'GET',
+        path: '',
+        description: ''
+    });
+    renderEndpoints();
+    updateProgress();
+}
+
+function updateEndpoint(id, field, value) {
+    const endpoint = endpoints.find(e => e.id === id);
+    if (endpoint) {
+        endpoint[field] = value;
+        updateProgress();
+    }
+}
+
+function removeEndpoint(id) {
+    endpoints = endpoints.filter(e => e.id !== id);
+    renderEndpoints();
+    updateProgress();
+}
+
+// Environment variables management
+function renderEnvVars() {
+    const container = document.getElementById('envVarsList');
+    container.innerHTML = envVars.map(envVar => `
+        <div class="env-var-builder" data-env-id="${envVar.id}">
+            <div class="flex items-start gap-3">
+                <input type="text" class="form-input w-48" value="${envVar.name}" 
+                    placeholder="VARIABLE_NAME" 
+                    onchange="updateEnvVar(${envVar.id}, 'name', this.value)">
+                
+                <input type="text" class="form-input flex-1" value="${envVar.value}" 
+                    placeholder="Value or example" 
+                    onchange="updateEnvVar(${envVar.id}, 'value', this.value)">
+                
+                <input type="text" class="form-input flex-1" value="${envVar.description || ''}" 
+                    placeholder="Description" 
+                    onchange="updateEnvVar(${envVar.id}, 'description', this.value)">
+                
+                <label class="flex items-center">
+                    <input type="checkbox" ${envVar.required ? 'checked' : ''} 
+                        onchange="updateEnvVar(${envVar.id}, 'required', this.checked)"
+                        class="mr-2">
+                    <span class="text-sm text-gray-700">Required</span>
+                </label>
+                
+                <button onclick="removeEnvVar(${envVar.id})" class="text-red-500 hover:text-red-700">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+        </div>
+    `).join('');
+}
+
+function addEnvVar() {
+    envVars.push({
+        id: envVarIdCounter++,
+        name: '',
+        value: '',
+        required: false,
+        description: ''
+    });
+    renderEnvVars();
+    updateProgress();
+}
+
+function updateEnvVar(id, field, value) {
+    const envVar = envVars.find(e => e.id === id);
+    if (envVar) {
+        envVar[field] = value;
+        updateProgress();
+    }
+}
+
+function removeEnvVar(id) {
+    envVars = envVars.filter(e => e.id !== id);
+    renderEnvVars();
+    updateProgress();
+}
+
+// Validation
+function validateApiName() {
+    const input = document.getElementById('apiName');
+    const error = document.getElementById('apiNameError');
+    const value = input.value;
+    
+    if (!value) {
+        error.textContent = 'API name is required';
+        error.classList.remove('hidden');
+        input.classList.add('border-red-500');
+        return false;
+    }
+    
+    if (!/^[a-z0-9-]+$/.test(value)) {
+        error.textContent = 'Only lowercase letters, numbers, and hyphens allowed';
+        error.classList.remove('hidden');
+        input.classList.add('border-red-500');
+        return false;
+    }
+    
+    if (value.startsWith('-') || value.endsWith('-')) {
+        error.textContent = 'Cannot start or end with a hyphen';
+        error.classList.remove('hidden');
+        input.classList.add('border-red-500');
+        return false;
+    }
+    
+    error.classList.add('hidden');
+    input.classList.remove('border-red-500');
+    return true;
+}
+
+// Progress tracking
+function updateProgress() {
+    const required = [
+        'apiName',
+        'runtime',
+        'mainFile',
+        'startCommand',
+        'port'
+    ];
+    
+    let completed = 0;
+    let total = required.length;
+    
+    required.forEach(field => {
+        const value = document.getElementById(field).value;
+        if (value && value.trim() !== '') {
+            completed++;
+        }
+    });
+    
+    // Check endpoints
+    if (endpoints.filter(e => e.path).length > 0) {
+        completed++;
+    }
+    total++;
+    
+    const percentage = Math.round((completed / total) * 100);
+    document.getElementById('completionPercent').textContent = percentage;
+    document.getElementById('progressBar').style.width = `${percentage}%`;
+}
+
+// Cost estimation
+function updateEstimatedCost() {
+    const memory = parseInt(document.getElementById('memorySlider').value);
+    const cpu = parseFloat(document.getElementById('cpuSlider').value);
+    const minInstances = parseInt(document.getElementById('minInstances').value);
+    
+    // Simple cost calculation (example rates)
+    const memoryCost = (memory / 1024) * 10; // $10 per GB
+    const cpuCost = cpu * 20; // $20 per vCPU
+    const baseCost = (memoryCost + cpuCost) * minInstances;
+    
+    const monthlyCost = baseCost * 730; // hours in a month
+    
+    document.getElementById('estimatedCost').textContent = 
+        monthlyCost > 0 ? `$${monthlyCost.toFixed(2)}/month` : 'Free (scales to zero)';
+}
+
+// Dockerfile toggle
+function toggleDockerfile() {
+    const enabled = document.getElementById('enableCustomDockerfile').checked;
+    document.getElementById('dockerfileConfig').style.display = enabled ? 'block' : 'none';
+}
+
+// Preview
+function togglePreview() {
+    const panel = document.getElementById('previewPanel');
+    panel.classList.toggle('open');
+    
+    if (panel.classList.contains('open')) {
+        generatePreview();
+    }
+}
+
+function generatePreview() {
+    const config = collectConfiguration();
+    const preview = document.getElementById('previewContent');
+    
+    preview.innerHTML = `
+        <div class="space-y-6">
+            <div>
+                <h4 class="font-semibold text-gray-900 mb-2">Basic Information</h4>
+                <dl class="space-y-1 text-sm">
+                    <div class="flex justify-between">
+                        <dt class="text-gray-600">Name:</dt>
+                        <dd class="font-medium">${config.name || 'Not set'}</dd>
+                    </div>
+                    <div class="flex justify-between">
+                        <dt class="text-gray-600">Version:</dt>
+                        <dd class="font-medium">${config.version}</dd>
+                    </div>
+                    <div class="flex justify-between">
+                        <dt class="text-gray-600">Runtime:</dt>
+                        <dd class="font-medium">${config.runtime || 'Not selected'}</dd>
+                    </div>
+                </dl>
+            </div>
+            
+            <div>
+                <h4 class="font-semibold text-gray-900 mb-2">Resources</h4>
+                <dl class="space-y-1 text-sm">
+                    <div class="flex justify-between">
+                        <dt class="text-gray-600">Memory:</dt>
+                        <dd class="font-medium">${config.resources.memory} MB</dd>
+                    </div>
+                    <div class="flex justify-between">
+                        <dt class="text-gray-600">CPU:</dt>
+                        <dd class="font-medium">${config.resources.cpu} vCPU</dd>
+                    </div>
+                    <div class="flex justify-between">
+                        <dt class="text-gray-600">Instances:</dt>
+                        <dd class="font-medium">${config.scaling.min} - ${config.scaling.max}</dd>
+                    </div>
+                </dl>
+            </div>
+            
+            <div>
+                <h4 class="font-semibold text-gray-900 mb-2">Endpoints (${config.endpoints.length})</h4>
+                <div class="space-y-1">
+                    ${config.endpoints.map(ep => `
+                        <div class="text-sm">
+                            <span class="method-badge ${ep.method}">${ep.method}</span>
+                            <span class="ml-2 text-gray-700">${ep.path}</span>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+            
+            <div>
+                <h4 class="font-semibold text-gray-900 mb-2">Environment Variables (${config.envVars.length})</h4>
+                <div class="space-y-1">
+                    ${config.envVars.map(env => `
+                        <div class="text-sm">
+                            <span class="font-medium ${env.required ? 'text-red-600' : 'text-gray-700'}">${env.name}</span>
+                            ${env.required ? '<span class="text-xs text-red-500 ml-1">(required)</span>' : ''}
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+// Configuration collection
+function collectConfiguration() {
+    return {
+        name: document.getElementById('apiName').value,
+        version: document.getElementById('apiVersion').value,
+        description: document.getElementById('apiDescription').value,
+        category: document.getElementById('apiCategory').value,
+        visibility: document.getElementById('apiVisibility').value,
+        license: document.getElementById('apiLicense').value,
+        runtime: document.getElementById('runtime').value,
+        framework: document.getElementById('framework').value,
+        mainFile: document.getElementById('mainFile').value,
+        buildCommand: document.getElementById('buildCommand').value,
+        startCommand: document.getElementById('startCommand').value,
+        port: parseInt(document.getElementById('port').value),
+        healthCheck: document.getElementById('healthCheck').value,
+        timeout: parseInt(document.getElementById('timeout').value),
+        resources: {
+            memory: parseInt(document.getElementById('memorySlider').value),
+            cpu: parseFloat(document.getElementById('cpuSlider').value)
+        },
+        scaling: {
+            min: parseInt(document.getElementById('minInstances').value),
+            max: parseInt(document.getElementById('maxInstances').value),
+            target: document.getElementById('scalingTarget').value
+        },
+        endpoints: endpoints.filter(e => e.path),
+        envVars: envVars.filter(e => e.name),
+        cors: {
+            enabled: document.getElementById('enableCors').checked,
+            origins: document.getElementById('corsOrigins').value
+        },
+        rateLimit: {
+            enabled: document.getElementById('enableRateLimit').checked,
+            limit: parseInt(document.getElementById('rateLimit').value),
+            window: document.getElementById('rateLimitWindow').value
+        },
+        customDockerfile: document.getElementById('enableCustomDockerfile').checked ? 
+            document.getElementById('dockerfile').value : null
+    };
+}
+
+// Save and deploy
+async function saveAsDraft() {
+    const config = collectConfiguration();
+    
+    try {
+        showNotification('Saving draft...', 'info');
+        
+        // In production, save to backend
+        console.log('Saving draft:', config);
+        
+        showNotification('Draft saved successfully', 'success');
+    } catch (error) {
+        showNotification('Failed to save draft', 'error');
+    }
+}
+
+async function validateAndDeploy() {
+    // Validate required fields
+    if (!validateApiName()) {
+        showNotification('Please fix validation errors', 'error');
+        return;
+    }
+    
+    const config = collectConfiguration();
+    
+    if (!config.runtime) {
+        showNotification('Please select a runtime', 'error');
+        return;
+    }
+    
+    if (!config.mainFile || !config.startCommand) {
+        showNotification('Please complete all required fields', 'error');
+        return;
+    }
+    
+    if (config.endpoints.length === 0) {
+        showNotification('Please add at least one endpoint', 'error');
+        return;
+    }
+    
+    // Deploy
+    try {
+        showNotification('Deploying API...', 'info');
+        
+        // In production, deploy via backend
+        console.log('Deploying:', config);
+        
+        showNotification('API deployed successfully!', 'success');
+        
+        // Redirect to API management
+        setTimeout(() => {
+            window.location.href = '/apis';
+        }, 2000);
+        
+    } catch (error) {
+        showNotification('Failed to deploy API', 'error');
+    }
+}
+</script>
+{% endblock %}

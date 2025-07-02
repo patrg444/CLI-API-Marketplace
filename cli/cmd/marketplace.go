@@ -3,7 +3,6 @@ package cmd
 import (
 	"encoding/json"
 	"fmt"
-	"os"
 	"strings"
 
 	"github.com/api-direct/cli/pkg/auth"
@@ -22,14 +21,13 @@ var marketplaceInfoCmd = &cobra.Command{
 	Short: "Get marketplace information for an API",
 	Long:  `Display detailed marketplace information for an API including publish status, pricing plans, and basic analytics.`,
 	Args:  cobra.ExactArgs(1),
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
 		apiIdentifier := args[0]
 
 		// Get authentication token
 		token, err := auth.GetToken()
 		if err != nil {
-			fmt.Printf("Error: Not authenticated. Please run 'apidirect auth login' first.\n")
-			os.Exit(1)
+			return fmt.Errorf("not authenticated. Please run 'apidirect auth login' first")
 		}
 
 		// Make API request to get marketplace info
@@ -38,16 +36,14 @@ var marketplaceInfoCmd = &cobra.Command{
 
 		resp, err := auth.MakeAuthenticatedRequest("GET", url, token, nil)
 		if err != nil {
-			fmt.Printf("Error getting marketplace info: %v\n", err)
-			os.Exit(1)
+			return fmt.Errorf("getting marketplace info: %w", err)
 		}
 		defer resp.Body.Close()
 
 		if resp.StatusCode == 200 {
 			var marketplaceData map[string]interface{}
 			if err := json.NewDecoder(resp.Body).Decode(&marketplaceData); err != nil {
-				fmt.Printf("Error parsing response: %v\n", err)
-				os.Exit(1)
+				return fmt.Errorf("parsing response: %w", err)
 			}
 
 			// Display marketplace information
@@ -142,14 +138,13 @@ var marketplaceInfoCmd = &cobra.Command{
 			fmt.Println()
 
 		} else if resp.StatusCode == 404 {
-			fmt.Printf("Error: API '%s' not found or you don't have permission to view it.\n", apiIdentifier)
-			os.Exit(1)
+			return fmt.Errorf("API '%s' not found or you don't have permission to view it", apiIdentifier)
 		} else {
 			var errorResp map[string]string
 			json.NewDecoder(resp.Body).Decode(&errorResp)
-			fmt.Printf("Error: Failed to get marketplace info - %s\n", errorResp["error"])
-			os.Exit(1)
+			return fmt.Errorf("failed to get marketplace info - %s", errorResp["error"])
 		}
+		return nil
 	},
 }
 
@@ -157,12 +152,11 @@ var marketplaceStatsCmd = &cobra.Command{
 	Use:   "stats",
 	Short: "Get marketplace statistics for all your APIs",
 	Long:  `Display aggregated marketplace statistics across all your published APIs.`,
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
 		// Get authentication token
 		token, err := auth.GetToken()
 		if err != nil {
-			fmt.Printf("Error: Not authenticated. Please run 'apidirect auth login' first.\n")
-			os.Exit(1)
+			return fmt.Errorf("not authenticated. Please run 'apidirect auth login' first")
 		}
 
 		// Make API request to get marketplace stats
@@ -171,16 +165,14 @@ var marketplaceStatsCmd = &cobra.Command{
 
 		resp, err := auth.MakeAuthenticatedRequest("GET", url, token, nil)
 		if err != nil {
-			fmt.Printf("Error getting marketplace stats: %v\n", err)
-			os.Exit(1)
+			return fmt.Errorf("getting marketplace stats: %w", err)
 		}
 		defer resp.Body.Close()
 
 		if resp.StatusCode == 200 {
 			var stats map[string]interface{}
 			if err := json.NewDecoder(resp.Body).Decode(&stats); err != nil {
-				fmt.Printf("Error parsing response: %v\n", err)
-				os.Exit(1)
+				return fmt.Errorf("parsing response: %w", err)
 			}
 
 			// Display statistics
@@ -221,9 +213,9 @@ var marketplaceStatsCmd = &cobra.Command{
 		} else {
 			var errorResp map[string]string
 			json.NewDecoder(resp.Body).Decode(&errorResp)
-			fmt.Printf("Error: Failed to get marketplace stats - %s\n", errorResp["error"])
-			os.Exit(1)
+			return fmt.Errorf("failed to get marketplace stats - %s", errorResp["error"])
 		}
+		return nil
 	},
 }
 

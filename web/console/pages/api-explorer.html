@@ -1,0 +1,1338 @@
+{% extends "templates/base.html" %}
+
+{% block title %}API Explorer - API-Direct{% endblock %}
+{% block description %}Explore API documentation and test endpoints interactively{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/github-dark.min.css">
+<style>
+.explorer-container {
+    display: grid;
+    grid-template-columns: 320px 1fr 400px;
+    gap: 1rem;
+    height: calc(100vh - 8rem);
+}
+
+.sidebar-panel {
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.5rem;
+    overflow-y: auto;
+}
+
+.docs-panel {
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.5rem;
+    overflow-y: auto;
+    padding: 2rem;
+}
+
+.try-panel {
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.5rem;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+}
+
+.api-header {
+    padding: 1.5rem;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.api-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #111827;
+    margin-bottom: 0.5rem;
+}
+
+.api-meta {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    margin-top: 1rem;
+}
+
+.version-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.25rem 0.75rem;
+    background: #eef2ff;
+    color: #4f46e5;
+    border-radius: 9999px;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.status-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.25rem 0.75rem;
+    background: #d1fae5;
+    color: #065f46;
+    border-radius: 9999px;
+    font-size: 0.875rem;
+}
+
+.status-indicator.operational { background: #d1fae5; color: #065f46; }
+.status-indicator.degraded { background: #fef3c7; color: #92400e; }
+.status-indicator.down { background: #fee2e2; color: #991b1b; }
+
+.search-box {
+    padding: 1rem;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.search-input {
+    width: 100%;
+    padding: 0.5rem 0.75rem 0.5rem 2.5rem;
+    border: 1px solid #d1d5db;
+    border-radius: 0.375rem;
+    font-size: 0.875rem;
+}
+
+.search-icon {
+    position: absolute;
+    left: 0.75rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #9ca3af;
+}
+
+.endpoint-group {
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.group-header {
+    padding: 0.75rem 1rem;
+    font-weight: 600;
+    color: #374151;
+    background: #f9fafb;
+    cursor: pointer;
+    user-select: none;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.group-header:hover {
+    background: #f3f4f6;
+}
+
+.endpoint-list {
+    padding: 0.5rem;
+}
+
+.endpoint-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem;
+    border-radius: 0.375rem;
+    cursor: pointer;
+    margin-bottom: 0.25rem;
+}
+
+.endpoint-item:hover {
+    background: #f9fafb;
+}
+
+.endpoint-item.active {
+    background: #eef2ff;
+}
+
+.method-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 60px;
+    padding: 0.125rem 0.5rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    border-radius: 0.25rem;
+    text-transform: uppercase;
+}
+
+.method-badge.GET { background: #d1fae5; color: #065f46; }
+.method-badge.POST { background: #dbeafe; color: #1e40af; }
+.method-badge.PUT { background: #fef3c7; color: #92400e; }
+.method-badge.DELETE { background: #fee2e2; color: #991b1b; }
+.method-badge.PATCH { background: #ede9fe; color: #5b21b6; }
+
+.endpoint-path {
+    font-size: 0.875rem;
+    color: #374151;
+    flex: 1;
+}
+
+.endpoint-header {
+    margin-bottom: 2rem;
+}
+
+.endpoint-title {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 0.5rem;
+}
+
+.endpoint-description {
+    color: #6b7280;
+    margin-bottom: 1rem;
+}
+
+.endpoint-url {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem;
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.375rem;
+    font-family: monospace;
+    font-size: 0.875rem;
+}
+
+.copy-btn {
+    padding: 0.25rem 0.5rem;
+    color: #6b7280;
+    cursor: pointer;
+}
+
+.copy-btn:hover {
+    color: #4f46e5;
+}
+
+.params-section {
+    margin-bottom: 2rem;
+}
+
+.section-title {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: #111827;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.param-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.param-table th {
+    text-align: left;
+    padding: 0.75rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #6b7280;
+    text-transform: uppercase;
+    background: #f9fafb;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.param-table td {
+    padding: 0.75rem;
+    border-bottom: 1px solid #f3f4f6;
+    vertical-align: top;
+}
+
+.param-name {
+    font-family: monospace;
+    font-weight: 500;
+    color: #111827;
+}
+
+.param-required {
+    display: inline-block;
+    padding: 0.125rem 0.375rem;
+    background: #fee2e2;
+    color: #991b1b;
+    font-size: 0.625rem;
+    font-weight: 600;
+    border-radius: 0.25rem;
+    text-transform: uppercase;
+    margin-left: 0.5rem;
+}
+
+.param-type {
+    font-family: monospace;
+    font-size: 0.875rem;
+    color: #6b7280;
+}
+
+.param-description {
+    font-size: 0.875rem;
+    color: #6b7280;
+}
+
+.code-example {
+    background: #1e1e1e;
+    color: #d4d4d4;
+    padding: 1rem;
+    border-radius: 0.375rem;
+    overflow-x: auto;
+    margin-bottom: 1rem;
+}
+
+.response-example {
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.375rem;
+    padding: 1rem;
+    margin-bottom: 1rem;
+}
+
+.try-header {
+    padding: 1.5rem;
+    border-bottom: 1px solid #e5e7eb;
+    background: #f9fafb;
+}
+
+.try-content {
+    flex: 1;
+    padding: 1.5rem;
+    overflow-y: auto;
+}
+
+.try-section {
+    margin-bottom: 1.5rem;
+}
+
+.input-group {
+    margin-bottom: 1rem;
+}
+
+.input-label {
+    display: block;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #374151;
+    margin-bottom: 0.5rem;
+}
+
+.input-field {
+    width: 100%;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid #d1d5db;
+    border-radius: 0.375rem;
+    font-size: 0.875rem;
+}
+
+.input-field:focus {
+    outline: none;
+    border-color: #6366f1;
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+.textarea-field {
+    min-height: 120px;
+    font-family: monospace;
+    resize: vertical;
+}
+
+.execute-btn {
+    width: 100%;
+    padding: 0.75rem 1.5rem;
+    background: #4f46e5;
+    color: white;
+    border: none;
+    border-radius: 0.375rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.execute-btn:hover {
+    background: #4338ca;
+}
+
+.execute-btn:disabled {
+    background: #9ca3af;
+    cursor: not-allowed;
+}
+
+.response-viewer {
+    margin-top: 1.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #e5e7eb;
+}
+
+.response-status {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    padding: 0.75rem;
+    background: #f9fafb;
+    border-radius: 0.375rem;
+}
+
+.auth-selector {
+    padding: 0.5rem;
+    background: #fef3c7;
+    border: 1px solid #fbbf24;
+    border-radius: 0.375rem;
+    margin-bottom: 1rem;
+}
+
+.schema-viewer {
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.375rem;
+    padding: 1rem;
+    font-family: monospace;
+    font-size: 0.75rem;
+}
+
+.example-selector {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.example-btn {
+    padding: 0.375rem 0.75rem;
+    font-size: 0.875rem;
+    border: 1px solid #e5e7eb;
+    background: white;
+    border-radius: 0.375rem;
+    cursor: pointer;
+}
+
+.example-btn:hover {
+    background: #f9fafb;
+}
+
+.example-btn.active {
+    background: #4f46e5;
+    color: white;
+    border-color: #4f46e5;
+}
+
+.security-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.25rem 0.5rem;
+    background: #fee2e2;
+    color: #991b1b;
+    font-size: 0.75rem;
+    font-weight: 500;
+    border-radius: 0.25rem;
+}
+
+.security-badge.unlocked {
+    background: #d1fae5;
+    color: #065f46;
+}
+
+.rate-limit-info {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.5rem;
+    background: #eef2ff;
+    border: 1px solid #c7d2fe;
+    border-radius: 0.375rem;
+    font-size: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+.loading-shimmer {
+    background: linear-gradient(90deg, #f3f4f6 25%, #e5e7eb 50%, #f3f4f6 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+.tag {
+    display: inline-block;
+    padding: 0.125rem 0.5rem;
+    background: #f3f4f6;
+    color: #6b7280;
+    font-size: 0.75rem;
+    border-radius: 9999px;
+    margin-right: 0.5rem;
+}
+
+.breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 1rem 2rem;
+    background: #f9fafb;
+    border-bottom: 1px solid #e5e7eb;
+    font-size: 0.875rem;
+    color: #6b7280;
+}
+
+.breadcrumb a {
+    color: #4f46e5;
+    text-decoration: none;
+}
+
+.breadcrumb a:hover {
+    text-decoration: underline;
+}
+
+.filter-section {
+    padding: 1rem;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.filter-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.filter-tag {
+    padding: 0.25rem 0.75rem;
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    cursor: pointer;
+}
+
+.filter-tag:hover {
+    border-color: #d1d5db;
+    background: #f9fafb;
+}
+
+.filter-tag.active {
+    background: #4f46e5;
+    color: white;
+    border-color: #4f46e5;
+}
+
+@media (max-width: 1280px) {
+    .explorer-container {
+        grid-template-columns: 280px 1fr;
+    }
+    
+    .try-panel {
+        position: fixed;
+        right: -400px;
+        top: 4rem;
+        width: 400px;
+        height: calc(100vh - 4rem);
+        z-index: 50;
+        transition: right 0.3s;
+        box-shadow: -4px 0 20px rgba(0, 0, 0, 0.1);
+    }
+    
+    .try-panel.open {
+        right: 0;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Breadcrumb -->
+<div class="breadcrumb">
+    <a href="/marketplace">API Marketplace</a>
+    <i class="fas fa-chevron-right text-xs"></i>
+    <a href="/marketplace/category/image-processing">Image Processing</a>
+    <i class="fas fa-chevron-right text-xs"></i>
+    <span>Image Processing API</span>
+</div>
+
+<div class="explorer-container">
+    <!-- Sidebar -->
+    <div class="sidebar-panel">
+        <!-- API Header -->
+        <div class="api-header">
+            <h1 class="api-title">Image Processing API</h1>
+            <p class="text-sm text-gray-600 mb-3">Professional image manipulation and enhancement</p>
+            
+            <div class="api-meta">
+                <span class="version-badge">v1.0</span>
+                <span class="status-indicator operational">
+                    <span class="w-2 h-2 bg-green-500 rounded-full"></span>
+                    Operational
+                </span>
+            </div>
+            
+            <div class="flex gap-2 mt-3">
+                <span class="tag">AI/ML</span>
+                <span class="tag">Media</span>
+                <span class="tag">SaaS</span>
+            </div>
+        </div>
+        
+        <!-- Search -->
+        <div class="search-box">
+            <div class="relative">
+                <i class="fas fa-search search-icon"></i>
+                <input type="text" class="search-input" placeholder="Search endpoints..." onkeyup="filterEndpoints(this.value)">
+            </div>
+        </div>
+        
+        <!-- Filter Tags -->
+        <div class="filter-section">
+            <p class="text-xs font-medium text-gray-700 mb-2">Filter by tag:</p>
+            <div class="filter-tags">
+                <button class="filter-tag active" onclick="filterByTag('all')">All</button>
+                <button class="filter-tag" onclick="filterByTag('core')">Core</button>
+                <button class="filter-tag" onclick="filterByTag('premium')">Premium</button>
+                <button class="filter-tag" onclick="filterByTag('beta')">Beta</button>
+            </div>
+        </div>
+        
+        <!-- Endpoints -->
+        <div class="endpoint-groups">
+            <!-- Image Enhancement -->
+            <div class="endpoint-group">
+                <div class="group-header" onclick="toggleGroup('enhancement')">
+                    <span><i class="fas fa-magic mr-2"></i>Enhancement</span>
+                    <i class="fas fa-chevron-down text-xs"></i>
+                </div>
+                <div class="endpoint-list" id="enhancement-endpoints">
+                    <div class="endpoint-item active" onclick="selectEndpoint('enhance-image')">
+                        <span class="method-badge POST">POST</span>
+                        <span class="endpoint-path">/enhance</span>
+                    </div>
+                    <div class="endpoint-item" onclick="selectEndpoint('auto-enhance')">
+                        <span class="method-badge POST">POST</span>
+                        <span class="endpoint-path">/auto-enhance</span>
+                    </div>
+                    <div class="endpoint-item" onclick="selectEndpoint('upscale')">
+                        <span class="method-badge POST">POST</span>
+                        <span class="endpoint-path">/upscale</span>
+                        <span class="tag">Premium</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Background -->
+            <div class="endpoint-group">
+                <div class="group-header" onclick="toggleGroup('background')">
+                    <span><i class="fas fa-eraser mr-2"></i>Background</span>
+                    <i class="fas fa-chevron-down text-xs"></i>
+                </div>
+                <div class="endpoint-list" id="background-endpoints">
+                    <div class="endpoint-item" onclick="selectEndpoint('remove-bg')">
+                        <span class="method-badge POST">POST</span>
+                        <span class="endpoint-path">/remove-background</span>
+                    </div>
+                    <div class="endpoint-item" onclick="selectEndpoint('replace-bg')">
+                        <span class="method-badge POST">POST</span>
+                        <span class="endpoint-path">/replace-background</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Transform -->
+            <div class="endpoint-group">
+                <div class="group-header" onclick="toggleGroup('transform')">
+                    <span><i class="fas fa-crop mr-2"></i>Transform</span>
+                    <i class="fas fa-chevron-down text-xs"></i>
+                </div>
+                <div class="endpoint-list" id="transform-endpoints">
+                    <div class="endpoint-item" onclick="selectEndpoint('resize')">
+                        <span class="method-badge POST">POST</span>
+                        <span class="endpoint-path">/resize</span>
+                    </div>
+                    <div class="endpoint-item" onclick="selectEndpoint('crop')">
+                        <span class="method-badge POST">POST</span>
+                        <span class="endpoint-path">/crop</span>
+                    </div>
+                    <div class="endpoint-item" onclick="selectEndpoint('rotate')">
+                        <span class="method-badge POST">POST</span>
+                        <span class="endpoint-path">/rotate</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Utilities -->
+            <div class="endpoint-group">
+                <div class="group-header" onclick="toggleGroup('utilities')">
+                    <span><i class="fas fa-tools mr-2"></i>Utilities</span>
+                    <i class="fas fa-chevron-down text-xs"></i>
+                </div>
+                <div class="endpoint-list" id="utilities-endpoints">
+                    <div class="endpoint-item" onclick="selectEndpoint('info')">
+                        <span class="method-badge GET">GET</span>
+                        <span class="endpoint-path">/info/{image_id}</span>
+                    </div>
+                    <div class="endpoint-item" onclick="selectEndpoint('convert')">
+                        <span class="method-badge POST">POST</span>
+                        <span class="endpoint-path">/convert</span>
+                    </div>
+                    <div class="endpoint-item" onclick="selectEndpoint('compress')">
+                        <span class="method-badge POST">POST</span>
+                        <span class="endpoint-path">/compress</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Documentation Panel -->
+    <div class="docs-panel">
+        <div id="endpoint-docs">
+            <!-- Enhance Image Documentation -->
+            <div class="endpoint-header">
+                <div class="endpoint-title">
+                    <span class="method-badge POST">POST</span>
+                    <h2 class="text-2xl font-bold">Enhance Image</h2>
+                    <span class="security-badge unlocked">
+                        <i class="fas fa-lock-open"></i>
+                        API Key Required
+                    </span>
+                </div>
+                
+                <p class="endpoint-description">
+                    Apply AI-powered enhancements to improve image quality. This endpoint uses advanced algorithms to denoise, sharpen, and adjust colors automatically.
+                </p>
+                
+                <div class="endpoint-url">
+                    <span>https://api.api-direct.com/v1/image-processing</span>
+                    <span class="text-indigo-600 font-medium">/enhance</span>
+                    <button class="copy-btn" onclick="copyUrl()">
+                        <i class="fas fa-copy"></i>
+                    </button>
+                </div>
+                
+                <div class="rate-limit-info">
+                    <span><i class="fas fa-tachometer-alt mr-1"></i> Rate Limit: 100 req/min</span>
+                    <span><i class="fas fa-coins mr-1"></i> Cost: 1 credit per request</span>
+                </div>
+            </div>
+            
+            <!-- Request Parameters -->
+            <div class="params-section">
+                <h3 class="section-title">
+                    <i class="fas fa-arrow-right"></i>
+                    Request Body
+                    <span class="text-sm font-normal text-gray-500">application/json</span>
+                </h3>
+                
+                <table class="param-table">
+                    <thead>
+                        <tr>
+                            <th>Parameter</th>
+                            <th>Type</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>
+                                <span class="param-name">image_url</span>
+                                <span class="param-required">required</span>
+                            </td>
+                            <td><span class="param-type">string</span></td>
+                            <td class="param-description">URL of the image to enhance. Must be publicly accessible.</td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <span class="param-name">enhancements</span>
+                            </td>
+                            <td><span class="param-type">object</span></td>
+                            <td class="param-description">Specific enhancement options to apply</td>
+                        </tr>
+                        <tr>
+                            <td style="padding-left: 2rem;">
+                                <span class="param-name">denoise</span>
+                            </td>
+                            <td><span class="param-type">boolean</span></td>
+                            <td class="param-description">Remove noise from the image. Default: true</td>
+                        </tr>
+                        <tr>
+                            <td style="padding-left: 2rem;">
+                                <span class="param-name">sharpen</span>
+                            </td>
+                            <td><span class="param-type">number</span></td>
+                            <td class="param-description">Sharpening intensity (0-2). Default: 1.0</td>
+                        </tr>
+                        <tr>
+                            <td style="padding-left: 2rem;">
+                                <span class="param-name">brightness</span>
+                            </td>
+                            <td><span class="param-type">number</span></td>
+                            <td class="param-description">Brightness adjustment (-1 to 1). Default: 0</td>
+                        </tr>
+                        <tr>
+                            <td style="padding-left: 2rem;">
+                                <span class="param-name">contrast</span>
+                            </td>
+                            <td><span class="param-type">number</span></td>
+                            <td class="param-description">Contrast adjustment (-1 to 1). Default: 0</td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <span class="param-name">format</span>
+                            </td>
+                            <td><span class="param-type">string</span></td>
+                            <td class="param-description">Output format: jpeg, png, webp. Default: same as input</td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <span class="param-name">quality</span>
+                            </td>
+                            <td><span class="param-type">integer</span></td>
+                            <td class="param-description">Output quality (1-100). Default: 85</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Request Example -->
+            <div class="params-section">
+                <h3 class="section-title">
+                    <i class="fas fa-code"></i>
+                    Request Example
+                </h3>
+                
+                <div class="example-selector">
+                    <button class="example-btn active" onclick="showExample('basic')">Basic</button>
+                    <button class="example-btn" onclick="showExample('advanced')">Advanced</button>
+                    <button class="example-btn" onclick="showExample('minimal')">Minimal</button>
+                </div>
+                
+                <pre class="code-example"><code>{
+  "image_url": "https://example.com/photo.jpg",
+  "enhancements": {
+    "denoise": true,
+    "sharpen": 1.2,
+    "brightness": 0.1,
+    "contrast": 0.2
+  },
+  "format": "jpeg",
+  "quality": 90
+}</code></pre>
+            </div>
+            
+            <!-- Response -->
+            <div class="params-section">
+                <h3 class="section-title">
+                    <i class="fas fa-arrow-left"></i>
+                    Response
+                    <span class="text-sm font-normal text-gray-500">200 OK</span>
+                </h3>
+                
+                <div class="response-example">
+                    <p class="text-sm font-medium text-gray-700 mb-2">Success Response</p>
+                    <pre class="code-example"><code>{
+  "success": true,
+  "data": {
+    "image_id": "img_2KtR3n8B9Z",
+    "url": "https://cdn.api-direct.com/processed/img_2KtR3n8B9Z.jpg",
+    "expires_at": "2024-01-15T10:30:00Z",
+    "metadata": {
+      "width": 1920,
+      "height": 1080,
+      "format": "jpeg",
+      "size_bytes": 245632,
+      "enhancements_applied": ["denoise", "sharpen", "brightness", "contrast"]
+    },
+    "processing_time_ms": 342
+  }
+}</code></pre>
+                </div>
+                
+                <table class="param-table">
+                    <thead>
+                        <tr>
+                            <th>Field</th>
+                            <th>Type</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><span class="param-name">success</span></td>
+                            <td><span class="param-type">boolean</span></td>
+                            <td class="param-description">Whether the request was successful</td>
+                        </tr>
+                        <tr>
+                            <td><span class="param-name">data.image_id</span></td>
+                            <td><span class="param-type">string</span></td>
+                            <td class="param-description">Unique identifier for the processed image</td>
+                        </tr>
+                        <tr>
+                            <td><span class="param-name">data.url</span></td>
+                            <td><span class="param-type">string</span></td>
+                            <td class="param-description">URL to download the enhanced image</td>
+                        </tr>
+                        <tr>
+                            <td><span class="param-name">data.expires_at</span></td>
+                            <td><span class="param-type">string</span></td>
+                            <td class="param-description">ISO 8601 timestamp when the URL expires</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Error Responses -->
+            <div class="params-section">
+                <h3 class="section-title">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    Error Responses
+                </h3>
+                
+                <div class="response-example">
+                    <p class="text-sm font-medium text-red-700 mb-2">400 Bad Request</p>
+                    <pre class="code-example"><code>{
+  "success": false,
+  "error": {
+    "code": "INVALID_IMAGE_URL",
+    "message": "The provided image URL is not accessible or invalid",
+    "details": {
+      "url": "https://example.com/broken.jpg",
+      "reason": "404 Not Found"
+    }
+  }
+}</code></pre>
+                </div>
+                
+                <div class="response-example">
+                    <p class="text-sm font-medium text-red-700 mb-2">429 Too Many Requests</p>
+                    <pre class="code-example"><code>{
+  "success": false,
+  "error": {
+    "code": "RATE_LIMIT_EXCEEDED",
+    "message": "Rate limit exceeded. Please retry after some time.",
+    "details": {
+      "limit": 100,
+      "window": "1 minute",
+      "retry_after": 45
+    }
+  }
+}</code></pre>
+                </div>
+            </div>
+            
+            <!-- Code Samples -->
+            <div class="params-section">
+                <h3 class="section-title">
+                    <i class="fas fa-terminal"></i>
+                    Code Samples
+                </h3>
+                
+                <div class="example-selector">
+                    <button class="example-btn active" onclick="showCodeSample('curl')">cURL</button>
+                    <button class="example-btn" onclick="showCodeSample('python')">Python</button>
+                    <button class="example-btn" onclick="showCodeSample('javascript')">JavaScript</button>
+                    <button class="example-btn" onclick="showCodeSample('php')">PHP</button>
+                    <button class="example-btn" onclick="showCodeSample('go')">Go</button>
+                </div>
+                
+                <pre class="code-example"><code id="code-sample">curl -X POST https://api.api-direct.com/v1/image-processing/enhance \
+  -H "X-API-Key: YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "image_url": "https://example.com/photo.jpg",
+    "enhancements": {
+      "denoise": true,
+      "sharpen": 1.2
+    }
+  }'</code></pre>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Try It Panel -->
+    <div class="try-panel" id="tryPanel">
+        <div class="try-header">
+            <h3 class="text-lg font-semibold">Try it out</h3>
+            <button class="absolute right-4 top-4 text-gray-400 hover:text-gray-600 lg:hidden" onclick="closeTryPanel()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        
+        <div class="try-content">
+            <!-- Authentication -->
+            <div class="auth-selector">
+                <p class="text-sm font-medium mb-2">
+                    <i class="fas fa-key mr-2"></i>Authentication Required
+                </p>
+                <select class="input-field">
+                    <option>Use Test API Key (Limited)</option>
+                    <option>Use My API Key</option>
+                    <option>Get Free API Key</option>
+                </select>
+            </div>
+            
+            <!-- Parameters -->
+            <div class="try-section">
+                <h4 class="font-medium mb-3">Request Body</h4>
+                
+                <div class="input-group">
+                    <label class="input-label">
+                        image_url <span class="text-red-500">*</span>
+                    </label>
+                    <input type="text" class="input-field" placeholder="https://example.com/image.jpg" 
+                           value="https://images.unsplash.com/photo-1506905925346-21bda4d32df4">
+                </div>
+                
+                <div class="input-group">
+                    <label class="input-label">enhancements</label>
+                    
+                    <div class="ml-4 space-y-2">
+                        <label class="flex items-center">
+                            <input type="checkbox" checked class="mr-2">
+                            <span class="text-sm">denoise</span>
+                        </label>
+                        
+                        <div>
+                            <label class="text-sm">sharpen</label>
+                            <input type="range" min="0" max="2" step="0.1" value="1" class="w-full">
+                            <span class="text-xs text-gray-500">1.0</span>
+                        </div>
+                        
+                        <div>
+                            <label class="text-sm">brightness</label>
+                            <input type="range" min="-1" max="1" step="0.1" value="0" class="w-full">
+                            <span class="text-xs text-gray-500">0.0</span>
+                        </div>
+                        
+                        <div>
+                            <label class="text-sm">contrast</label>
+                            <input type="range" min="-1" max="1" step="0.1" value="0" class="w-full">
+                            <span class="text-xs text-gray-500">0.0</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="input-group">
+                    <label class="input-label">format</label>
+                    <select class="input-field">
+                        <option value="">Same as input</option>
+                        <option value="jpeg">JPEG</option>
+                        <option value="png">PNG</option>
+                        <option value="webp">WebP</option>
+                    </select>
+                </div>
+                
+                <div class="input-group">
+                    <label class="input-label">quality</label>
+                    <input type="number" class="input-field" min="1" max="100" value="85">
+                </div>
+                
+                <div class="input-group">
+                    <label class="input-label">Generated Request</label>
+                    <textarea class="textarea-field input-field" readonly>{
+  "image_url": "https://images.unsplash.com/photo-1506905925346-21bda4d32df4",
+  "enhancements": {
+    "denoise": true,
+    "sharpen": 1.0,
+    "brightness": 0.0,
+    "contrast": 0.0
+  },
+  "quality": 85
+}</textarea>
+                </div>
+            </div>
+            
+            <!-- Execute Button -->
+            <button class="execute-btn" onclick="executeRequest()">
+                <i class="fas fa-play"></i>
+                Execute Request
+            </button>
+            
+            <!-- Response -->
+            <div class="response-viewer" id="responseViewer" style="display:none;">
+                <h4 class="font-medium mb-3">Response</h4>
+                
+                <div class="response-status">
+                    <span class="status-badge success">200 OK</span>
+                    <span class="text-sm text-gray-600">234ms</span>
+                    <span class="text-sm text-gray-600">1.2 KB</span>
+                </div>
+                
+                <pre class="code-example"><code id="response-output">{
+  "success": true,
+  "data": {
+    "image_id": "img_2KtR3n8B9Z",
+    "url": "https://cdn.api-direct.com/processed/img_2KtR3n8B9Z.jpg",
+    "expires_at": "2024-01-15T10:30:00Z",
+    "metadata": {
+      "width": 1920,
+      "height": 1080,
+      "format": "jpeg",
+      "size_bytes": 245632,
+      "enhancements_applied": ["denoise", "sharpen", "brightness", "contrast"]
+    },
+    "processing_time_ms": 342
+  }
+}</code></pre>
+                
+                <div class="mt-4">
+                    <p class="text-sm font-medium mb-2">Processed Image:</p>
+                    <img src="https://via.placeholder.com/300x200" alt="Processed" class="rounded-lg border">
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js"></script>
+<script>
+// Initialize
+document.addEventListener('DOMContentLoaded', () => {
+    hljs.highlightAll();
+});
+
+// State
+let currentEndpoint = 'enhance-image';
+let activeFilters = new Set(['all']);
+
+// Endpoint selection
+function selectEndpoint(endpoint) {
+    // Update active state
+    document.querySelectorAll('.endpoint-item').forEach(item => {
+        item.classList.remove('active');
+    });
+    event.target.closest('.endpoint-item').classList.add('active');
+    
+    currentEndpoint = endpoint;
+    
+    // Load endpoint documentation
+    loadEndpointDocs(endpoint);
+    
+    // Update try panel
+    updateTryPanel(endpoint);
+}
+
+// Group toggle
+function toggleGroup(group) {
+    const list = document.getElementById(`${group}-endpoints`);
+    const icon = event.target.querySelector('.fa-chevron-down');
+    
+    if (list.style.display === 'none') {
+        list.style.display = 'block';
+        icon.style.transform = 'rotate(0deg)';
+    } else {
+        list.style.display = 'none';
+        icon.style.transform = 'rotate(-90deg)';
+    }
+}
+
+// Filter endpoints
+function filterEndpoints(query) {
+    const items = document.querySelectorAll('.endpoint-item');
+    const lowerQuery = query.toLowerCase();
+    
+    items.forEach(item => {
+        const path = item.querySelector('.endpoint-path').textContent.toLowerCase();
+        if (path.includes(lowerQuery)) {
+            item.style.display = 'flex';
+        } else {
+            item.style.display = 'none';
+        }
+    });
+}
+
+// Filter by tag
+function filterByTag(tag) {
+    // Update active filter
+    document.querySelectorAll('.filter-tag').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    event.target.classList.add('active');
+    
+    // Filter endpoints
+    const items = document.querySelectorAll('.endpoint-item');
+    items.forEach(item => {
+        if (tag === 'all') {
+            item.style.display = 'flex';
+        } else {
+            const hasTag = item.querySelector('.tag')?.textContent.toLowerCase() === tag;
+            item.style.display = hasTag ? 'flex' : 'none';
+        }
+    });
+}
+
+// Show example
+function showExample(type) {
+    // Update active button
+    document.querySelectorAll('.example-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    event.target.classList.add('active');
+    
+    // Update example code
+    const examples = {
+        basic: `{
+  "image_url": "https://example.com/photo.jpg",
+  "enhancements": {
+    "denoise": true,
+    "sharpen": 1.2,
+    "brightness": 0.1,
+    "contrast": 0.2
+  },
+  "format": "jpeg",
+  "quality": 90
+}`,
+        advanced: `{
+  "image_url": "https://example.com/photo.jpg",
+  "enhancements": {
+    "denoise": true,
+    "sharpen": 1.5,
+    "brightness": 0.2,
+    "contrast": 0.3,
+    "saturation": 0.1,
+    "gamma": 1.2,
+    "exposure": 0.1
+  },
+  "format": "png",
+  "quality": 95,
+  "preserve_metadata": true,
+  "color_profile": "sRGB"
+}`,
+        minimal: `{
+  "image_url": "https://example.com/photo.jpg"
+}`
+    };
+    
+    document.querySelector('.code-example code').textContent = examples[type];
+    hljs.highlightAll();
+}
+
+// Show code sample
+function showCodeSample(lang) {
+    // Update active button
+    document.querySelectorAll('.code-lang-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    event.target.classList.add('active');
+    
+    // Update code sample
+    const samples = {
+        curl: `curl -X POST https://api.api-direct.com/v1/image-processing/enhance \\
+  -H "X-API-Key: YOUR_API_KEY" \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "image_url": "https://example.com/photo.jpg",
+    "enhancements": {
+      "denoise": true,
+      "sharpen": 1.2
+    }
+  }'`,
+        python: `import requests
+
+url = "https://api.api-direct.com/v1/image-processing/enhance"
+headers = {
+    "X-API-Key": "YOUR_API_KEY",
+    "Content-Type": "application/json"
+}
+data = {
+    "image_url": "https://example.com/photo.jpg",
+    "enhancements": {
+        "denoise": True,
+        "sharpen": 1.2
+    }
+}
+
+response = requests.post(url, json=data, headers=headers)
+print(response.json())`,
+        javascript: `const options = {
+  method: 'POST',
+  headers: {
+    'X-API-Key': 'YOUR_API_KEY',
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    image_url: 'https://example.com/photo.jpg',
+    enhancements: {
+      denoise: true,
+      sharpen: 1.2
+    }
+  })
+};
+
+fetch('https://api.api-direct.com/v1/image-processing/enhance', options)
+  .then(response => response.json())
+  .then(data => console.log(data))
+  .catch(error => console.error(error));`
+    };
+    
+    document.getElementById('code-sample').textContent = samples[lang] || samples.curl;
+    hljs.highlightAll();
+}
+
+// Copy URL
+function copyUrl() {
+    const url = document.querySelector('.endpoint-url span').textContent + 
+                document.querySelector('.endpoint-url .text-indigo-600').textContent;
+    navigator.clipboard.writeText(url);
+    
+    // Show feedback
+    const btn = event.target.closest('button');
+    const icon = btn.querySelector('i');
+    icon.className = 'fas fa-check text-green-500';
+    setTimeout(() => {
+        icon.className = 'fas fa-copy';
+    }, 2000);
+}
+
+// Execute request
+async function executeRequest() {
+    const btn = event.target;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Executing...';
+    
+    // Simulate API call
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    
+    // Show response
+    document.getElementById('responseViewer').style.display = 'block';
+    
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fas fa-play"></i> Execute Request';
+    
+    // Scroll to response
+    document.getElementById('responseViewer').scrollIntoView({ behavior: 'smooth' });
+}
+
+// Try panel mobile
+function closeTryPanel() {
+    document.getElementById('tryPanel').classList.remove('open');
+}
+
+// Range input updates
+document.querySelectorAll('input[type="range"]').forEach(input => {
+    input.addEventListener('input', (e) => {
+        const value = e.target.value;
+        e.target.nextElementSibling.textContent = value;
+        updateGeneratedRequest();
+    });
+});
+
+// Update generated request
+function updateGeneratedRequest() {
+    const request = {
+        image_url: document.querySelector('input[placeholder*="example.com"]').value,
+        enhancements: {
+            denoise: document.querySelector('input[type="checkbox"]').checked,
+            sharpen: parseFloat(document.querySelectorAll('input[type="range"]')[0].value),
+            brightness: parseFloat(document.querySelectorAll('input[type="range"]')[1].value),
+            contrast: parseFloat(document.querySelectorAll('input[type="range"]')[2].value)
+        },
+        quality: parseInt(document.querySelector('input[type="number"]').value)
+    };
+    
+    document.querySelector('.textarea-field').value = JSON.stringify(request, null, 2);
+}
+
+// Initialize
+updateGeneratedRequest();
+</script>
+{% endblock %}

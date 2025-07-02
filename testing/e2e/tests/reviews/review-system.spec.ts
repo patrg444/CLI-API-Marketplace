@@ -7,7 +7,7 @@ test.describe('Review & Rating System', () => {
   test.beforeEach(async ({ page: p }) => {
     page = p;
     // Assume user is already logged in as a consumer with subscription
-    await page.goto(`/api/${testApiId}`);
+    await page.goto(`/apis/${testApiId}`);
     await page.waitForLoadState('networkidle');
   });
 
@@ -131,19 +131,19 @@ test.describe('Review & Rating System', () => {
     test('should enforce character limits', async () => {
       // Test title character limit
       const longTitle = 'a'.repeat(101);
-      await page.fill('[data-testid="review-title"]', longTitle);
-      const titleValue = await page.locator('[data-testid="review-title"]').inputValue();
+      await page.locator('[data-testid="review-form"]').locator('[data-testid="review-title"]').fill(longTitle);
+      const titleValue = await page.locator('[data-testid="review-form"]').locator('[data-testid="review-title"]').inputValue();
       expect(titleValue.length).toBeLessThanOrEqual(100);
       
       // Test comment character limit
       const longComment = 'a'.repeat(1001);
-      await page.fill('[data-testid="review-comment"]', longComment);
-      const commentValue = await page.locator('[data-testid="review-comment"]').inputValue();
+      await page.locator('[data-testid="review-form"]').locator('[data-testid="review-comment"]').fill(longComment);
+      const commentValue = await page.locator('[data-testid="review-form"]').locator('[data-testid="review-comment"]').inputValue();
       expect(commentValue.length).toBeLessThanOrEqual(1000);
     });
 
     test('should show character count', async () => {
-      await page.fill('[data-testid="review-comment"]', 'This is my review');
+      await page.locator('[data-testid="review-form"]').locator('[data-testid="review-comment"]').fill('This is my review');
       const charCount = page.locator('[data-testid="char-count"]');
       await expect(charCount).toContainText('17 / 1000');
     });
@@ -275,7 +275,7 @@ test.describe('Review & Rating System', () => {
   test.describe('Creator Response Flow', () => {
     test('creator should be able to respond to reviews', async () => {
       // Switch to creator view
-      await page.goto(`${process.env.CREATOR_PORTAL_URL}/apis/${testApiId}/reviews`);
+      await page.goto(`/creator-portal/apis/${testApiId}/reviews`);
       
       // Find a review without response
       const unrepliedReview = page.locator('[data-testid="review-item"]').filter({
@@ -308,7 +308,23 @@ test.describe('Review & Rating System', () => {
 
   test.describe('Edge Cases', () => {
     test('should handle API with no reviews', async () => {
-      await page.goto('/api/new-api-no-reviews');
+      // Navigate to page first
+      await page.goto(`/apis/${testApiId}`);
+      
+      // Clear review data to simulate no reviews
+      await page.evaluate((id) => {
+        // Clear all review data
+        localStorage.removeItem('reviewsData');
+        localStorage.removeItem('votedReviews');
+        // Set explicit cleared flag
+        localStorage.setItem('reviewsCleared', 'true');
+        // Also set empty reviews for this specific API
+        const emptyData = { [id]: [] };
+        localStorage.setItem('reviewsData', JSON.stringify(emptyData));
+      }, testApiId);
+      
+      // Reload page to apply the cleared localStorage
+      await page.reload();
       
       // Should show no reviews message
       await expect(page.locator('[data-testid="no-reviews"]')).toBeVisible();
@@ -320,9 +336,9 @@ test.describe('Review & Rating System', () => {
     });
 
     test('should handle review submission errors', async () => {
-      // Mock network error
-      await page.route('**/api/v1/marketplace/apis/*/reviews', route => {
-        route.abort('failed');
+      // Set up mock error flag
+      await page.evaluate(() => {
+        (window as any).__TEST_MOCK_ERROR = true;
       });
       
       // Try to submit review
@@ -338,7 +354,7 @@ test.describe('Review & Rating System', () => {
       // Open same API in two tabs
       const context = page.context();
       const page2 = await context.newPage();
-      await page2.goto(`/api/${testApiId}`);
+      await page2.goto(`/apis/${testApiId}`);
       
       // Submit review in first tab
       await page.click('[data-testid="star-rating-5"]');

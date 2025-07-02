@@ -15,9 +15,12 @@ import (
 	"strings"
 	"time"
 
+	"github.com/api-direct/cli/pkg/aws"
 	"github.com/api-direct/cli/pkg/config"
 	"github.com/api-direct/cli/pkg/errors"
 	"github.com/api-direct/cli/pkg/manifest"
+	"github.com/api-direct/cli/pkg/orchestrator"
+	"github.com/api-direct/cli/pkg/terraform"
 	"github.com/spf13/cobra"
 )
 
@@ -215,12 +218,141 @@ func deployHostedV2(apiName string, m *manifest.Manifest) error {
 }
 
 func deployBYOAV2(apiName string, m *manifest.Manifest) error {
-	// Similar to hosted but deploys to user's AWS account
-	fmt.Println("📋 Using BYOA (Bring Your Own AWS) deployment...")
-	fmt.Println("⚠️  BYOA deployment requires additional AWS configuration")
-	
-	// For now, return an error directing to use hosted mode
-	return fmt.Errorf("BYOA deployment not yet implemented with new manifest system. Use --hosted mode")
+	// Check prerequisites
+	if err := checkBYOAPrerequisites(); err != nil {
+		return err
+	}
+
+	// Create deployment orchestrator
+	deployment, err := orchestrator.NewBYOADeployment(apiName, m)
+	if err != nil {
+		return fmt.Errorf("failed to initialize deployment: %w", err)
+	}
+	defer deployment.Cleanup()
+
+	// Prepare deployment environment
+	if outputFormat != "json" {
+		fmt.Println("🔧 Preparing deployment environment...")
+	}
+	if err := deployment.Prepare(); err != nil {
+		return fmt.Errorf("failed to prepare deployment: %w", err)
+	}
+
+	// Create deployment plan
+	if err := deployment.Plan(); err != nil {
+		return fmt.Errorf("deployment planning failed: %w", err)
+	}
+
+	// Ask for confirmation unless --yes flag is set
+	if !yesFlag && outputFormat != "json" {
+		fmt.Printf("\n⚠️  This will create AWS resources in account %s (region: %s)\n", 
+			deployment.AWSAccountID, deployment.AWSRegion)
+		fmt.Printf("   Estimated cost: ~$50-300/month depending on usage\n")
+		fmt.Printf("\nDo you want to continue? [y/N]: ")
+		
+		var response string
+		fmt.Scanln(&response)
+		if strings.ToLower(response) != "y" && strings.ToLower(response) != "yes" {
+			return fmt.Errorf("deployment cancelled")
+		}
+	}
+
+	// Execute deployment
+	result, err := deployment.Deploy()
+	if err != nil {
+		return fmt.Errorf("deployment failed: %w", err)
+	}
+
+	// Output results
+	if outputFormat == "json" {
+		output := map[string]interface{}{
+			"success":         true,
+			"api_name":        apiName,
+			"api_url":         result.APIURL,
+			"deployment_id":   result.DeploymentID,
+			"deployment_type": "byoa",
+			"aws_account":     result.AWSAccountID,
+			"aws_region":      result.AWSRegion,
+			"runtime":         m.Runtime,
+			"endpoints":       m.Endpoints,
+		}
+
+		jsonOutput, _ := json.Marshal(output)
+		fmt.Println(string(jsonOutput))
+	} else {
+		fmt.Println("\n✅ BYOA Deployment successful!")
+		fmt.Printf("🌐 API URL: https://%s\n", result.LoadBalancerDNS)
+		fmt.Printf("🆔 Deployment ID: %s\n", result.DeploymentID)
+		fmt.Printf("☁️  AWS Account: %s\n", result.AWSAccountID)
+		fmt.Printf("📍 AWS Region: %s\n", result.AWSRegion)
+
+		if len(m.Endpoints) > 0 {
+			fmt.Printf("\n📍 Available endpoints:\n")
+			for i, endpoint := range m.Endpoints {
+				if i < 5 {
+					fmt.Printf("   https://%s%s\n", result.LoadBalancerDNS, parseEndpointPath(endpoint))
+				}
+			}
+			if len(m.Endpoints) > 5 {
+				fmt.Printf("   ... and %d more\n", len(m.Endpoints)-5)
+			}
+		}
+
+		fmt.Printf("\n🧪 Test your API:\n")
+		fmt.Printf("   curl https://%s%s\n", result.LoadBalancerDNS, m.HealthCheck)
+
+		fmt.Printf("\n📝 Next steps:\n")
+		fmt.Printf("   1. Update DNS: Point your domain to %s\n", result.LoadBalancerDNS)
+		fmt.Printf("   2. Configure SSL: Add certificate to ALB\n")
+		fmt.Printf("   3. Set environment variables in AWS Systems Manager\n")
+		fmt.Printf("   4. Monitor: Check CloudWatch logs and metrics\n")
+
+		if len(m.Env.Required) > 0 {
+			fmt.Printf("\n⚠️  Required environment variables:\n")
+			fmt.Printf("   Set these in AWS Systems Manager Parameter Store:\n")
+			for _, env := range m.Env.Required {
+				fmt.Printf("   - /%s/%s/%s\n", apiName, deployment.Environment, env)
+			}
+		}
+
+		fmt.Printf("\n💡 Manage your deployment:\n")
+		fmt.Printf("   View status:  apidirect status %s\n", apiName)
+		fmt.Printf("   View logs:    apidirect logs %s\n", apiName)
+		fmt.Printf("   Update:       apidirect deploy\n")
+		fmt.Printf("   Destroy:      apidirect destroy %s\n", apiName)
+	}
+
+	return nil
+}
+
+func checkBYOAPrerequisites() error {
+	// Check AWS CLI
+	if err := aws.CheckAWSCLI(); err != nil {
+		return err
+	}
+
+	// Check AWS credentials
+	if err := aws.CheckAWSCredentials(); err != nil {
+		return err
+	}
+
+	// Check Terraform
+	if err := terraform.CheckInstalled(); err != nil {
+		return err
+	}
+
+	// Get and display AWS account info
+	info, err := aws.GetCallerIdentity()
+	if err != nil {
+		return fmt.Errorf("failed to get AWS account info: %w", err)
+	}
+
+	if outputFormat != "json" {
+		fmt.Printf("🔐 AWS Account: %s\n", info.AccountID)
+		fmt.Printf("👤 AWS User: %s\n", info.Arn)
+	}
+
+	return nil
 }
 
 func createBuildContextV2(dockerfilePath string) (string, error) {

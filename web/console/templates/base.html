@@ -112,14 +112,26 @@
                     <ul class="space-y-1">
                         <li><a href="/dashboard" class="nav-item {% if current_page == 'dashboard' %}active{% endif %} flex items-center px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md">
                             <i class="fas fa-tachometer-alt w-5 mr-3"></i>Dashboard</a></li>
+                        <li><a href="/api-builder" class="nav-item {% if current_page == 'api-builder' %}active{% endif %} flex items-center px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md">
+                            <i class="fas fa-hammer w-5 mr-3"></i>API Builder</a></li>
+                        <li><a href="/api-config-advanced" class="nav-item {% if current_page == 'api-config-advanced' %}active{% endif %} flex items-center px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md">
+                            <i class="fas fa-cogs w-5 mr-3"></i>API Configuration</a></li>
+                        <li><a href="/api-versions" class="nav-item {% if current_page == 'api-versions' %}active{% endif %} flex items-center px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md">
+                            <i class="fas fa-code-branch w-5 mr-3"></i>API Versions</a></li>
                         <li><a href="/apis" class="nav-item {% if current_page == 'apis' %}active{% endif %} flex items-center px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md">
                             <i class="fas fa-server w-5 mr-3"></i>APIs & Deployments</a></li>
                         <li><a href="/analytics" class="nav-item {% if current_page == 'analytics' %}active{% endif %} flex items-center px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md">
                             <i class="fas fa-chart-line w-5 mr-3"></i>Analytics</a></li>
                         <li><a href="/marketplace" class="nav-item {% if current_page == 'marketplace' %}active{% endif %} flex items-center px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md">
                             <i class="fas fa-store w-5 mr-3"></i>Marketplace</a></li>
+                        <li><a href="/publish" class="nav-item {% if current_page == 'publish' %}active{% endif %} flex items-center px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md">
+                            <i class="fas fa-rocket w-5 mr-3"></i>Publish API</a></li>
+                        <li><a href="/pricing" class="nav-item {% if current_page == 'pricing' %}active{% endif %} flex items-center px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md">
+                            <i class="fas fa-tag w-5 mr-3"></i>Pricing</a></li>
                         <li><a href="/earnings" class="nav-item {% if current_page == 'earnings' %}active{% endif %} flex items-center px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md">
-                            <i class="fas fa-dollar-sign w-5 mr-3"></i>Earnings & Billing</a></li>
+                            <i class="fas fa-dollar-sign w-5 mr-3"></i>Earnings</a></li>
+                        <li><a href="/subscriptions" class="nav-item {% if current_page == 'subscriptions' %}active{% endif %} flex items-center px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md">
+                            <i class="fas fa-credit-card w-5 mr-3"></i>Subscriptions</a></li>
                     </ul>
                 </div>
 

@@ -2,6 +2,8 @@ package cmd
 
 import (
 	"fmt"
+	"io"
+	"os"
 	"runtime"
 
 	"github.com/fatih/color"
@@ -21,7 +23,7 @@ var versionCmd = &cobra.Command{
 	Short: "Show version information",
 	Long:  `Display version information about the API Direct CLI including build details.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		showVersion()
+		showVersionTo(cmd.OutOrStdout())
 	},
 }
 
@@ -34,26 +36,34 @@ func init() {
 }
 
 func showVersion() {
-	fmt.Println(color.CyanString("API Direct CLI"))
-	fmt.Printf("Version:      %s\n", color.GreenString(Version))
-	fmt.Printf("Build Date:   %s\n", BuildDate)
-	fmt.Printf("Git Commit:   %s\n", GitCommit)
-	fmt.Printf("Go Version:   %s\n", runtime.Version())
-	fmt.Printf("OS/Arch:      %s/%s\n", runtime.GOOS, runtime.GOARCH)
+	showVersionTo(os.Stdout)
+}
+
+func showVersionTo(w io.Writer) {
+	fmt.Fprintln(w, color.CyanString("API Direct CLI"))
+	fmt.Fprintf(w, "Version:      %s\n", color.GreenString(Version))
+	fmt.Fprintf(w, "Build Date:   %s\n", BuildDate)
+	fmt.Fprintf(w, "Git Commit:   %s\n", GitCommit)
+	fmt.Fprintf(w, "Go Version:   %s\n", runtime.Version())
+	fmt.Fprintf(w, "OS/Arch:      %s/%s\n", runtime.GOOS, runtime.GOARCH)
 	
 	// Check for updates
 	if Version != "dev" {
-		checkForUpdates()
+		checkForUpdatesTo(w)
 	}
 }
 
 func checkForUpdates() {
+	checkForUpdatesTo(os.Stdout)
+}
+
+func checkForUpdatesTo(w io.Writer) {
 	latestVersion, _, err := getLatestRelease()
 	if err == nil && latestVersion != Version {
-		fmt.Printf("\n%s Update available: %s → %s\n", 
+		fmt.Fprintf(w, "\n%s Update available: %s → %s\n", 
 			color.YellowString("🆕"),
 			Version, 
 			color.GreenString(latestVersion))
-		fmt.Println("Run 'apidirect self-update' to update.")
+		fmt.Fprintln(w, "Run 'apidirect self-update' to update.")
 	}
 }

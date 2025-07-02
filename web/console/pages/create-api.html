@@ -1,0 +1,1170 @@
+{% extends "templates/base.html" %}
+
+{% block title %}Create API - API-Direct Creator Portal{% endblock %}
+{% block description %}Create a new API from GitHub repository or templates{% endblock %}
+
+{% block styles %}
+<style>
+.creation-method {
+    border: 2px solid #e5e7eb;
+    border-radius: 0.75rem;
+    padding: 2rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: white;
+}
+
+.creation-method:hover {
+    border-color: #d1d5db;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+
+.creation-method.selected {
+    border-color: #4f46e5;
+    background: #eef2ff;
+}
+
+.github-repo-card {
+    border: 1px solid #e5e7eb;
+    border-radius: 0.5rem;
+    padding: 1rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.github-repo-card:hover {
+    border-color: #4f46e5;
+    background: #f9fafb;
+}
+
+.github-repo-card.selected {
+    border-color: #4f46e5;
+    background: #eef2ff;
+}
+
+.detection-result {
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.5rem;
+    padding: 1rem;
+}
+
+.endpoint-item {
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.375rem;
+    padding: 0.75rem;
+    margin-bottom: 0.5rem;
+}
+
+.env-var-item {
+    display: flex;
+    align-items: center;
+    padding: 0.5rem;
+    border-bottom: 1px solid #f3f4f6;
+}
+
+.env-var-item:last-child {
+    border-bottom: none;
+}
+
+.analysis-step {
+    display: flex;
+    align-items: center;
+    padding: 0.75rem;
+    margin-bottom: 0.5rem;
+}
+
+.analysis-step.completed {
+    color: #10b981;
+}
+
+.analysis-step.in-progress {
+    color: #3b82f6;
+}
+
+.analysis-step.pending {
+    color: #9ca3af;
+}
+
+.template-card {
+    border: 2px solid #e5e7eb;
+    border-radius: 0.5rem;
+    padding: 1.5rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.template-card:hover {
+    border-color: #d1d5db;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.template-card.selected {
+    border-color: #4f46e5;
+    background: #eef2ff;
+}
+
+.feature-tag {
+    display: inline-block;
+    padding: 0.25rem 0.5rem;
+    background: #f3f4f6;
+    border-radius: 0.25rem;
+    font-size: 0.75rem;
+    margin: 0.125rem;
+}
+
+.code-preview {
+    background: #1e293b;
+    color: #e2e8f0;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.875rem;
+    overflow-x: auto;
+}
+
+.deployment-option {
+    border: 1px solid #e5e7eb;
+    border-radius: 0.5rem;
+    padding: 1rem;
+    margin-bottom: 0.75rem;
+}
+
+.deployment-option input[type="radio"] {
+    margin-right: 0.5rem;
+}
+
+.review-section {
+    background: #f9fafb;
+    border-radius: 0.5rem;
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+}
+
+.editable-field {
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.375rem;
+    padding: 0.5rem 0.75rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.editable-field:hover {
+    border-color: #4f46e5;
+}
+
+.editable-field.editing {
+    cursor: text;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto">
+    <!-- Header -->
+    <div class="mb-8">
+        <h1 class="text-3xl font-bold text-gray-900 mb-2">Create New API</h1>
+        <p class="text-gray-600">Create an API from your GitHub repository or use a template</p>
+    </div>
+
+    <!-- Step 1: Choose Creation Method -->
+    <div id="step1" class="mb-8">
+        <h2 class="text-xl font-semibold text-gray-900 mb-4">How would you like to create your API?</h2>
+        
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <!-- GitHub Import -->
+            <div class="creation-method" onclick="selectMethod('github')">
+                <div class="text-center mb-4">
+                    <i class="fab fa-github text-5xl text-gray-700"></i>
+                </div>
+                <h3 class="text-lg font-semibold text-gray-900 mb-2">Import from GitHub</h3>
+                <p class="text-sm text-gray-600">
+                    Connect your GitHub account and automatically detect API endpoints from your repository
+                </p>
+                <div class="mt-4 space-y-1 text-xs text-gray-500">
+                    <div><i class="fas fa-check text-green-500 mr-1"></i> Auto-detects endpoints</div>
+                    <div><i class="fas fa-check text-green-500 mr-1"></i> Analyzes dependencies</div>
+                    <div><i class="fas fa-check text-green-500 mr-1"></i> Configures runtime</div>
+                </div>
+            </div>
+
+            <!-- Template -->
+            <div class="creation-method" onclick="selectMethod('template')">
+                <div class="text-center mb-4">
+                    <i class="fas fa-rocket text-5xl text-indigo-600"></i>
+                </div>
+                <h3 class="text-lg font-semibold text-gray-900 mb-2">Use a Template</h3>
+                <p class="text-sm text-gray-600">
+                    Start with pre-built templates for common API patterns and AI/ML models
+                </p>
+                <div class="mt-4 space-y-1 text-xs text-gray-500">
+                    <div><i class="fas fa-check text-green-500 mr-1"></i> AI/ML templates</div>
+                    <div><i class="fas fa-check text-green-500 mr-1"></i> Best practices</div>
+                    <div><i class="fas fa-check text-green-500 mr-1"></i> Quick start</div>
+                </div>
+            </div>
+
+            <!-- Upload -->
+            <div class="creation-method" onclick="selectMethod('upload')">
+                <div class="text-center mb-4">
+                    <i class="fas fa-upload text-5xl text-gray-700"></i>
+                </div>
+                <h3 class="text-lg font-semibold text-gray-900 mb-2">Upload Code</h3>
+                <p class="text-sm text-gray-600">
+                    Upload a ZIP file or paste code directly for automatic API detection
+                </p>
+                <div class="mt-4 space-y-1 text-xs text-gray-500">
+                    <div><i class="fas fa-check text-green-500 mr-1"></i> ZIP upload</div>
+                    <div><i class="fas fa-check text-green-500 mr-1"></i> Direct paste</div>
+                    <div><i class="fas fa-check text-green-500 mr-1"></i> Auto-config</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Step 2: GitHub Repository Selection -->
+    <div id="githubStep" class="hidden mb-8">
+        <div class="bg-white rounded-lg border border-gray-200 p-6">
+            <h2 class="text-xl font-semibold text-gray-900 mb-4">Select Repository</h2>
+            
+            <!-- GitHub Connection Status -->
+            <div id="githubStatus" class="mb-6">
+                <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+                    <div class="flex items-center">
+                        <i class="fab fa-github text-green-600 text-xl mr-3"></i>
+                        <div>
+                            <p class="font-medium text-green-900">Connected to GitHub</p>
+                            <p class="text-sm text-green-700">Logged in as <span id="githubUsername">@username</span></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Repository Search -->
+            <div class="mb-4">
+                <div class="relative">
+                    <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                    <input type="text" id="repoSearch" placeholder="Search repositories..." 
+                        class="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
+                        onkeyup="filterRepositories()">
+                </div>
+            </div>
+
+            <!-- Repository List -->
+            <div id="repoList" class="space-y-3 max-h-96 overflow-y-auto">
+                <!-- Repositories will be loaded here -->
+                <div class="text-center py-8">
+                    <i class="fas fa-spinner fa-spin text-2xl text-gray-400"></i>
+                    <p class="text-gray-500 mt-2">Loading repositories...</p>
+                </div>
+            </div>
+
+            <!-- Navigation -->
+            <div class="flex justify-between mt-6">
+                <button onclick="backToMethodSelection()" class="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50">
+                    <i class="fas fa-arrow-left mr-2"></i>Back
+                </button>
+                <button id="analyzeBtn" onclick="analyzeRepository()" disabled
+                    class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed">
+                    <i class="fas fa-microscope mr-2"></i>Analyze Repository
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Step 3: Repository Analysis -->
+    <div id="analysisStep" class="hidden mb-8">
+        <div class="bg-white rounded-lg border border-gray-200 p-6">
+            <h2 class="text-xl font-semibold text-gray-900 mb-4">Analyzing Repository</h2>
+            
+            <!-- Analysis Progress -->
+            <div id="analysisProgress" class="mb-6">
+                <div class="analysis-step completed">
+                    <i class="fas fa-check-circle mr-3"></i>
+                    <span>Cloning repository...</span>
+                </div>
+                <div class="analysis-step in-progress">
+                    <i class="fas fa-spinner fa-spin mr-3"></i>
+                    <span>Detecting language and framework...</span>
+                </div>
+                <div class="analysis-step pending">
+                    <i class="far fa-circle mr-3"></i>
+                    <span>Finding API endpoints...</span>
+                </div>
+                <div class="analysis-step pending">
+                    <i class="far fa-circle mr-3"></i>
+                    <span>Analyzing dependencies...</span>
+                </div>
+                <div class="analysis-step pending">
+                    <i class="far fa-circle mr-3"></i>
+                    <span>Detecting environment variables...</span>
+                </div>
+                <div class="analysis-step pending">
+                    <i class="far fa-circle mr-3"></i>
+                    <span>Generating documentation...</span>
+                </div>
+            </div>
+
+            <!-- Progress Bar -->
+            <div class="w-full bg-gray-200 rounded-full h-2">
+                <div id="progressBar" class="bg-indigo-600 h-2 rounded-full transition-all duration-500" style="width: 0%"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Step 4: Review & Edit -->
+    <div id="reviewStep" class="hidden">
+        <div class="bg-white rounded-lg border border-gray-200 p-6 mb-6">
+            <h2 class="text-xl font-semibold text-gray-900 mb-4">Review API Configuration</h2>
+            
+            <!-- Basic Information -->
+            <div class="review-section">
+                <h3 class="font-medium text-gray-900 mb-3">Basic Information</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm text-gray-600 mb-1">API Name</label>
+                        <div class="editable-field" onclick="makeEditable(this)" data-field="name">
+                            <span id="apiName">My Weather API</span>
+                            <i class="fas fa-edit float-right text-gray-400"></i>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm text-gray-600 mb-1">Runtime</label>
+                        <select id="runtime" class="w-full px-3 py-2 border border-gray-300 rounded-md">
+                            <option value="python3.11">Python 3.11</option>
+                            <option value="python3.9">Python 3.9</option>
+                            <option value="node18">Node.js 18</option>
+                            <option value="node16">Node.js 16</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="mt-4">
+                    <label class="block text-sm text-gray-600 mb-1">Description</label>
+                    <div class="editable-field" onclick="makeEditable(this)" data-field="description">
+                        <span id="apiDescription">A comprehensive weather API providing current conditions and forecasts</span>
+                        <i class="fas fa-edit float-right text-gray-400"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Detected Endpoints -->
+            <div class="review-section">
+                <div class="flex items-center justify-between mb-3">
+                    <h3 class="font-medium text-gray-900">Detected Endpoints (12)</h3>
+                    <button onclick="addEndpoint()" class="text-sm text-indigo-600 hover:text-indigo-700">
+                        <i class="fas fa-plus mr-1"></i>Add Endpoint
+                    </button>
+                </div>
+                <div id="endpointsList" class="space-y-2 max-h-64 overflow-y-auto">
+                    <div class="endpoint-item">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center space-x-3">
+                                <span class="px-2 py-1 bg-blue-100 text-blue-700 text-xs font-medium rounded">GET</span>
+                                <code class="text-sm">/weather/current</code>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <button onclick="editEndpoint(this)" class="text-gray-400 hover:text-gray-600">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button onclick="removeEndpoint(this)" class="text-red-400 hover:text-red-600">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="endpoint-item">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center space-x-3">
+                                <span class="px-2 py-1 bg-blue-100 text-blue-700 text-xs font-medium rounded">GET</span>
+                                <code class="text-sm">/weather/forecast/{days}</code>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <button onclick="editEndpoint(this)" class="text-gray-400 hover:text-gray-600">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button onclick="removeEndpoint(this)" class="text-red-400 hover:text-red-600">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="endpoint-item">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center space-x-3">
+                                <span class="px-2 py-1 bg-green-100 text-green-700 text-xs font-medium rounded">POST</span>
+                                <code class="text-sm">/weather/alerts</code>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <button onclick="editEndpoint(this)" class="text-gray-400 hover:text-gray-600">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button onclick="removeEndpoint(this)" class="text-red-400 hover:text-red-600">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Environment Variables -->
+            <div class="review-section">
+                <div class="flex items-center justify-between mb-3">
+                    <h3 class="font-medium text-gray-900">Environment Variables</h3>
+                    <button onclick="addEnvVar()" class="text-sm text-indigo-600 hover:text-indigo-700">
+                        <i class="fas fa-plus mr-1"></i>Add Variable
+                    </button>
+                </div>
+                <div id="envVarsList" class="bg-white border border-gray-200 rounded-md">
+                    <div class="env-var-item">
+                        <div class="flex-1 grid grid-cols-3 gap-4">
+                            <input type="text" value="API_KEY" class="px-3 py-1 border border-gray-300 rounded text-sm" placeholder="Variable name">
+                            <input type="text" value="Required for authentication" class="px-3 py-1 border border-gray-300 rounded text-sm" placeholder="Description">
+                            <select class="px-3 py-1 border border-gray-300 rounded text-sm">
+                                <option value="required">Required</option>
+                                <option value="optional">Optional</option>
+                            </select>
+                        </div>
+                        <button onclick="removeEnvVar(this)" class="ml-4 text-red-400 hover:text-red-600">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                    
+                    <div class="env-var-item">
+                        <div class="flex-1 grid grid-cols-3 gap-4">
+                            <input type="text" value="DATABASE_URL" class="px-3 py-1 border border-gray-300 rounded text-sm" placeholder="Variable name">
+                            <input type="text" value="PostgreSQL connection string" class="px-3 py-1 border border-gray-300 rounded text-sm" placeholder="Description">
+                            <select class="px-3 py-1 border border-gray-300 rounded text-sm">
+                                <option value="required">Required</option>
+                                <option value="optional">Optional</option>
+                            </select>
+                        </div>
+                        <button onclick="removeEnvVar(this)" class="ml-4 text-red-400 hover:text-red-600">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Deployment Configuration -->
+            <div class="review-section">
+                <h3 class="font-medium text-gray-900 mb-3">Deployment Configuration</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm text-gray-600 mb-1">Start Command</label>
+                        <input type="text" id="startCommand" value="python app.py" 
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm font-mono">
+                    </div>
+                    <div>
+                        <label class="block text-sm text-gray-600 mb-1">Port</label>
+                        <input type="number" id="port" value="8080" 
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-sm text-gray-600 mb-1">Health Check Path</label>
+                        <input type="text" id="healthCheck" value="/health" 
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-sm text-gray-600 mb-1">Memory (MB)</label>
+                        <select id="memory" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm">
+                            <option value="256">256 MB</option>
+                            <option value="512" selected>512 MB</option>
+                            <option value="1024">1 GB</option>
+                            <option value="2048">2 GB</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Auto-generated Documentation Preview -->
+            <div class="review-section">
+                <div class="flex items-center justify-between mb-3">
+                    <h3 class="font-medium text-gray-900">Documentation Preview</h3>
+                    <button onclick="editDocumentation()" class="text-sm text-indigo-600 hover:text-indigo-700">
+                        <i class="fas fa-edit mr-1"></i>Edit
+                    </button>
+                </div>
+                <div class="code-preview">
+# Weather API
+
+A comprehensive weather API providing current conditions and forecasts.
+
+## Endpoints
+
+### GET /weather/current
+Get current weather conditions for a location.
+
+**Parameters:**
+- `lat` (float): Latitude
+- `lon` (float): Longitude
+
+**Response:**
+```json
+{
+  "temperature": 72.5,
+  "conditions": "Partly cloudy",
+  "humidity": 65
+}
+```
+
+### GET /weather/forecast/{days}
+Get weather forecast for specified days.
+
+[... more documentation ...]
+                </div>
+            </div>
+
+            <!-- Deployment Options -->
+            <div class="review-section">
+                <h3 class="font-medium text-gray-900 mb-3">Deployment Options</h3>
+                
+                <div class="deployment-option">
+                    <label class="flex items-start">
+                        <input type="radio" name="deployment" value="immediate" checked class="mt-1">
+                        <div class="ml-3">
+                            <p class="font-medium text-gray-900">Deploy Immediately</p>
+                            <p class="text-sm text-gray-600">Deploy your API as soon as review is complete</p>
+                        </div>
+                    </label>
+                </div>
+                
+                <div class="deployment-option">
+                    <label class="flex items-start">
+                        <input type="radio" name="deployment" value="draft" class="mt-1">
+                        <div class="ml-3">
+                            <p class="font-medium text-gray-900">Save as Draft</p>
+                            <p class="text-sm text-gray-600">Save configuration without deploying</p>
+                        </div>
+                    </label>
+                </div>
+                
+                <div class="deployment-option">
+                    <label class="flex items-start">
+                        <input type="radio" name="deployment" value="schedule" class="mt-1">
+                        <div class="ml-3">
+                            <p class="font-medium text-gray-900">Schedule Deployment</p>
+                            <p class="text-sm text-gray-600">Deploy at a specific time</p>
+                            <input type="datetime-local" class="mt-2 px-3 py-1 border border-gray-300 rounded-md text-sm">
+                        </div>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex justify-between mt-6">
+                <button onclick="backToAnalysis()" class="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50">
+                    <i class="fas fa-arrow-left mr-2"></i>Re-analyze
+                </button>
+                <div class="space-x-3">
+                    <button onclick="saveConfiguration()" class="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50">
+                        <i class="fas fa-save mr-2"></i>Save Configuration
+                    </button>
+                    <button onclick="deployAPI()" class="px-6 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700">
+                        <i class="fas fa-rocket mr-2"></i>Deploy API
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- AI Suggestions Panel -->
+        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <div class="flex items-start">
+                <i class="fas fa-lightbulb text-blue-500 mt-0.5 mr-3"></i>
+                <div>
+                    <h3 class="font-medium text-blue-900">AI Suggestions</h3>
+                    <ul class="text-sm text-blue-800 mt-2 space-y-1">
+                        <li>• Consider adding rate limiting to protect your API from abuse</li>
+                        <li>• The <code>/weather/current</code> endpoint could benefit from caching (5-minute TTL recommended)</li>
+                        <li>• Add API versioning (e.g., <code>/v1/weather/current</code>) for future compatibility</li>
+                        <li>• Consider implementing webhook support for weather alerts</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Template Selection (Alternative Flow) -->
+    <div id="templateStep" class="hidden">
+        <div class="bg-white rounded-lg border border-gray-200 p-6">
+            <h2 class="text-xl font-semibold text-gray-900 mb-4">Choose a Template</h2>
+            
+            <!-- Category Filter -->
+            <div class="flex items-center space-x-4 mb-6">
+                <button onclick="filterTemplates('all')" class="px-4 py-2 bg-indigo-600 text-white rounded-md">All</button>
+                <button onclick="filterTemplates('ai-ml')" class="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50">AI/ML</button>
+                <button onclick="filterTemplates('web-api')" class="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50">Web API</button>
+                <button onclick="filterTemplates('data')" class="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50">Data Processing</button>
+            </div>
+
+            <!-- Template Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="templateGrid">
+                <!-- GPT Wrapper Template -->
+                <div class="template-card" data-category="ai-ml" onclick="selectTemplate('gpt-wrapper')">
+                    <div class="flex items-start justify-between mb-3">
+                        <h3 class="font-semibold text-gray-900">🤖 GPT Wrapper API</h3>
+                        <span class="text-xs px-2 py-1 bg-purple-100 text-purple-700 rounded">AI/ML</span>
+                    </div>
+                    <p class="text-sm text-gray-600 mb-3">Production-ready OpenAI GPT wrapper with caching and rate limiting</p>
+                    <div class="flex flex-wrap gap-1">
+                        <span class="feature-tag">Response caching</span>
+                        <span class="feature-tag">Rate limiting</span>
+                        <span class="feature-tag">Cost optimization</span>
+                    </div>
+                </div>
+
+                <!-- Image Classifier Template -->
+                <div class="template-card" data-category="ai-ml" onclick="selectTemplate('image-classifier')">
+                    <div class="flex items-start justify-between mb-3">
+                        <h3 class="font-semibold text-gray-900">👁️ Image Classification API</h3>
+                        <span class="text-xs px-2 py-1 bg-purple-100 text-purple-700 rounded">AI/ML</span>
+                    </div>
+                    <p class="text-sm text-gray-600 mb-3">Computer vision API using pre-trained Vision Transformer models</p>
+                    <div class="flex flex-wrap gap-1">
+                        <span class="feature-tag">Vision Transformer</span>
+                        <span class="feature-tag">Batch processing</span>
+                        <span class="feature-tag">GPU optimization</span>
+                    </div>
+                </div>
+
+                <!-- More templates... -->
+            </div>
+
+            <!-- Navigation -->
+            <div class="flex justify-between mt-6">
+                <button onclick="backToMethodSelection()" class="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50">
+                    <i class="fas fa-arrow-left mr-2"></i>Back
+                </button>
+                <button id="useTemplateBtn" onclick="useTemplate()" disabled
+                    class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed">
+                    <i class="fas fa-check mr-2"></i>Use Template
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- GitHub OAuth Modal -->
+<div id="githubModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4">Connect to GitHub</h3>
+        <p class="text-gray-600 mb-4">
+            Connect your GitHub account to import repositories and enable automatic updates.
+        </p>
+        <button onclick="connectGitHub()" class="w-full px-4 py-2 bg-gray-900 text-white rounded-md hover:bg-gray-800">
+            <i class="fab fa-github mr-2"></i>Connect with GitHub
+        </button>
+    </div>
+</div>
+
+<script>
+// Global variables
+let selectedMethod = null;
+let selectedRepo = null;
+let selectedTemplate = null;
+let analysisData = null;
+
+// Initialize
+document.addEventListener('DOMContentLoaded', () => {
+    checkGitHubConnection();
+});
+
+// Method selection
+function selectMethod(method) {
+    selectedMethod = method;
+    
+    // Update UI
+    document.querySelectorAll('.creation-method').forEach(el => {
+        el.classList.remove('selected');
+    });
+    event.target.closest('.creation-method').classList.add('selected');
+    
+    // Hide step 1 and show appropriate next step
+    setTimeout(() => {
+        document.getElementById('step1').classList.add('hidden');
+        
+        if (method === 'github') {
+            if (isGitHubConnected()) {
+                document.getElementById('githubStep').classList.remove('hidden');
+                loadGitHubRepos();
+            } else {
+                document.getElementById('githubModal').classList.remove('hidden');
+            }
+        } else if (method === 'template') {
+            document.getElementById('templateStep').classList.remove('hidden');
+        } else if (method === 'upload') {
+            // Show upload interface (not implemented in this example)
+            showNotification('Upload functionality coming soon', 'info');
+        }
+    }, 300);
+}
+
+// GitHub connection
+function checkGitHubConnection() {
+    // Check if GitHub is connected
+    const isConnected = localStorage.getItem('github_connected') === 'true';
+    if (isConnected) {
+        document.getElementById('githubUsername').textContent = '@' + (localStorage.getItem('github_username') || 'username');
+    }
+}
+
+function isGitHubConnected() {
+    return localStorage.getItem('github_connected') === 'true';
+}
+
+function connectGitHub() {
+    // In a real implementation, this would redirect to GitHub OAuth
+    window.location.href = 'https://github.com/login/oauth/authorize?client_id=YOUR_CLIENT_ID&scope=repo';
+}
+
+// Load GitHub repositories
+async function loadGitHubRepos() {
+    try {
+        // In a real implementation, this would fetch from GitHub API
+        const mockRepos = [
+            {
+                name: 'weather-api',
+                full_name: 'username/weather-api',
+                description: 'A comprehensive weather API with forecast capabilities',
+                language: 'Python',
+                updated_at: '2024-03-15T10:30:00Z',
+                stargazers_count: 42
+            },
+            {
+                name: 'ml-sentiment-analyzer',
+                full_name: 'username/ml-sentiment-analyzer',
+                description: 'Machine learning API for sentiment analysis',
+                language: 'Python',
+                updated_at: '2024-03-10T15:45:00Z',
+                stargazers_count: 128
+            },
+            {
+                name: 'image-processor',
+                full_name: 'username/image-processor',
+                description: 'REST API for image processing and manipulation',
+                language: 'JavaScript',
+                updated_at: '2024-03-01T08:20:00Z',
+                stargazers_count: 67
+            }
+        ];
+        
+        const repoList = document.getElementById('repoList');
+        repoList.innerHTML = mockRepos.map(repo => `
+            <div class="github-repo-card" onclick="selectRepository('${repo.full_name}')" data-repo="${repo.full_name}">
+                <div class="flex items-start justify-between">
+                    <div>
+                        <h4 class="font-medium text-gray-900">${repo.name}</h4>
+                        <p class="text-sm text-gray-600 mt-1">${repo.description || 'No description'}</p>
+                        <div class="flex items-center space-x-4 mt-2 text-xs text-gray-500">
+                            <span><i class="fas fa-code mr-1"></i>${repo.language}</span>
+                            <span><i class="fas fa-star mr-1"></i>${repo.stargazers_count}</span>
+                            <span>Updated ${formatDate(repo.updated_at)}</span>
+                        </div>
+                    </div>
+                    <i class="fas fa-check-circle text-green-500 text-xl hidden"></i>
+                </div>
+            </div>
+        `).join('');
+        
+    } catch (error) {
+        console.error('Error loading repositories:', error);
+        showNotification('Failed to load repositories', 'error');
+    }
+}
+
+// Select repository
+function selectRepository(repoName) {
+    selectedRepo = repoName;
+    
+    // Update UI
+    document.querySelectorAll('.github-repo-card').forEach(card => {
+        card.classList.remove('selected');
+        card.querySelector('.fa-check-circle').classList.add('hidden');
+    });
+    
+    const selectedCard = document.querySelector(`[data-repo="${repoName}"]`);
+    selectedCard.classList.add('selected');
+    selectedCard.querySelector('.fa-check-circle').classList.remove('hidden');
+    
+    // Enable analyze button
+    document.getElementById('analyzeBtn').disabled = false;
+}
+
+// Analyze repository
+async function analyzeRepository() {
+    if (!selectedRepo) return;
+    
+    // Hide repo selection and show analysis
+    document.getElementById('githubStep').classList.add('hidden');
+    document.getElementById('analysisStep').classList.remove('hidden');
+    
+    // Simulate analysis steps
+    const steps = [
+        { delay: 1000, step: 1, message: 'Detecting language and framework...' },
+        { delay: 2000, step: 2, message: 'Finding API endpoints...' },
+        { delay: 1500, step: 3, message: 'Analyzing dependencies...' },
+        { delay: 1000, step: 4, message: 'Detecting environment variables...' },
+        { delay: 1500, step: 5, message: 'Generating documentation...' }
+    ];
+    
+    for (let i = 0; i < steps.length; i++) {
+        await simulateAnalysisStep(i, steps[i]);
+    }
+    
+    // Analysis complete - show review
+    setTimeout(() => {
+        document.getElementById('analysisStep').classList.add('hidden');
+        document.getElementById('reviewStep').classList.remove('hidden');
+        
+        // Populate with detected data
+        populateReviewData();
+    }, 1000);
+}
+
+// Simulate analysis step
+function simulateAnalysisStep(index, config) {
+    return new Promise((resolve) => {
+        setTimeout(() => {
+            const steps = document.querySelectorAll('.analysis-step');
+            
+            // Mark current as completed
+            if (index > 0) {
+                steps[index].classList.remove('in-progress');
+                steps[index].classList.add('completed');
+                steps[index].querySelector('i').className = 'fas fa-check-circle mr-3';
+            }
+            
+            // Mark next as in progress
+            if (index < steps.length - 1) {
+                steps[index + 1].classList.remove('pending');
+                steps[index + 1].classList.add('in-progress');
+                steps[index + 1].querySelector('i').className = 'fas fa-spinner fa-spin mr-3';
+            }
+            
+            // Update progress bar
+            const progress = ((index + 1) / steps.length) * 100;
+            document.getElementById('progressBar').style.width = progress + '%';
+            
+            resolve();
+        }, config.delay);
+    });
+}
+
+// Populate review data
+function populateReviewData(data) {
+    // Use real analysis data if provided, otherwise use the global analysisData
+    const analysis = data?.analysis || analysisData?.analysis || {};
+    const config = data?.config || analysisData?.config || {};
+    
+    // Update UI with detected data
+    document.getElementById('apiName').textContent = config.name || selectedRepo.full_name.split('/')[1];
+    document.getElementById('apiDescription').textContent = config.description || 'API created from ' + selectedRepo.full_name;
+    document.getElementById('runtime').value = analysis.runtime || 'python3.11';
+    document.getElementById('startCommand').value = analysis.start_command || 'python main.py';
+    document.getElementById('port').value = analysis.port || 8080;
+    document.getElementById('healthCheck').value = analysis.health_check || '/health';
+    
+    // Update language and framework
+    if (analysis.language) {
+        document.querySelector('.detection-result').innerHTML = `
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-600">Language</p>
+                    <p class="font-medium">${analysis.language}</p>
+                </div>
+                <div>
+                    <p class="text-sm text-gray-600">Framework</p>
+                    <p class="font-medium">${analysis.framework || 'None detected'}</p>
+                </div>
+                <div>
+                    <p class="text-sm text-gray-600">Main File</p>
+                    <p class="font-medium">${analysis.main_file || 'Not found'}</p>
+                </div>
+            </div>
+        `;
+    }
+    
+    // Update endpoints
+    if (analysis.endpoints && analysis.endpoints.length > 0) {
+        const endpointsList = document.createElement('div');
+        endpointsList.className = 'space-y-2 mt-4';
+        endpointsList.innerHTML = '<h4 class="text-sm font-medium text-gray-700 mb-2">Detected Endpoints:</h4>';
+        
+        analysis.endpoints.forEach(endpoint => {
+            const endpointDiv = document.createElement('div');
+            endpointDiv.className = 'endpoint-item';
+            endpointDiv.innerHTML = `
+                <span class="inline-block px-2 py-1 text-xs font-medium rounded 
+                    ${endpoint.method === 'GET' ? 'bg-green-100 text-green-700' : 
+                      endpoint.method === 'POST' ? 'bg-blue-100 text-blue-700' : 
+                      endpoint.method === 'PUT' ? 'bg-yellow-100 text-yellow-700' : 
+                      endpoint.method === 'DELETE' ? 'bg-red-100 text-red-700' : 
+                      'bg-gray-100 text-gray-700'}">
+                    ${endpoint.method}
+                </span>
+                <span class="ml-2 text-sm">${endpoint.path}</span>
+            `;
+            endpointsList.appendChild(endpointDiv);
+        });
+        
+        document.querySelector('.detection-result').appendChild(endpointsList);
+    }
+    
+    // Update environment variables
+    if (analysis.environment) {
+        const envVarsDiv = document.createElement('div');
+        envVarsDiv.className = 'mt-4';
+        envVarsDiv.innerHTML = '<h4 class="text-sm font-medium text-gray-700 mb-2">Environment Variables:</h4>';
+        
+        if (analysis.environment.required && analysis.environment.required.length > 0) {
+            analysis.environment.required.forEach(varName => {
+                const varDiv = document.createElement('div');
+                varDiv.className = 'env-var-item';
+                varDiv.innerHTML = `
+                    <span class="text-sm font-medium text-red-600">${varName}</span>
+                    <span class="ml-2 text-xs text-gray-500">(required)</span>
+                `;
+                envVarsDiv.appendChild(varDiv);
+            });
+        }
+        
+        if (analysis.environment.optional) {
+            Object.entries(analysis.environment.optional).forEach(([key, value]) => {
+                const varDiv = document.createElement('div');
+                varDiv.className = 'env-var-item';
+                varDiv.innerHTML = `
+                    <span class="text-sm">${key}</span>
+                    <span class="ml-2 text-xs text-gray-500">= ${value}</span>
+                `;
+                envVarsDiv.appendChild(varDiv);
+            });
+        }
+        
+        document.querySelector('.detection-result').appendChild(envVarsDiv);
+    }
+}
+
+// Editable fields
+function makeEditable(element) {
+    const span = element.querySelector('span');
+    const currentValue = span.textContent;
+    
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.value = currentValue;
+    input.className = 'w-full px-2 py-1 border border-indigo-500 rounded text-sm';
+    
+    input.onblur = () => {
+        span.textContent = input.value;
+        element.replaceChild(span, input);
+    };
+    
+    input.onkeypress = (e) => {
+        if (e.key === 'Enter') {
+            input.blur();
+        }
+    };
+    
+    element.replaceChild(input, span);
+    input.focus();
+    input.select();
+}
+
+// Deploy API
+async function deployAPI() {
+    const deploymentOption = document.querySelector('input[name="deployment"]:checked').value;
+    
+    try {
+        if (!analysisData || !analysisData.draft_id) {
+            throw new Error('No draft configuration found');
+        }
+        
+        // Update draft with any changes
+        const updatedConfig = {
+            name: document.getElementById('apiName').textContent,
+            description: document.getElementById('apiDescription').textContent,
+            runtime: {
+                version: document.getElementById('runtime').value
+            },
+            build: {
+                start_command: document.getElementById('startCommand').value,
+                port: parseInt(document.getElementById('port').value),
+                health_check: document.getElementById('healthCheck').value
+            }
+        };
+        
+        // Update draft
+        await fetch(`http://localhost:8000/api/creation/drafts/${analysisData.draft_id}`, {
+            method: 'PUT',
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('api_token')}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ config: updatedConfig })
+        });
+        
+        if (deploymentOption === 'draft') {
+            showNotification('Configuration saved as draft', 'success');
+            setTimeout(() => {
+                window.location.href = '/apis';
+            }, 1500);
+            return;
+        }
+        
+        // Deploy the API
+        showNotification('Deploying your API...', 'info');
+        
+        const response = await fetch(`http://localhost:8000/api/creation/drafts/${analysisData.draft_id}/deploy`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('api_token')}`
+            }
+        });
+        
+        if (!response.ok) throw new Error('Deployment failed');
+        
+        const result = await response.json();
+        
+        showNotification('API deployed successfully!', 'success');
+        
+        // Redirect to API management
+        setTimeout(() => {
+            window.location.href = `/apis?highlight=${result.api_id}`;
+        }, 2000);
+        
+    } catch (error) {
+        console.error('Error deploying API:', error);
+        showNotification('Failed to deploy API', 'error');
+    }
+}
+
+// Save configuration
+async function saveConfiguration() {
+    try {
+        // Save configuration without deploying
+        showNotification('Configuration saved as draft', 'success');
+    } catch (error) {
+        console.error('Error saving configuration:', error);
+        showNotification('Failed to save configuration', 'error');
+    }
+}
+
+// Helper functions
+function formatDate(dateString) {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diff = now - date;
+    
+    if (diff < 60000) return 'just now';
+    if (diff < 3600000) return `${Math.floor(diff / 60000)} minutes ago`;
+    if (diff < 86400000) return `${Math.floor(diff / 3600000)} hours ago`;
+    if (diff < 604800000) return `${Math.floor(diff / 86400000)} days ago`;
+    return date.toLocaleDateString();
+}
+
+function showNotification(message, type = 'info') {
+    const notification = document.createElement('div');
+    const bgColor = type === 'error' ? 'bg-red-500' : type === 'success' ? 'bg-green-500' : 'bg-blue-500';
+    
+    notification.className = `fixed top-4 right-4 ${bgColor} text-white px-6 py-3 rounded-lg shadow-lg z-50`;
+    notification.textContent = message;
+    
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        notification.remove();
+    }, 5000);
+}
+
+// Navigation helpers
+function backToMethodSelection() {
+    document.getElementById('githubStep').classList.add('hidden');
+    document.getElementById('templateStep').classList.add('hidden');
+    document.getElementById('step1').classList.remove('hidden');
+    selectedMethod = null;
+}
+
+function backToAnalysis() {
+    // This would re-run analysis
+    showNotification('Re-analysis feature coming soon', 'info');
+}
+
+// Filter repositories
+function filterRepositories() {
+    const searchTerm = document.getElementById('repoSearch').value.toLowerCase();
+    const repos = document.querySelectorAll('.github-repo-card');
+    
+    repos.forEach(repo => {
+        const text = repo.textContent.toLowerCase();
+        repo.style.display = text.includes(searchTerm) ? 'block' : 'none';
+    });
+}
+
+// Template functions
+function filterTemplates(category) {
+    const templates = document.querySelectorAll('.template-card');
+    
+    templates.forEach(template => {
+        if (category === 'all' || template.dataset.category === category) {
+            template.style.display = 'block';
+        } else {
+            template.style.display = 'none';
+        }
+    });
+    
+    // Update button states
+    event.target.parentElement.querySelectorAll('button').forEach(btn => {
+        btn.classList.remove('bg-indigo-600', 'text-white');
+        btn.classList.add('border', 'border-gray-300', 'text-gray-700');
+    });
+    
+    event.target.classList.remove('border', 'border-gray-300', 'text-gray-700');
+    event.target.classList.add('bg-indigo-600', 'text-white');
+}
+
+function selectTemplate(templateId) {
+    selectedTemplate = templateId;
+    
+    // Update UI
+    document.querySelectorAll('.template-card').forEach(card => {
+        card.classList.remove('selected');
+    });
+    event.target.closest('.template-card').classList.add('selected');
+    
+    // Enable use button
+    document.getElementById('useTemplateBtn').disabled = false;
+}
+
+async function useTemplate() {
+    if (!selectedTemplate) return;
+    
+    try {
+        // Fetch template details
+        const response = await fetch(`http://localhost:8000/api/creation/templates/${selectedTemplate}`, {
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('api_token')}`
+            }
+        });
+        
+        if (!response.ok) throw new Error('Failed to fetch template');
+        
+        const template = await response.json();
+        
+        // Store template data in session storage
+        sessionStorage.setItem('selectedTemplate', JSON.stringify(template));
+        
+        // Redirect to API Builder with template
+        window.location.href = `/api-builder?template=${selectedTemplate}`;
+        
+    } catch (error) {
+        console.error('Error using template:', error);
+        showNotification('Failed to load template', 'error');
+    }
+}
+</script>
+{% endblock %}

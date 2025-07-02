@@ -163,21 +163,44 @@ services:
 
   # Marketplace Frontend
   marketplace:
-    build: ./web/marketplace
+    build: 
+      context: ./web/marketplace
+      dockerfile: Dockerfile
+      args:
+        NODE_ENV: ${NODE_ENV:-development}
     ports:
       - "3001:3000"
     environment:
-      REACT_APP_API_URL: http://localhost:8082
-      REACT_APP_APIKEY_SERVICE_URL: http://localhost:8083
-      REACT_APP_BILLING_SERVICE_URL: http://localhost:8085
-      REACT_APP_COGNITO_USER_POOL_ID: ${COGNITO_USER_POOL_ID}
-      REACT_APP_COGNITO_CLIENT_ID: ${COGNITO_WEB_CLIENT_ID}
-      REACT_APP_COGNITO_REGION: ${AWS_REGION:-us-east-1}
-      REACT_APP_STRIPE_PUBLISHABLE_KEY: pk_test_51RTaKEIeLEFImVyF5u9rm8nDSN42hWmrNbxSLk16k2KBSiSlLPn2np3vljS9RnoJxAuKrrnqiYJqFGU7MIwSTZFT00idvU8gKF
+      NODE_ENV: ${NODE_ENV:-development}
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8082}
+      NEXT_PUBLIC_APIKEY_SERVICE_URL: ${NEXT_PUBLIC_APIKEY_SERVICE_URL:-http://localhost:8083}
+      NEXT_PUBLIC_BILLING_SERVICE_URL: ${NEXT_PUBLIC_BILLING_SERVICE_URL:-http://localhost:8085}
+      NEXT_PUBLIC_METERING_SERVICE_URL: ${NEXT_PUBLIC_METERING_SERVICE_URL:-http://localhost:8084}
+      NEXT_PUBLIC_MARKETPLACE_SERVICE_URL: ${NEXT_PUBLIC_MARKETPLACE_SERVICE_URL:-http://localhost:8086}
+      NEXT_PUBLIC_GATEWAY_URL: ${NEXT_PUBLIC_GATEWAY_URL:-http://localhost:8082}
+      NEXT_PUBLIC_AWS_REGION: ${AWS_REGION:-us-east-1}
+      NEXT_PUBLIC_AWS_USER_POOL_ID: ${COGNITO_USER_POOL_ID}
+      NEXT_PUBLIC_AWS_USER_POOL_WEB_CLIENT_ID: ${COGNITO_WEB_CLIENT_ID}
+      NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: ${STRIPE_PUBLISHABLE_KEY:-pk_test_51RTaKEIeLEFImVyF5u9rm8nDSN42hWmrNbxSLk16k2KBSiSlLPn2np3vljS9RnoJxAuKrrnqiYJqFGU7MIwSTZFT00idvU8gKF}
+      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET:-development-secret}
+      NEXTAUTH_URL: ${NEXTAUTH_URL:-http://localhost:3001}
+      DATABASE_URL: postgresql://apidirect:localpassword@postgres:5432/apidirect?sslmode=disable
+      REDIS_URL: redis://redis:6379
     volumes:
-      - ./web/marketplace:/app
-      - /app/node_modules
-    command: npm start
+      # Only mount in development mode
+      - ./web/marketplace:/app:${MOUNT_SOURCE:-ro}
+      - marketplace_node_modules:/app/node_modules
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
 
   # Elasticsearch for advanced search
   elasticsearch:
@@ -234,3 +257,4 @@ volumes:
   postgres_data:
   redis_data:
   elasticsearch_data:
+  marketplace_node_modules:

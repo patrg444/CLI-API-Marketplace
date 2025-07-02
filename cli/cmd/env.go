@@ -307,7 +307,7 @@ func runEnvUnset(cmd *cobra.Command, args []string) error {
 		var response string
 		fmt.Scanln(&response)
 		if strings.ToLower(response) != "y" {
-			return fmt.Errorf("cancelled")
+			return fmt.Errorf("Cancelled")
 		}
 	}
 
@@ -319,7 +319,7 @@ func runEnvPull(cmd *cobra.Command, args []string) error {
 	environment := getTargetEnvironment()
 	
 	if environment == "local" {
-		return fmt.Errorf("cannot pull from local environment")
+		return fmt.Errorf("Cannot pull from local environment")
 	}
 
 	if err := checkAuth(); err != nil {
@@ -368,7 +368,7 @@ func runEnvPush(cmd *cobra.Command, args []string) error {
 	environment := getTargetEnvironment()
 	
 	if environment == "local" {
-		return fmt.Errorf("cannot push to local environment")
+		return fmt.Errorf("Cannot push to local environment")
 	}
 
 	if err := checkAuth(); err != nil {
@@ -406,7 +406,7 @@ func runEnvPush(cmd *cobra.Command, args []string) error {
 		var response string
 		fmt.Scanln(&response)
 		if strings.ToLower(response) != "y" {
-			return fmt.Errorf("cancelled")
+			return fmt.Errorf("Cancelled")
 		}
 	}
 
@@ -505,7 +505,7 @@ func unsetLocalEnvVars(keys []string) error {
 	}
 
 	if removed == 0 {
-		return fmt.Errorf("no matching variables found in .env")
+		return fmt.Errorf("No matching variables found in .env")
 	}
 
 	if err := writeDotenvFile(".env", vars); err != nil {
@@ -543,7 +543,12 @@ func readDotenvFile(filename string) (map[string]string, error) {
 			value := strings.TrimSpace(parts[1])
 			
 			// Remove quotes if present
-			value = strings.Trim(value, `"'`)
+			if len(value) >= 2 {
+				if (value[0] == '"' && value[len(value)-1] == '"') ||
+				   (value[0] == '\'' && value[len(value)-1] == '\'') {
+					value = value[1 : len(value)-1]
+				}
+			}
 			
 			vars[key] = value
 		}
@@ -652,19 +657,20 @@ func outputTable(envVars map[string]map[string]string) error {
 // Utility functions
 
 func getAPIName() (string, error) {
+	// Get current directory
+	dir, err := os.Getwd()
+	if err != nil {
+		return "", err
+	}
+	
 	// Try to load from manifest
-	if manifestPath, err := manifest.FindManifest("."); err == nil {
+	if manifestPath, err := manifest.FindManifest(dir); err == nil {
 		if m, err := manifest.Load(manifestPath); err == nil {
 			return m.Name, nil
 		}
 	}
 	
 	// Fallback to directory name
-	dir, err := os.Getwd()
-	if err != nil {
-		return "", err
-	}
-	
 	return filepath.Base(dir), nil
 }
 

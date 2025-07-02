@@ -21,7 +21,8 @@ test.describe('Creator Earnings & Payout Journey', () => {
       await page.fill('[data-testid="email-input"]', testCreator.email);
       await page.fill('[data-testid="password-input"]', testCreator.password);
       await page.click('[data-testid="submit-login"]');
-      await page.waitForNavigation();
+      // Wait for the navigation tabs to appear after login
+      await page.waitForSelector('[data-testid="apis-nav"]', { timeout: 10000 });
     });
 
     test('should create and publish new API', async () => {
@@ -62,7 +63,11 @@ test.describe('Creator Earnings & Payout Journey', () => {
       // Test negative price validation (bug fix verification)
       await page.fill('[data-testid="price-per-call-input"]', '-5');
       await page.click('[data-testid="save-plan-button"]');
-      await expect(page.locator('[data-testid="price-per-call-input"]')).toHaveValue('0.01');
+      // Wait for validation to complete and field to reset
+      await page.waitForFunction(() => {
+        const input = document.querySelector('[data-testid="price-per-call-input"]') as HTMLInputElement;
+        return input && input.value === '0.01';
+      }, { timeout: 5000 });
       
       // Save plan
       await page.click('[data-testid="save-plan-button"]');
@@ -102,6 +107,8 @@ test.describe('Creator Earnings & Payout Journey', () => {
       await page.fill('[data-testid="email-input"]', testCreator.email);
       await page.fill('[data-testid="password-input"]', testCreator.password);
       await page.click('[data-testid="submit-login"]');
+      // Wait for login to complete
+      await page.waitForSelector('[data-testid="apis-nav"]', { timeout: 10000 });
       await page.goto('/creator-portal/payouts');
     });
 
@@ -169,6 +176,8 @@ test.describe('Creator Earnings & Payout Journey', () => {
       await page.fill('[data-testid="email-input"]', testCreator.email);
       await page.fill('[data-testid="password-input"]', testCreator.password);
       await page.click('[data-testid="submit-login"]');
+      // Wait for login to complete
+      await page.waitForSelector('[data-testid="apis-nav"]', { timeout: 10000 });
       await page.goto('/creator-portal/payouts');
     });
 
@@ -244,6 +253,8 @@ test.describe('Creator Earnings & Payout Journey', () => {
       await page.fill('[data-testid="email-input"]', testCreator.email);
       await page.fill('[data-testid="password-input"]', testCreator.password);
       await page.click('[data-testid="submit-login"]');
+      // Wait for login to complete
+      await page.waitForSelector('[data-testid="apis-nav"]', { timeout: 10000 });
       await page.goto('/creator-portal/payouts');
     });
 
@@ -321,6 +332,8 @@ test.describe('Creator Earnings & Payout Journey', () => {
       await page.fill('[data-testid="email-input"]', testCreator.email);
       await page.fill('[data-testid="password-input"]', testCreator.password);
       await page.click('[data-testid="submit-login"]');
+      // Wait for login to complete
+      await page.waitForSelector('[data-testid="apis-nav"]', { timeout: 10000 });
       await page.goto('/creator-portal/dashboard');
     });
 

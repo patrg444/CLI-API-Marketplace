@@ -1,0 +1,44 @@
+# API-Direct Configuration
+name: demo-ml-api
+runtime: python3.9
+
+# API Endpoints
+endpoints:
+  - path: /complete
+    method: POST
+    handler: main.complete_text
+  
+  - path: /chat
+    method: POST
+    handler: main.chat_completion
+  
+  - path: /health
+    method: GET
+    handler: main.health_check
+
+# Environment Variables
+environment:
+  OPENAI_API_KEY: ${OPENAI_API_KEY}
+  REDIS_URL: ${REDIS_URL}
+  MAX_TOKENS: 1000
+  CACHE_TTL: 3600
+  LOG_LEVEL: INFO
+
+# AWS Configuration (Optimized for AI workloads)
+aws:
+  cpu: 1024
+  memory: 2048
+  instance_type: "t3.large"
+  min_capacity: 1
+  max_capacity: 10
+  
+# Pricing Suggestions
+pricing:
+  free_tier: 100
+  tiers:
+    - name: "Starter"
+      price_per_1k: 0.50
+      features: ["Basic GPT-3.5", "Rate limiting"]
+    - name: "Pro" 
+      price_per_1k: 1.00
+      features: ["GPT-4 access", "Priority processing", "Analytics"]

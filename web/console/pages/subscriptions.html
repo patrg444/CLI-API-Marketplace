@@ -1,0 +1,746 @@
+{% extends "templates/base.html" %}
+
+{% block title %}Subscriptions - API-Direct Creator Portal{% endblock %}
+{% block description %}Manage your API subscriptions and customer access{% endblock %}
+
+{% block styles %}
+<style>
+.subscription-card {
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+    transition: all 0.2s;
+}
+
+.subscription-card:hover {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.status-badge.active {
+    background: #d1fae5;
+    color: #065f46;
+}
+
+.status-badge.trialing {
+    background: #dbeafe;
+    color: #1e40af;
+}
+
+.status-badge.canceled {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.status-badge.past_due {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.usage-progress {
+    height: 8px;
+    background: #e5e7eb;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.usage-fill {
+    height: 100%;
+    background: #4f46e5;
+    transition: width 0.3s ease;
+}
+
+.usage-fill.warning {
+    background: #f59e0b;
+}
+
+.usage-fill.danger {
+    background: #ef4444;
+}
+
+.customer-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: #e5e7eb;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    color: #6b7280;
+}
+
+.plan-selector {
+    border: 2px solid #e5e7eb;
+    border-radius: 0.5rem;
+    padding: 1rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.plan-selector:hover {
+    border-color: #d1d5db;
+}
+
+.plan-selector.selected {
+    border-color: #4f46e5;
+    background: #eef2ff;
+}
+
+.metric-tile {
+    background: #f9fafb;
+    border-radius: 0.5rem;
+    padding: 1rem;
+    text-align: center;
+}
+
+.activity-timeline {
+    position: relative;
+    padding-left: 2rem;
+}
+
+.activity-timeline::before {
+    content: '';
+    position: absolute;
+    left: 0.5rem;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: #e5e7eb;
+}
+
+.activity-item {
+    position: relative;
+    padding-bottom: 1rem;
+}
+
+.activity-dot {
+    position: absolute;
+    left: -1.5rem;
+    top: 0.25rem;
+    width: 1rem;
+    height: 1rem;
+    border-radius: 50%;
+    background: white;
+    border: 2px solid #e5e7eb;
+}
+
+.activity-dot.success {
+    border-color: #10b981;
+}
+
+.activity-dot.warning {
+    border-color: #f59e0b;
+}
+
+.activity-dot.error {
+    border-color: #ef4444;
+}
+
+.revenue-card {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto">
+    <!-- Header -->
+    <div class="mb-8">
+        <h1 class="text-3xl font-bold text-gray-900 mb-2">API Subscriptions</h1>
+        <p class="text-gray-600">Manage customer subscriptions and access to your APIs</p>
+    </div>
+
+    <!-- Overview Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <div class="revenue-card">
+            <div class="flex items-start justify-between mb-3">
+                <div>
+                    <p class="text-sm opacity-90">Monthly Recurring Revenue</p>
+                    <p class="text-2xl font-bold mt-1">$<span id="mrr">12,450</span></p>
+                </div>
+                <i class="fas fa-chart-line text-2xl opacity-75"></i>
+            </div>
+            <p class="text-sm opacity-90">
+                <i class="fas fa-arrow-up mr-1"></i>+18.2% from last month
+            </p>
+        </div>
+
+        <div class="bg-white rounded-lg p-4 border border-gray-200">
+            <div class="flex items-start justify-between mb-2">
+                <div>
+                    <p class="text-sm text-gray-600">Active Subscriptions</p>
+                    <p class="text-2xl font-bold text-gray-900">248</p>
+                </div>
+                <i class="fas fa-users text-green-500"></i>
+            </div>
+            <p class="text-xs text-gray-500">+12 this month</p>
+        </div>
+
+        <div class="bg-white rounded-lg p-4 border border-gray-200">
+            <div class="flex items-start justify-between mb-2">
+                <div>
+                    <p class="text-sm text-gray-600">Trial Conversions</p>
+                    <p class="text-2xl font-bold text-gray-900">68%</p>
+                </div>
+                <i class="fas fa-percentage text-blue-500"></i>
+            </div>
+            <p class="text-xs text-gray-500">17 of 25 trials</p>
+        </div>
+
+        <div class="bg-white rounded-lg p-4 border border-gray-200">
+            <div class="flex items-start justify-between mb-2">
+                <div>
+                    <p class="text-sm text-gray-600">Churn Rate</p>
+                    <p class="text-2xl font-bold text-gray-900">2.3%</p>
+                </div>
+                <i class="fas fa-user-minus text-red-500"></i>
+            </div>
+            <p class="text-xs text-green-600">-0.5% from last month</p>
+        </div>
+    </div>
+
+    <!-- Filters and Search -->
+    <div class="bg-white rounded-lg p-4 mb-6 border border-gray-200">
+        <div class="flex flex-wrap gap-4 items-center justify-between">
+            <div class="flex items-center space-x-4">
+                <div class="relative">
+                    <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                    <input type="text" id="searchInput" placeholder="Search by customer or email..." 
+                        class="pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
+                        onkeyup="filterSubscriptions()">
+                </div>
+                
+                <select id="statusFilter" onchange="filterSubscriptions()" 
+                    class="px-4 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
+                    <option value="">All Status</option>
+                    <option value="active">Active</option>
+                    <option value="trialing">Trial</option>
+                    <option value="past_due">Past Due</option>
+                    <option value="canceled">Canceled</option>
+                </select>
+
+                <select id="apiFilter" onchange="filterSubscriptions()" 
+                    class="px-4 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
+                    <option value="">All APIs</option>
+                </select>
+            </div>
+
+            <button onclick="exportSubscriptions()" class="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50">
+                <i class="fas fa-download mr-2"></i>Export
+            </button>
+        </div>
+    </div>
+
+    <!-- Subscriptions List -->
+    <div class="space-y-4" id="subscriptionsList">
+        <!-- Active Subscription -->
+        <div class="subscription-card" data-status="active">
+            <div class="flex items-start justify-between mb-4">
+                <div class="flex items-start space-x-4">
+                    <div class="customer-avatar">
+                        <span>AC</span>
+                    </div>
+                    <div>
+                        <h3 class="font-semibold text-gray-900">Acme Corporation</h3>
+                        <p class="text-sm text-gray-600">billing@acmecorp.com</p>
+                        <div class="flex items-center space-x-3 mt-1">
+                            <span class="status-badge active">Active</span>
+                            <span class="text-xs text-gray-500">Customer since Mar 2023</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="text-right">
+                    <p class="text-lg font-semibold text-gray-900">$199/mo</p>
+                    <p class="text-xs text-gray-500">Pro Plan</p>
+                </div>
+            </div>
+
+            <!-- Subscribed APIs -->
+            <div class="mb-4">
+                <p class="text-sm font-medium text-gray-700 mb-2">Subscribed APIs</p>
+                <div class="flex flex-wrap gap-2">
+                    <span class="px-3 py-1 bg-indigo-100 text-indigo-700 rounded-full text-xs font-medium">
+                        Weather API Pro
+                    </span>
+                    <span class="px-3 py-1 bg-indigo-100 text-indigo-700 rounded-full text-xs font-medium">
+                        Translation API
+                    </span>
+                </div>
+            </div>
+
+            <!-- Usage Metrics -->
+            <div class="grid grid-cols-4 gap-4 mb-4">
+                <div class="metric-tile">
+                    <p class="text-xs text-gray-600">API Calls</p>
+                    <p class="font-semibold text-gray-900">45,230</p>
+                    <p class="text-xs text-gray-500">of 100k</p>
+                </div>
+                <div class="metric-tile">
+                    <p class="text-xs text-gray-600">Billing</p>
+                    <p class="font-semibold text-gray-900">Current</p>
+                    <p class="text-xs text-gray-500">Next: Apr 15</p>
+                </div>
+                <div class="metric-tile">
+                    <p class="text-xs text-gray-600">Lifetime Value</p>
+                    <p class="font-semibold text-gray-900">$2,588</p>
+                    <p class="text-xs text-gray-500">13 months</p>
+                </div>
+                <div class="metric-tile">
+                    <p class="text-xs text-gray-600">Support Tickets</p>
+                    <p class="font-semibold text-gray-900">3</p>
+                    <p class="text-xs text-gray-500">All resolved</p>
+                </div>
+            </div>
+
+            <!-- Usage Progress -->
+            <div class="mb-4">
+                <div class="flex justify-between text-sm mb-1">
+                    <span class="text-gray-600">Monthly Usage</span>
+                    <span class="text-gray-900 font-medium">45.2%</span>
+                </div>
+                <div class="usage-progress">
+                    <div class="usage-fill" style="width: 45.2%"></div>
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="flex items-center justify-between pt-4 border-t border-gray-200">
+                <div class="flex items-center space-x-2">
+                    <button onclick="viewCustomerDetails('acme')" class="text-sm text-indigo-600 hover:text-indigo-700">
+                        View Details
+                    </button>
+                    <span class="text-gray-300">|</span>
+                    <button onclick="viewUsageHistory('acme')" class="text-sm text-indigo-600 hover:text-indigo-700">
+                        Usage History
+                    </button>
+                    <span class="text-gray-300">|</span>
+                    <button onclick="contactCustomer('acme')" class="text-sm text-indigo-600 hover:text-indigo-700">
+                        Contact
+                    </button>
+                </div>
+                <button onclick="manageSubscription('acme')" class="text-sm text-gray-600 hover:text-gray-700">
+                    <i class="fas fa-cog mr-1"></i>Manage
+                </button>
+            </div>
+        </div>
+
+        <!-- Trial Subscription -->
+        <div class="subscription-card" data-status="trialing">
+            <div class="flex items-start justify-between mb-4">
+                <div class="flex items-start space-x-4">
+                    <div class="customer-avatar" style="background: #dbeafe; color: #1e40af;">
+                        <span>TS</span>
+                    </div>
+                    <div>
+                        <h3 class="font-semibold text-gray-900">Tech Startup Inc</h3>
+                        <p class="text-sm text-gray-600">dev@techstartup.io</p>
+                        <div class="flex items-center space-x-3 mt-1">
+                            <span class="status-badge trialing">Trial - 5 days left</span>
+                            <span class="text-xs text-gray-500">Started Mar 15, 2024</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="text-right">
+                    <p class="text-lg font-semibold text-gray-900">$0/mo</p>
+                    <p class="text-xs text-gray-500">Trial (Pro Plan)</p>
+                </div>
+            </div>
+
+            <!-- Trial Activity -->
+            <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
+                <div class="flex items-start">
+                    <i class="fas fa-info-circle text-blue-500 mt-0.5 mr-2"></i>
+                    <div class="text-sm">
+                        <p class="font-medium text-blue-900">Trial Activity</p>
+                        <p class="text-blue-700 mt-1">
+                            High engagement: 12,450 API calls in 2 days. Consider reaching out!
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="flex items-center justify-between">
+                <button onclick="convertTrial('techstartup')" 
+                    class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 text-sm">
+                    <i class="fas fa-rocket mr-2"></i>Convert to Paid
+                </button>
+                <button onclick="extendTrial('techstartup')" class="text-sm text-gray-600 hover:text-gray-700">
+                    Extend Trial
+                </button>
+            </div>
+        </div>
+
+        <!-- Past Due Subscription -->
+        <div class="subscription-card" data-status="past_due">
+            <div class="flex items-start justify-between mb-4">
+                <div class="flex items-start space-x-4">
+                    <div class="customer-avatar" style="background: #fef3c7; color: #92400e;">
+                        <span>JD</span>
+                    </div>
+                    <div>
+                        <h3 class="font-semibold text-gray-900">John Doe</h3>
+                        <p class="text-sm text-gray-600">john@example.com</p>
+                        <div class="flex items-center space-x-3 mt-1">
+                            <span class="status-badge past_due">Past Due - 3 days</span>
+                            <span class="text-xs text-gray-500">Payment failed Mar 17</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="text-right">
+                    <p class="text-lg font-semibold text-gray-900">$49/mo</p>
+                    <p class="text-xs text-gray-500">Basic Plan</p>
+                </div>
+            </div>
+
+            <!-- Warning -->
+            <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-4">
+                <p class="text-sm text-yellow-800">
+                    <i class="fas fa-exclamation-triangle mr-2"></i>
+                    Payment method declined. Service will be suspended in 4 days.
+                </p>
+            </div>
+
+            <!-- Actions -->
+            <div class="flex items-center justify-between">
+                <button onclick="retryPayment('johndoe')" 
+                    class="px-4 py-2 bg-yellow-600 text-white rounded-md hover:bg-yellow-700 text-sm">
+                    <i class="fas fa-redo mr-2"></i>Retry Payment
+                </button>
+                <button onclick="contactForPayment('johndoe')" class="text-sm text-gray-600 hover:text-gray-700">
+                    Send Reminder
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Activity -->
+    <div class="bg-white rounded-lg p-6 border border-gray-200 mt-8">
+        <h2 class="text-lg font-semibold text-gray-900 mb-4">Recent Subscription Activity</h2>
+        
+        <div class="activity-timeline">
+            <div class="activity-item">
+                <div class="activity-dot success"></div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-900">New subscription started</p>
+                    <p class="text-xs text-gray-600">DataTech Solutions subscribed to Pro Plan</p>
+                    <p class="text-xs text-gray-500 mt-1">2 hours ago</p>
+                </div>
+            </div>
+            
+            <div class="activity-item">
+                <div class="activity-dot warning"></div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-900">Payment failed</p>
+                    <p class="text-xs text-gray-600">John Doe's payment method was declined</p>
+                    <p class="text-xs text-gray-500 mt-1">3 days ago</p>
+                </div>
+            </div>
+            
+            <div class="activity-item">
+                <div class="activity-dot success"></div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-900">Trial converted</p>
+                    <p class="text-xs text-gray-600">WebScale Inc upgraded from trial to Enterprise Plan</p>
+                    <p class="text-xs text-gray-500 mt-1">5 days ago</p>
+                </div>
+            </div>
+            
+            <div class="activity-item">
+                <div class="activity-dot error"></div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-900">Subscription canceled</p>
+                    <p class="text-xs text-gray-600">SmallBiz Co canceled their Basic Plan subscription</p>
+                    <p class="text-xs text-gray-500 mt-1">1 week ago</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Customer Details Modal -->
+<div id="customerModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div class="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="text-lg font-semibold text-gray-900">Customer Details</h3>
+            <button onclick="closeCustomerModal()" class="text-gray-400 hover:text-gray-600">
+                <i class="fas fa-times text-xl"></i>
+            </button>
+        </div>
+
+        <div class="space-y-6">
+            <!-- Customer Info -->
+            <div>
+                <h4 class="font-medium text-gray-900 mb-3">Customer Information</h4>
+                <div class="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                        <p class="text-gray-600">Company</p>
+                        <p class="font-medium" id="modalCompany">Acme Corporation</p>
+                    </div>
+                    <div>
+                        <p class="text-gray-600">Email</p>
+                        <p class="font-medium" id="modalEmail">billing@acmecorp.com</p>
+                    </div>
+                    <div>
+                        <p class="text-gray-600">Customer Since</p>
+                        <p class="font-medium" id="modalSince">March 2023</p>
+                    </div>
+                    <div>
+                        <p class="text-gray-600">Lifetime Value</p>
+                        <p class="font-medium" id="modalLTV">$2,588</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Subscription Details -->
+            <div>
+                <h4 class="font-medium text-gray-900 mb-3">Subscription Details</h4>
+                <div class="bg-gray-50 rounded-lg p-4">
+                    <div class="flex items-center justify-between mb-3">
+                        <div>
+                            <p class="font-medium text-gray-900">Pro Plan</p>
+                            <p class="text-sm text-gray-600">$199/month</p>
+                        </div>
+                        <span class="status-badge active">Active</span>
+                    </div>
+                    <div class="space-y-2 text-sm">
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Next Billing Date</span>
+                            <span class="font-medium">April 15, 2024</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Payment Method</span>
+                            <span class="font-medium">•••• 4242</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Auto-renewal</span>
+                            <span class="font-medium text-green-600">Enabled</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Usage Stats -->
+            <div>
+                <h4 class="font-medium text-gray-900 mb-3">Usage Statistics (Current Period)</h4>
+                <div class="grid grid-cols-3 gap-4">
+                    <div class="text-center p-3 bg-gray-50 rounded-lg">
+                        <p class="text-2xl font-bold text-gray-900">45,230</p>
+                        <p class="text-xs text-gray-600">API Calls</p>
+                    </div>
+                    <div class="text-center p-3 bg-gray-50 rounded-lg">
+                        <p class="text-2xl font-bold text-gray-900">99.8%</p>
+                        <p class="text-xs text-gray-600">Success Rate</p>
+                    </div>
+                    <div class="text-center p-3 bg-gray-50 rounded-lg">
+                        <p class="text-2xl font-bold text-gray-900">142ms</p>
+                        <p class="text-xs text-gray-600">Avg Response</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="flex justify-end space-x-3 pt-4 border-t">
+                <button onclick="closeCustomerModal()" class="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50">
+                    Close
+                </button>
+                <button onclick="editSubscription()" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700">
+                    Edit Subscription
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Global variables
+let subscriptions = [];
+let filteredSubscriptions = [];
+
+// Initialize
+document.addEventListener('DOMContentLoaded', () => {
+    loadAPIsForFilter();
+    loadSubscriptions();
+});
+
+// Load APIs for filter
+async function loadAPIsForFilter() {
+    try {
+        const apis = await apiClient.getMyAPIs();
+        const select = document.getElementById('apiFilter');
+        
+        apis.forEach(api => {
+            const option = document.createElement('option');
+            option.value = api.id;
+            option.textContent = api.name;
+            select.appendChild(option);
+        });
+    } catch (error) {
+        console.error('Error loading APIs:', error);
+    }
+}
+
+// Load subscriptions
+async function loadSubscriptions() {
+    try {
+        // In a real implementation, this would fetch from the backend
+        // For now, we'll keep the mock data visible
+        console.log('Loading subscriptions...');
+    } catch (error) {
+        console.error('Error loading subscriptions:', error);
+    }
+}
+
+// Filter subscriptions
+function filterSubscriptions() {
+    const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+    const statusFilter = document.getElementById('statusFilter').value;
+    const apiFilter = document.getElementById('apiFilter').value;
+    
+    const cards = document.querySelectorAll('.subscription-card');
+    
+    cards.forEach(card => {
+        let show = true;
+        
+        // Status filter
+        if (statusFilter && card.dataset.status !== statusFilter) {
+            show = false;
+        }
+        
+        // Search filter
+        if (searchTerm) {
+            const text = card.textContent.toLowerCase();
+            if (!text.includes(searchTerm)) {
+                show = false;
+            }
+        }
+        
+        card.style.display = show ? 'block' : 'none';
+    });
+}
+
+// View customer details
+function viewCustomerDetails(customerId) {
+    // In a real implementation, this would fetch customer data
+    document.getElementById('customerModal').classList.remove('hidden');
+}
+
+// Close customer modal
+function closeCustomerModal() {
+    document.getElementById('customerModal').classList.add('hidden');
+}
+
+// View usage history
+function viewUsageHistory(customerId) {
+    window.location.href = `/customer-usage?customer_id=${customerId}`;
+}
+
+// Contact customer
+function contactCustomer(customerId) {
+    // In a real implementation, this would open a contact form
+    showNotification('Contact form opened', 'info');
+}
+
+// Manage subscription
+function manageSubscription(customerId) {
+    window.location.href = `/subscription-details?customer_id=${customerId}`;
+}
+
+// Convert trial
+async function convertTrial(customerId) {
+    if (confirm('Convert this trial to a paid subscription?')) {
+        try {
+            // API call to convert trial
+            showNotification('Trial converted successfully', 'success');
+            setTimeout(() => window.location.reload(), 2000);
+        } catch (error) {
+            showNotification('Failed to convert trial', 'error');
+        }
+    }
+}
+
+// Extend trial
+async function extendTrial(customerId) {
+    const days = prompt('How many days to extend the trial?', '7');
+    if (days) {
+        try {
+            // API call to extend trial
+            showNotification(`Trial extended by ${days} days`, 'success');
+            setTimeout(() => window.location.reload(), 2000);
+        } catch (error) {
+            showNotification('Failed to extend trial', 'error');
+        }
+    }
+}
+
+// Retry payment
+async function retryPayment(customerId) {
+    if (confirm('Retry the payment for this subscription?')) {
+        try {
+            // API call to retry payment
+            showNotification('Payment retry initiated', 'info');
+        } catch (error) {
+            showNotification('Failed to retry payment', 'error');
+        }
+    }
+}
+
+// Contact for payment
+async function contactForPayment(customerId) {
+    try {
+        // API call to send payment reminder
+        showNotification('Payment reminder sent', 'success');
+    } catch (error) {
+        showNotification('Failed to send reminder', 'error');
+    }
+}
+
+// Edit subscription
+function editSubscription() {
+    // In a real implementation, this would open an edit form
+    showNotification('Edit subscription feature coming soon', 'info');
+}
+
+// Export subscriptions
+async function exportSubscriptions() {
+    try {
+        showNotification('Preparing export...', 'info');
+        
+        // In a real implementation, this would generate and download a CSV
+        setTimeout(() => {
+            showNotification('Subscriptions exported successfully', 'success');
+        }, 2000);
+    } catch (error) {
+        showNotification('Failed to export subscriptions', 'error');
+    }
+}
+
+// Helper functions
+function showNotification(message, type = 'info') {
+    const notification = document.createElement('div');
+    const bgColor = type === 'error' ? 'bg-red-500' : type === 'success' ? 'bg-green-500' : 'bg-blue-500';
+    
+    notification.className = `fixed top-4 right-4 ${bgColor} text-white px-6 py-3 rounded-lg shadow-lg z-50`;
+    notification.textContent = message;
+    
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        notification.remove();
+    }, 5000);
+}
+</script>
+{% endblock %}

@@ -1,0 +1,672 @@
+{
+  "timestamp": "2025-06-21T01:07:34.040237",
+  "summary": {
+    "total_tests": 110,
+    "passed_tests": 105,
+    "failed_tests": 5,
+    "pass_rate": 95.45454545454545,
+    "status": "EXCELLENT"
+  },
+  "test_results": [
+    {
+      "test": "File: backend/api/main.py",
+      "status": true,
+      "details": "",
+      "timestamp": "2025-06-21T01:07:34.037866"
+    },
+    {
+      "test": "File: backend/api/websocket.py",
+      "status": true,
+      "details": "",
+      "timestamp": "2025-06-21T01:07:34.037882"
+    },
+    {
+      "test": "File: backend/database/schema.sql",
+      "status": true,
+      "details": "",
+      "timestamp": "2025-06-21T01:07:34.037889"
+    },
+    {
+      "test": "File: backend/Dockerfile",
+      "status": true,
+      "details": "",
+      "timestamp": "2025-06-21T01:07:34.037895"
+    },
+    {
+      "test": "File: backend/requirements.txt",
+      "status": true,
+      "details": "",
+      "timestamp": "2025-06-21T01:07:34.037901"
+    },
+    {
+      "test": "File: web/console/templates/base.html",
+      "status": true,
+      "details": "",
+      "timestamp": "2025-06-21T01:07:34.037909"
+    },
+    {
+      "test": "File: web/console/pages/dashboard.html",
+      "status": true,
+      "details": "",
+      "timestamp": "2025-06-21T01:07:34.037916"
+    },
+    {
+      "test": "File: web/console/pages/apis.html",
+      "status": true,
+      "details": "",
+      "timestamp": "2025-06-21T01:07:34.037923"
+    },
+    {
+      "test": "File: web/console/pages/analytics.html",
+      "status": true,
+      "details": "",
+      "timestamp": "2025-06-21T01:07:34.037929"
+    },
+    {
+      "test": "File: web/console/pages/earnings.html",
+      "status": true,
+      "details": "",
+      "timestamp": "2025-06-21T01:07:34.037934"
+    },
+    {
+      "test": "File: web/console/pages/marketplace.html",
+      "status": true,
+      "details": "",
+      "timestamp": "2025-06-21T01:07:34.037940"
+    },
+    {
+      "test": "File: web/console/login.html",
+      "status": true,
+      "details": "",
+      "timestamp": "2025-06-21T01:07:34.037945"
+    },
+    {
+      "test": "File: web/console/register.html",
+      "status": true,
+      "details": "",
+      "timestamp": "2025-06-21T01:07:34.037949"
+    },
+    {
+      "test": "File: web/console/static/js/api-client.js",
+      "status": true,
+      "details": "",
+      "timestamp": "2025-06-21T01:07:34.037955"
+    },
+    {
+      "test": "File: web/landing/index.html",
+      "status": true,
+      "details": "",
+      "timestamp": "2025-06-21T01:07:34.037961"
+    },
+    {
+      "test": "File: docker-compose.production.yml",
+      "status": true,
+      "details": "",
+      "timestamp": "2025-06-21T01:07:34.037967"
+    },
+    {
+      "test": "File: .env.production.example",
+      "status": true,
+      "details": "",
+      "timestamp": "2025-06-21T01:07:34.037972"
+    },
+    {
+      "test": "File: nginx/nginx.conf",
+      "status": true,
+      "details": "",
+      "timestamp": "2025-06-21T01:07:34.037977"
+    },
+    {
+      "test": "File: monitoring/prometheus.yml",
+      "status": true,
+      "details": "",
+      "timestamp": "2025-06-21T01:07:34.037982"
+    },
+    {
+      "test": "File: scripts/deploy.sh",
+      "status": true,
+      "details": "",
+      "timestamp": "2025-06-21T01:07:34.037987"
+    },
+    {
+      "test": "File: scripts/backup.sh",
+      "status": true,
+      "details": "",
+      "timestamp": "2025-06-21T01:07:34.037992"
+    },
+    {
+      "test": "File: scripts/health-check.sh",
+      "status": true,
+      "details": "",
+      "timestamp": "2025-06-21T01:07:34.037996"
+    },
+    {
+      "test": "File: DEPLOYMENT_GUIDE.md",
+      "status": true,
+      "details": "",
+      "timestamp": "2025-06-21T01:07:34.038001"
+    },
+    {
+      "test": "File: BETA_LAUNCH_CHECKLIST.md",
+      "status": true,
+      "details": "",
+      "timestamp": "2025-06-21T01:07:34.038006"
+    },
+    {
+      "test": "Page: login.html",
+      "status": true,
+      "details": "Title: True, Structure: True, Auth: True",
+      "timestamp": "2025-06-21T01:07:34.038073"
+    },
+    {
+      "test": "Page: register.html",
+      "status": true,
+      "details": "Title: True, Structure: True, Auth: False",
+      "timestamp": "2025-06-21T01:07:34.038146"
+    },
+    {
+      "test": "Page: pages/dashboard.html",
+      "status": false,
+      "details": "Title: True, Structure: False, Auth: False",
+      "timestamp": "2025-06-21T01:07:34.038244"
+    },
+    {
+      "test": "Page: pages/apis.html",
+      "status": false,
+      "details": "Title: True, Structure: False, Auth: False",
+      "timestamp": "2025-06-21T01:07:34.038423"
+    },
+    {
+      "test": "Page: pages/analytics.html",
+      "status": false,
+      "details": "Title: True, Structure: False, Auth: False",
+      "timestamp": "2025-06-21T01:07:34.038498"
+    },
+    {
+      "test": "Page: pages/earnings.html",
+      "status": false,
+      "details": "Title: True, Structure: False, Auth: False",
+      "timestamp": "2025-06-21T01:07:34.038705"
+    },
+    {
+      "test": "Page: pages/marketplace.html",
+      "status": false,
+      "details": "Title: True, Structure: False, Auth: False",
+      "timestamp": "2025-06-21T01:07:34.038977"
+    },
+    {
+      "test": "Page: templates/base.html",
+      "status": true,
+      "details": "Title: True, Structure: True",
+      "timestamp": "2025-06-21T01:07:34.039053"
+    },
+    {
+      "test": "FastAPI imports",
+      "status": true,
+      "details": "",
+      "timestamp": "2025-06-21T01:07:34.039108"
+    },
+    {
+      "test": "CORS middleware",
+      "status": true,
+      "details": "",
+      "timestamp": "2025-06-21T01:07:34.039111"
+    },
+    {
+      "test": "Authentication setup",
+      "status": true,
+      "details": "",
+      "timestamp": "2025-06-21T01:07:34.039113"
+    },
+    {
+      "test": "Pydantic models",
+      "status": true,
+      "details": "",
+      "timestamp": "2025-06-21T01:07:34.039114"
+    },
+    {
+      "test": "API endpoints",
+      "status": true,
+      "details": "",
+      "timestamp": "2025-06-21T01:07:34.039116"
+    },
+    {
+      "test": "WebSocket implementation",
+      "status": true,
+      "details": "",
+      "timestamp": "2025-06-21T01:07:34.039147"
+    },
+    {
+      "test": "WebSocket manager",
+      "status": true,
+      "details": "",
+      "timestamp": "2025-06-21T01:07:34.039150"
+    },
+    {
+      "test": "Table: users",
+      "status": true,
+      "details": "",
+      "timestamp": "2025-06-21T01:07:34.039181"
+    },
+    {
+      "test": "Table: apis",
+      "status": true,
+      "details": "",
+      "timestamp": "2025-06-21T01:07:34.039183"
+    },
+    {
+      "test": "Table: api_calls",
+      "status": true,
+      "details": "",
+      "timestamp": "2025-06-21T01:07:34.039187"
+    },
+    {
+      "test": "Table: billing_events",
+      "status": true,
+      "details": "",
+      "timestamp": "2025-06-21T01:07:34.039190"
+    },
+    {
+      "test": "Table: marketplace_listings",
+      "status": true,
+      "details": "",
+      "timestamp": "2025-06-21T01:07:34.039194"
+    },
+    {
+      "test": "Table: password_reset_tokens",
+      "status": true,
+      "details": "",
+      "timestamp": "2025-06-21T01:07:34.039196"
+    },
+    {
+      "test": "Database indexes",
+      "status": true,
+      "details": "",
+      "timestamp": "2025-06-21T01:07:34.039207"
+    },
+    {
+      "test": "Update triggers",
+      "status": true,
+      "details": "",
+      "timestamp": "2025-06-21T01:07:34.039209"
+    },
+    {
+      "test": "Database functions",
+      "status": true,
+      "details": "",
+      "timestamp": "2025-06-21T01:07:34.039211"
+    },
+    {
+      "test": "Service: postgres",
+      "status": true,
+      "details": "",
+      "timestamp": "2025-06-21T01:07:34.039238"
+    },
+    {
+      "test": "Service: redis",
+      "status": true,
+      "details": "",
+      "timestamp": "2025-06-21T01:07:34.039241"
+    },
+    {
+      "test": "Service: influxdb",
+      "status": true,
+      "details": "",
+      "timestamp": "2025-06-21T01:07:34.039243"
+    },
+    {
+      "test": "Service: backend",
+      "status": true,
+      "details": "",
+      "timestamp": "2025-06-21T01:07:34.039245"
+    },
+    {
+      "test": "Service: nginx",
+      "status": true,
+      "details": "",
+      "timestamp": "2025-06-21T01:07:34.039248"
+    },
+    {
+      "test": "Service: prometheus",
+      "status": true,
+      "details": "",
+      "timestamp": "2025-06-21T01:07:34.039251"
+    },
+    {
+      "test": "Service: grafana",
+      "status": true,
+      "details": "",
+      "timestamp": "2025-06-21T01:07:34.039254"
+    },
+    {
+      "test": "Volume configuration",
+      "status": true,
+      "details": "",
+      "timestamp": "2025-06-21T01:07:34.039260"
+    },
+    {
+      "test": "Network configuration",
+      "status": true,
+      "details": "",
+      "timestamp": "2025-06-21T01:07:34.039262"
+    },
+    {
+      "test": "Health checks",
+      "status": true,
+      "details": "",
+      "timestamp": "2025-06-21T01:07:34.039263"
+    },
+    {
+      "test": "SSL configuration",
+      "status": true,
+      "details": "",
+      "timestamp": "2025-06-21T01:07:34.039298"
+    },
+    {
+      "test": "Reverse proxy",
+      "status": true,
+      "details": "",
+      "timestamp": "2025-06-21T01:07:34.039300"
+    },
+    {
+      "test": "Rate limiting",
+      "status": true,
+      "details": "",
+      "timestamp": "2025-06-21T01:07:34.039302"
+    },
+    {
+      "test": "WebSocket support",
+      "status": true,
+      "details": "",
+      "timestamp": "2025-06-21T01:07:34.039304"
+    },
+    {
+      "test": "APIClient class",
+      "status": true,
+      "details": "",
+      "timestamp": "2025-06-21T01:07:34.039338"
+    },
+    {
+      "test": "Authentication headers",
+      "status": true,
+      "details": "",
+      "timestamp": "2025-06-21T01:07:34.039340"
+    },
+    {
+      "test": "Async methods",
+      "status": true,
+      "details": "",
+      "timestamp": "2025-06-21T01:07:34.039342"
+    },
+    {
+      "test": "Error handling",
+      "status": true,
+      "details": "",
+      "timestamp": "2025-06-21T01:07:34.039343"
+    },
+    {
+      "test": "Method: getDashboardOverview",
+      "status": true,
+      "details": "",
+      "timestamp": "2025-06-21T01:07:34.039346"
+    },
+    {
+      "test": "Method: getAPIs",
+      "status": true,
+      "details": "",
+      "timestamp": "2025-06-21T01:07:34.039348"
+    },
+    {
+      "test": "Method: getAnalytics",
+      "status": true,
+      "details": "",
+      "timestamp": "2025-06-21T01:07:34.039351"
+    },
+    {
+      "test": "Method: getEarnings",
+      "status": true,
+      "details": "",
+      "timestamp": "2025-06-21T01:07:34.039355"
+    },
+    {
+      "test": "Method: getMarketplace",
+      "status": true,
+      "details": "",
+      "timestamp": "2025-06-21T01:07:34.039358"
+    },
+    {
+      "test": "Login form",
+      "status": true,
+      "details": "",
+      "timestamp": "2025-06-21T01:07:34.039398"
+    },
+    {
+      "test": "Email field",
+      "status": true,
+      "details": "",
+      "timestamp": "2025-06-21T01:07:34.039400"
+    },
+    {
+      "test": "Password field",
+      "status": true,
+      "details": "",
+      "timestamp": "2025-06-21T01:07:34.039401"
+    },
+    {
+      "test": "Remember me option",
+      "status": true,
+      "details": "",
+      "timestamp": "2025-06-21T01:07:34.039403"
+    },
+    {
+      "test": "Submit handler",
+      "status": true,
+      "details": "",
+      "timestamp": "2025-06-21T01:07:34.039404"
+    },
+    {
+      "test": "Registration name field",
+      "status": true,
+      "details": "",
+      "timestamp": "2025-06-21T01:07:34.039441"
+    },
+    {
+      "test": "Password strength indicator",
+      "status": true,
+      "details": "",
+      "timestamp": "2025-06-21T01:07:34.039443"
+    },
+    {
+      "test": "Confirm password field",
+      "status": true,
+      "details": "",
+      "timestamp": "2025-06-21T01:07:34.039444"
+    },
+    {
+      "test": "Terms checkbox",
+      "status": true,
+      "details": "",
+      "timestamp": "2025-06-21T01:07:34.039446"
+    },
+    {
+      "test": "Authentication check",
+      "status": true,
+      "details": "",
+      "timestamp": "2025-06-21T01:07:34.039483"
+    },
+    {
+      "test": "Token handling",
+      "status": true,
+      "details": "",
+      "timestamp": "2025-06-21T01:07:34.039490"
+    },
+    {
+      "test": "Logout functionality",
+      "status": true,
+      "details": "",
+      "timestamp": "2025-06-21T01:07:34.039491"
+    },
+    {
+      "test": "User menu",
+      "status": true,
+      "details": "",
+      "timestamp": "2025-06-21T01:07:34.039493"
+    },
+    {
+      "test": "WebSocket class",
+      "status": true,
+      "details": "",
+      "timestamp": "2025-06-21T01:07:34.039541"
+    },
+    {
+      "test": "Connection handling",
+      "status": true,
+      "details": "",
+      "timestamp": "2025-06-21T01:07:34.039543"
+    },
+    {
+      "test": "Message handling",
+      "status": true,
+      "details": "",
+      "timestamp": "2025-06-21T01:07:34.039546"
+    },
+    {
+      "test": "Auto-reconnection",
+      "status": true,
+      "details": "",
+      "timestamp": "2025-06-21T01:07:34.039548"
+    },
+    {
+      "test": "Event handlers",
+      "status": true,
+      "details": "",
+      "timestamp": "2025-06-21T01:07:34.039549"
+    },
+    {
+      "test": "Event: api_status_update",
+      "status": true,
+      "details": "",
+      "timestamp": "2025-06-21T01:07:34.039554"
+    },
+    {
+      "test": "Event: analytics_update",
+      "status": true,
+      "details": "",
+      "timestamp": "2025-06-21T01:07:34.039561"
+    },
+    {
+      "test": "Event: billing_update",
+      "status": true,
+      "details": "",
+      "timestamp": "2025-06-21T01:07:34.039567"
+    },
+    {
+      "test": "Event: notification",
+      "status": true,
+      "details": "",
+      "timestamp": "2025-06-21T01:07:34.039569"
+    },
+    {
+      "test": "Search functionality",
+      "status": true,
+      "details": "",
+      "timestamp": "2025-06-21T01:07:34.040070"
+    },
+    {
+      "test": "Category filtering",
+      "status": true,
+      "details": "",
+      "timestamp": "2025-06-21T01:07:34.040072"
+    },
+    {
+      "test": "Advanced filters",
+      "status": true,
+      "details": "",
+      "timestamp": "2025-06-21T01:07:34.040073"
+    },
+    {
+      "test": "API listing cards",
+      "status": true,
+      "details": "",
+      "timestamp": "2025-06-21T01:07:34.040074"
+    },
+    {
+      "test": "Pagination",
+      "status": true,
+      "details": "",
+      "timestamp": "2025-06-21T01:07:34.040076"
+    },
+    {
+      "test": "Feature: loadMarketplaceData",
+      "status": true,
+      "details": "",
+      "timestamp": "2025-06-21T01:07:34.040082"
+    },
+    {
+      "test": "Feature: publishAPI",
+      "status": true,
+      "details": "",
+      "timestamp": "2025-06-21T01:07:34.040104"
+    },
+    {
+      "test": "Feature: subscribeToAPI",
+      "status": true,
+      "details": "",
+      "timestamp": "2025-06-21T01:07:34.040119"
+    },
+    {
+      "test": "DEPLOYMENT_GUIDE.md: Prerequisites",
+      "status": true,
+      "details": "",
+      "timestamp": "2025-06-21T01:07:34.040160"
+    },
+    {
+      "test": "DEPLOYMENT_GUIDE.md: Quick Deployment",
+      "status": true,
+      "details": "",
+      "timestamp": "2025-06-21T01:07:34.040162"
+    },
+    {
+      "test": "DEPLOYMENT_GUIDE.md: Configuration",
+      "status": true,
+      "details": "",
+      "timestamp": "2025-06-21T01:07:34.040165"
+    },
+    {
+      "test": "BETA_LAUNCH_CHECKLIST.md: Pre-Launch Setup",
+      "status": true,
+      "details": "",
+      "timestamp": "2025-06-21T01:07:34.040191"
+    },
+    {
+      "test": "BETA_LAUNCH_CHECKLIST.md: Testing",
+      "status": true,
+      "details": "",
+      "timestamp": "2025-06-21T01:07:34.040194"
+    },
+    {
+      "test": "BETA_LAUNCH_CHECKLIST.md: Go-Live",
+      "status": true,
+      "details": "",
+      "timestamp": "2025-06-21T01:07:34.040199"
+    },
+    {
+      "test": ".env.production.example: POSTGRES_PASSWORD",
+      "status": true,
+      "details": "",
+      "timestamp": "2025-06-21T01:07:34.040223"
+    },
+    {
+      "test": ".env.production.example: JWT_SECRET",
+      "status": true,
+      "details": "",
+      "timestamp": "2025-06-21T01:07:34.040225"
+    },
+    {
+      "test": ".env.production.example: STRIPE_SECRET_KEY",
+      "status": true,
+      "details": "",
+      "timestamp": "2025-06-21T01:07:34.040227"
+    }
+  ]
+}

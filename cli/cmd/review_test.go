@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"testing"
@@ -54,7 +56,7 @@ func TestReviewSubmitCommand(t *testing.T) {
 			flags: map[string]string{
 				"rating": "4",
 			},
-			userInput: "Good API\nWorks well but could use better error messages\n\n",
+			userInput: "\nGood API\nWorks well but could use better error messages\n\n",
 			mockResponses: map[string]mockResponse{
 				"POST /api/v1/reviews": {
 					statusCode: 201,
@@ -87,7 +89,7 @@ func TestReviewSubmitCommand(t *testing.T) {
 			flags: map[string]string{
 				"rating": "3",
 			},
-			userInput:      "\n\n", // Empty input
+			userInput:      "\n\n\n", // Empty title, then immediate double newline for empty message
 			expectedOutput: []string{},
 			expectError:    true,
 			errorMessage:   "review message is required",
@@ -117,18 +119,14 @@ func TestReviewSubmitCommand(t *testing.T) {
 			httpClient = &mockHTTPClient{responses: tt.mockResponses}
 			defer func() { httpClient = oldClient }()
 
-			// Mock user input
-			if tt.userInput != "" {
-				oldStdin := stdin
-				stdin = strings.NewReader(tt.userInput)
-				defer func() { stdin = oldStdin }()
-			}
-
 			// Capture output
 			var buf bytes.Buffer
 			cmd := &cobra.Command{}
 			cmd.SetOut(&buf)
 			cmd.SetErr(&buf)
+			if tt.userInput != "" {
+				cmd.SetIn(strings.NewReader(tt.userInput))
+			}
 
 			// Reset and set flags
 			reviewRating = 0
@@ -248,7 +246,7 @@ func TestReviewListCommand(t *testing.T) {
 				"filter": "5",
 			},
 			mockResponses: map[string]mockResponse{
-				"GET /api/v1/reviews/weather-api?filter=5": {
+				"GET /api/v1/reviews/weather-api?sort=helpful&limit=20&filter=5": {
 					statusCode: 200,
 					body: map[string]interface{}{
 						"api": map[string]interface{}{
@@ -330,6 +328,26 @@ func TestReviewListCommand(t *testing.T) {
 			cmd := &cobra.Command{}
 			cmd.SetOut(&buf)
 			cmd.SetErr(&buf)
+			
+			// Add limit flag with default value
+			cmd.Flags().IntP("limit", "l", 20, "Number of reviews to show")
+
+			// Setup test environment
+			cleanup := setupTestAuth(t)
+			defer cleanup()
+
+			// Create config with mock server URL
+			tempDir := os.Getenv("HOME") // setupTestAuth sets this
+			configDir := filepath.Join(tempDir, ".apidirect")
+			os.MkdirAll(configDir, 0755)
+			
+			config := map[string]interface{}{
+				"api": map[string]interface{}{
+					"base_url": "http://test-server",
+				},
+			}
+			configData, _ := json.Marshal(config)
+			os.WriteFile(filepath.Join(configDir, "config.json"), configData, 0644)
 
 			// Reset and set flags
 			reviewFilter = ""
@@ -445,6 +463,9 @@ func TestReviewMyCommand(t *testing.T) {
 			cmd := &cobra.Command{}
 			cmd.SetOut(&buf)
 			cmd.SetErr(&buf)
+
+			// Reset format to table
+			reviewFormat = "table"
 
 			// Execute command
 			err := runReviewMy(cmd, tt.args)
@@ -683,7 +704,7 @@ func TestReviewStatsCommand(t *testing.T) {
 				"5★",
 				"75 (60%)",
 				"Last 30 days: 4.7★ (25 reviews)",
-				"Response rate: 64%",
+				"Response rate: 64% (80/125)",
 				"accurate (45)",
 				"Excellent!",
 			},
@@ -742,6 +763,9 @@ func TestReviewStatsCommand(t *testing.T) {
 			cmd := &cobra.Command{}
 			cmd.SetOut(&buf)
 			cmd.SetErr(&buf)
+
+			// Reset format to table
+			reviewFormat = "table"
 
 			// Set flags
 			cmd.Flags().Bool("all", false, "")

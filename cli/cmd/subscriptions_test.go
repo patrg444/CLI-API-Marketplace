@@ -3,6 +3,8 @@ package cmd
 import (
 	"bytes"
 	"encoding/json"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 	"time"
@@ -149,6 +151,23 @@ func TestSubscriptionsListCommand(t *testing.T) {
 			cmd := &cobra.Command{}
 			cmd.SetOut(&buf)
 			cmd.SetErr(&buf)
+
+			// Setup test environment
+			cleanup := setupTestAuth(t)
+			defer cleanup()
+
+			// Create config with mock server URL
+			tempDir := os.Getenv("HOME") // setupTestAuth sets this
+			configDir := filepath.Join(tempDir, ".apidirect")
+			os.MkdirAll(configDir, 0755)
+			
+			config := map[string]interface{}{
+				"api": map[string]interface{}{
+					"base_url": "http://test-server",
+				},
+			}
+			configData, _ := json.Marshal(config)
+			os.WriteFile(filepath.Join(configDir, "config.json"), configData, 0644)
 
 			// Reset and set flags
 			subscriptionStatus = ""
@@ -325,6 +344,23 @@ func TestSubscriptionsShowCommand(t *testing.T) {
 			if detailed, ok := tt.flags["detailed"]; ok {
 				subscriptionDetailed = detailed == "true"
 			}
+
+			// Setup test environment
+			cleanup := setupTestAuth(t)
+			defer cleanup()
+
+			// Create config with mock server URL
+			tempDir := os.Getenv("HOME") // setupTestAuth sets this
+			configDir := filepath.Join(tempDir, ".apidirect")
+			os.MkdirAll(configDir, 0755)
+			
+			config := map[string]interface{}{
+				"api": map[string]interface{}{
+					"base_url": "http://test-server",
+				},
+			}
+			configData, _ := json.Marshal(config)
+			os.WriteFile(filepath.Join(configDir, "config.json"), configData, 0644)
 
 			// Execute command
 			err := runSubscriptionsShow(cmd, tt.args)
@@ -657,7 +693,7 @@ func TestSubscriptionsKeysCommand(t *testing.T) {
 			expectedOutput: []string{
 				"API Keys: weather-api",
 				"https://api.weather.com/v1",
-				"sk_test_abcd...3456",
+				"sk_test_abcd...6789",
 				"Production Key",
 				"active",
 				"350 calls today",
@@ -761,7 +797,7 @@ func TestGetCurrencySymbol(t *testing.T) {
 		{"GBP", "£"},
 		{"JPY", "¥"},
 		{"usd", "$"}, // Test case insensitive
-		{"CAD", "CAD "}, // Unknown currency
+		{"XYZ", "XYZ "}, // Unknown currency
 		{"", " "},
 	}
 

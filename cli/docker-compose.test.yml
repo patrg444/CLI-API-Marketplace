@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  cli-tests:
+    build:
+      context: .
+      dockerfile: Dockerfile.test
+    volumes:
+      - ./coverage.out:/app/coverage.out
+      - ./coverage.html:/app/coverage.html
+      - ./test-results:/app/test-results
+    environment:
+      - CGO_ENABLED=0
+      - GOOS=linux
+      - GOARCH=amd64

@@ -70,7 +70,7 @@ const APIDocumentation: React.FC<APIDocumentationProps> = ({
         </svg>
         <h3 className="mt-2 text-sm font-medium text-gray-900">No API documentation available</h3>
         <p className="mt-1 text-sm text-gray-500">
-          The API creator hasn't uploaded OpenAPI documentation yet.
+          The API creator hasn&apos;t uploaded OpenAPI documentation yet.
         </p>
         {documentation?.markdown_content && (
           <div className="mt-6 text-left prose prose-sm max-w-none">
@@ -136,7 +136,7 @@ const APIDocumentation: React.FC<APIDocumentationProps> = ({
               </h3>
               <div className="mt-2 text-sm text-yellow-700">
                 <p>
-                  Subscribe to this API to enable the "Try it out" functionality and test endpoints directly from this documentation.
+                  Subscribe to this API to enable the &quot;Try it out&quot; functionality and test endpoints directly from this documentation.
                 </p>
               </div>
             </div>

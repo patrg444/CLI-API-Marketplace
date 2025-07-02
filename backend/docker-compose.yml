@@ -1,0 +1,168 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:14-alpine
+    container_name: apidirect-postgres
+    environment:
+      POSTGRES_DB: apidirect
+      POSTGRES_USER: apidirect
+      POSTGRES_PASSWORD: apidirect_password
+      POSTGRES_HOST_AUTH_METHOD: trust
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/schema.sql:/docker-entrypoint-initdb.d/schema.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U apidirect"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: apidirect-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # InfluxDB for Time-Series Analytics
+  influxdb:
+    image: influxdb:2.0-alpine
+    container_name: apidirect-influxdb
+    environment:
+      DOCKER_INFLUXDB_INIT_MODE: setup
+      DOCKER_INFLUXDB_INIT_USERNAME: admin
+      DOCKER_INFLUXDB_INIT_PASSWORD: apidirect_influx
+      DOCKER_INFLUXDB_INIT_ORG: apidirect
+      DOCKER_INFLUXDB_INIT_BUCKET: metrics
+      DOCKER_INFLUXDB_INIT_ADMIN_TOKEN: apidirect_influx_token
+    ports:
+      - "8086:8086"
+    volumes:
+      - influxdb_data:/var/lib/influxdb2
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8086/ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # API Backend Service
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: apidirect-api
+    environment:
+      DATABASE_URL: postgresql://apidirect:apidirect_password@postgres:5432/apidirect
+      REDIS_URL: redis://redis:6379
+      INFLUXDB_URL: http://influxdb:8086
+      INFLUXDB_TOKEN: apidirect_influx_token
+      INFLUXDB_ORG: apidirect
+      INFLUXDB_BUCKET: metrics
+      JWT_SECRET: your_jwt_secret_here
+      STRIPE_SECRET_KEY: sk_test_your_stripe_key_here
+      ENVIRONMENT: development
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      influxdb:
+        condition: service_healthy
+    volumes:
+      - ./api:/app
+      - /app/__pycache__
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Nginx API Gateway (Optional, for production)
+  nginx:
+    image: nginx:alpine
+    container_name: apidirect-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./nginx/ssl:/etc/nginx/ssl
+    depends_on:
+      - api
+    profiles:
+      - production
+
+  # Analytics Worker (Background Job Processing)
+  analytics-worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: apidirect-analytics-worker
+    environment:
+      DATABASE_URL: postgresql://apidirect:apidirect_password@postgres:5432/apidirect
+      REDIS_URL: redis://redis:6379
+      INFLUXDB_URL: http://influxdb:8086
+      INFLUXDB_TOKEN: apidirect_influx_token
+      INFLUXDB_ORG: apidirect
+      INFLUXDB_BUCKET: metrics
+      WORKER_TYPE: analytics
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      influxdb:
+        condition: service_healthy
+    volumes:
+      - ./workers:/app
+    command: python analytics_worker.py
+    profiles:
+      - workers
+
+  # Billing Worker (Stripe Integration, Payouts)
+  billing-worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: apidirect-billing-worker
+    environment:
+      DATABASE_URL: postgresql://apidirect:apidirect_password@postgres:5432/apidirect
+      REDIS_URL: redis://redis:6379
+      STRIPE_SECRET_KEY: sk_test_your_stripe_key_here
+      WORKER_TYPE: billing
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./workers:/app
+    command: python billing_worker.py
+    profiles:
+      - workers
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  influxdb_data:
+    driver: local
+
+networks:
+  default:
+    name: apidirect-network

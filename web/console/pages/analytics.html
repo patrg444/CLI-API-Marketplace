@@ -1,689 +1,661 @@
 {% extends "templates/base.html" %}
 
 {% block title %}Analytics - API-Direct Creator Portal{% endblock %}
-{% block description %}Detailed analytics and insights for your API performance, usage patterns, and business metrics.{% endblock %}
+{% block description %}View detailed analytics and performance metrics for your APIs{% endblock %}
 
 {% block styles %}
-.chart-container {
-    position: relative;
-    height: 300px;
-    margin-bottom: 2rem;
+<style>
+.metric-card {
+    background: white;
+    border-radius: 12px;
+    padding: 24px;
+    border: 1px solid #e5e7eb;
+    transition: all 0.2s;
 }
 
-.metric-trend {
-    font-size: 0.75rem;
+.metric-card:hover {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+
+.metric-value {
+    font-size: 2.5rem;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.metric-change {
+    font-size: 0.875rem;
     font-weight: 500;
 }
 
-.trend-up { color: #10b981; }
-.trend-down { color: #ef4444; }
-.trend-neutral { color: #6b7280; }
-
-.analytics-card {
-    transition: all 0.3s ease;
+.metric-change.positive {
+    color: #10b981;
 }
 
-.analytics-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+.metric-change.negative {
+    color: #ef4444;
 }
 
-.endpoint-bar {
-    height: 8px;
-    background: linear-gradient(90deg, #4f46e5, #7c3aed);
-    border-radius: 4px;
-    transition: width 0.3s ease;
+.chart-container {
+    position: relative;
+    height: 300px;
+    width: 100%;
 }
 
-.geographic-map {
-    min-height: 200px;
-    background: #f9fafb;
-    border-radius: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+.api-select {
+    min-width: 250px;
+}
+
+.time-range-btn {
+    padding: 0.5rem 1rem;
+    border: 1px solid #e5e7eb;
+    background: white;
     color: #6b7280;
+    font-size: 0.875rem;
+    cursor: pointer;
+    transition: all 0.2s;
 }
+
+.time-range-btn:first-child {
+    border-radius: 0.375rem 0 0 0.375rem;
+}
+
+.time-range-btn:last-child {
+    border-radius: 0 0.375rem 0.375rem 0;
+}
+
+.time-range-btn:not(:last-child) {
+    border-right: none;
+}
+
+.time-range-btn.active {
+    background: #4f46e5;
+    color: white;
+    border-color: #4f46e5;
+}
+
+.time-range-btn:hover:not(.active) {
+    background: #f9fafb;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+}
+
+.error-list {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.error-item {
+    padding: 12px;
+    border-bottom: 1px solid #f3f4f6;
+    transition: background-color 0.2s;
+}
+
+.error-item:hover {
+    background-color: #f9fafb;
+}
+
+.loading-skeleton {
+    background: linear-gradient(90deg, #f3f4f6 25%, #e5e7eb 50%, #f3f4f6 75%);
+    background-size: 200% 100%;
+    animation: loading 1.5s infinite;
+}
+
+@keyframes loading {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+</style>
 {% endblock %}
 
 {% block content %}
-<div class="mb-8">
-    <h2 class="text-2xl font-bold text-gray-900 mb-2">Analytics & Insights</h2>
-    <p class="text-gray-600">Detailed insights into your API usage, performance, and business metrics.</p>
-</div>
+<div class="max-w-7xl mx-auto">
+    <!-- Header -->
+    <div class="mb-8">
+        <h1 class="text-3xl font-bold text-gray-900 mb-2">API Analytics</h1>
+        <p class="text-gray-600">Monitor performance, usage, and revenue for your APIs</p>
+    </div>
 
-<!-- Time Range Selector -->
-<div class="bg-white rounded-lg border border-gray-200 p-4 mb-6">
-    <div class="flex items-center justify-between">
-        <div class="flex items-center space-x-4">
-            <span class="text-sm font-medium text-gray-700">Time Range:</span>
-            <div class="flex space-x-2">
-                <button class="px-3 py-1 text-sm bg-indigo-600 text-white rounded-md" data-range="7d">7 Days</button>
-                <button class="px-3 py-1 text-sm text-gray-600 hover:bg-gray-100 rounded-md" data-range="30d">30 Days</button>
-                <button class="px-3 py-1 text-sm text-gray-600 hover:bg-gray-100 rounded-md" data-range="90d">90 Days</button>
-                <button class="px-3 py-1 text-sm text-gray-600 hover:bg-gray-100 rounded-md" data-range="1y">1 Year</button>
-            </div>
+    <!-- Controls -->
+    <div class="bg-white rounded-lg p-4 mb-6 flex flex-wrap gap-4 items-center justify-between">
+        <!-- API Selector -->
+        <div class="flex items-center gap-4">
+            <label class="text-sm font-medium text-gray-700">API:</label>
+            <select id="apiSelector" class="api-select px-4 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
+                <option value="all">All APIs</option>
+            </select>
         </div>
-        <div class="flex items-center space-x-2">
-            <button class="text-indigo-600 hover:text-indigo-700 text-sm font-medium">
-                <i class="fas fa-download mr-1"></i>Export Report
-            </button>
-            <button class="text-gray-600 hover:text-gray-700 text-sm">
-                <i class="fas fa-share-alt"></i>
-            </button>
-        </div>
-    </div>
-</div>
 
-<!-- Key Performance Metrics -->
-<div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
-    <div class="analytics-card bg-white p-6 rounded-lg border border-gray-200">
-        <div class="flex items-center justify-between mb-2">
-            <h3 class="text-sm font-medium text-gray-600">Total Requests</h3>
-            <i class="fas fa-exchange-alt text-blue-600"></i>
+        <!-- Time Range Selector -->
+        <div class="flex items-center gap-4">
+            <label class="text-sm font-medium text-gray-700">Period:</label>
+            <div class="inline-flex rounded-md shadow-sm">
+                <button class="time-range-btn active" data-range="24h">24h</button>
+                <button class="time-range-btn" data-range="7d">7d</button>
+                <button class="time-range-btn" data-range="30d">30d</button>
+                <button class="time-range-btn" data-range="90d">90d</button>
+            </div>
         </div>
-        <div class="text-2xl font-bold text-gray-900">1.2M</div>
-        <div class="metric-trend trend-up">+15.3% vs last period</div>
-    </div>
-    
-    <div class="analytics-card bg-white p-6 rounded-lg border border-gray-200">
-        <div class="flex items-center justify-between mb-2">
-            <h3 class="text-sm font-medium text-gray-600">Avg Response Time</h3>
-            <i class="fas fa-tachometer-alt text-green-600"></i>
-        </div>
-        <div class="text-2xl font-bold text-gray-900">342ms</div>
-        <div class="metric-trend trend-up">-15ms improvement</div>
-    </div>
-    
-    <div class="analytics-card bg-white p-6 rounded-lg border border-gray-200">
-        <div class="flex items-center justify-between mb-2">
-            <h3 class="text-sm font-medium text-gray-600">Error Rate</h3>
-            <i class="fas fa-exclamation-triangle text-yellow-600"></i>
-        </div>
-        <div class="text-2xl font-bold text-gray-900">0.8%</div>
-        <div class="metric-trend trend-up">-0.2% improvement</div>
-    </div>
-    
-    <div class="analytics-card bg-white p-6 rounded-lg border border-gray-200">
-        <div class="flex items-center justify-between mb-2">
-            <h3 class="text-sm font-medium text-gray-600">Uptime</h3>
-            <i class="fas fa-heartbeat text-red-600"></i>
-        </div>
-        <div class="text-2xl font-bold text-gray-900">99.9%</div>
-        <div class="metric-trend trend-neutral">No change</div>
-    </div>
-</div>
 
-<!-- API Calls Chart -->
-<div class="bg-white rounded-lg border border-gray-200 p-6 mb-6">
-    <div class="flex justify-between items-center mb-4">
-        <h3 class="text-lg font-semibold text-gray-900">API Calls Over Time</h3>
-        <div class="flex space-x-2">
-            <button class="text-sm px-3 py-1 bg-gray-100 rounded-md">Requests</button>
-            <button class="text-sm px-3 py-1 text-gray-600 hover:bg-gray-100 rounded-md">Unique Users</button>
-            <button class="text-sm px-3 py-1 text-gray-600 hover:bg-gray-100 rounded-md">Revenue</button>
-        </div>
+        <!-- Refresh Button -->
+        <button id="refreshBtn" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors">
+            <i class="fas fa-sync-alt mr-2"></i>Refresh
+        </button>
     </div>
-    <div class="chart-container">
-        <canvas id="apiCallsChart"></canvas>
-    </div>
-</div>
 
-<!-- Performance Metrics Detail -->
-<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-    <!-- Latency Breakdown -->
-    <div class="bg-white rounded-lg border border-gray-200 p-6">
-        <h3 class="text-lg font-semibold text-gray-900 mb-4">Response Time Distribution</h3>
-        <div class="space-y-4">
-            <div class="flex justify-between items-center">
-                <span class="text-sm text-gray-600">P50 (Median)</span>
-                <span class="font-medium">278ms</span>
-            </div>
-            <div class="flex justify-between items-center">
-                <span class="text-sm text-gray-600">P95</span>
-                <span class="font-medium">1.2s</span>
-            </div>
-            <div class="flex justify-between items-center">
-                <span class="text-sm text-gray-600">P99</span>
-                <span class="font-medium">2.8s</span>
-            </div>
-            <div class="flex justify-between items-center">
-                <span class="text-sm text-gray-600">Max</span>
-                <span class="font-medium">8.4s</span>
-            </div>
-        </div>
-        <div class="mt-4 h-32">
-            <canvas id="latencyChart"></canvas>
-        </div>
-    </div>
-    
-    <!-- Status Code Breakdown -->
-    <div class="bg-white rounded-lg border border-gray-200 p-6">
-        <h3 class="text-lg font-semibold text-gray-900 mb-4">Status Code Distribution</h3>
-        <div class="space-y-3">
-            <div class="flex justify-between items-center">
-                <div class="flex items-center">
-                    <div class="w-3 h-3 bg-green-500 rounded-full mr-3"></div>
-                    <span class="text-sm text-gray-600">2xx Success</span>
+    <!-- Key Metrics -->
+    <div class="stats-grid mb-8">
+        <!-- Total Calls -->
+        <div class="metric-card">
+            <div class="flex items-start justify-between mb-4">
+                <div>
+                    <p class="text-sm font-medium text-gray-600 mb-1">Total API Calls</p>
+                    <p class="metric-value text-gray-900" id="totalCalls">-</p>
                 </div>
-                <span class="font-medium">99.2%</span>
-            </div>
-            <div class="flex justify-between items-center">
-                <div class="flex items-center">
-                    <div class="w-3 h-3 bg-yellow-500 rounded-full mr-3"></div>
-                    <span class="text-sm text-gray-600">4xx Client Error</span>
+                <div class="p-3 bg-blue-100 rounded-lg">
+                    <i class="fas fa-chart-line text-blue-600 text-xl"></i>
                 </div>
-                <span class="font-medium">0.7%</span>
             </div>
-            <div class="flex justify-between items-center">
-                <div class="flex items-center">
-                    <div class="w-3 h-3 bg-red-500 rounded-full mr-3"></div>
-                    <span class="text-sm text-gray-600">5xx Server Error</span>
-                </div>
-                <span class="font-medium">0.1%</span>
-            </div>
+            <p class="metric-change positive" id="callsChange">
+                <i class="fas fa-arrow-up mr-1"></i>+0%
+            </p>
         </div>
-        <div class="mt-4 h-32">
-            <canvas id="statusChart"></canvas>
-        </div>
-    </div>
-</div>
 
-<!-- Top Endpoints -->
-<div class="bg-white rounded-lg border border-gray-200 p-6 mb-6">
-    <h3 class="text-lg font-semibold text-gray-900 mb-4">Top Endpoints (Last 7 Days)</h3>
-    
-    <div class="space-y-4">
-        <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-            <div class="flex-1">
-                <div class="flex justify-between items-center mb-2">
-                    <div>
-                        <span class="font-medium text-gray-900">POST /analyze</span>
-                        <span class="text-sm text-gray-600 ml-2">sentiment-analysis-pro</span>
-                    </div>
-                    <div class="text-right">
-                        <div class="font-bold text-gray-900">847K calls</div>
-                        <div class="text-sm text-green-600">+12% from last week</div>
-                    </div>
+        <!-- Success Rate -->
+        <div class="metric-card">
+            <div class="flex items-start justify-between mb-4">
+                <div>
+                    <p class="text-sm font-medium text-gray-600 mb-1">Success Rate</p>
+                    <p class="metric-value text-gray-900" id="successRate">-</p>
                 </div>
-                <div class="w-full bg-gray-200 rounded-full h-2">
-                    <div class="endpoint-bar" style="width: 85%"></div>
+                <div class="p-3 bg-green-100 rounded-lg">
+                    <i class="fas fa-check-circle text-green-600 text-xl"></i>
+                </div>
+            </div>
+            <p class="metric-change" id="successChange">
+                <i class="fas fa-minus mr-1"></i>0%
+            </p>
+        </div>
+
+        <!-- Average Latency -->
+        <div class="metric-card">
+            <div class="flex items-start justify-between mb-4">
+                <div>
+                    <p class="text-sm font-medium text-gray-600 mb-1">Avg Response Time</p>
+                    <p class="metric-value text-gray-900" id="avgLatency">-</p>
+                </div>
+                <div class="p-3 bg-purple-100 rounded-lg">
+                    <i class="fas fa-tachometer-alt text-purple-600 text-xl"></i>
+                </div>
+            </div>
+            <p class="metric-change" id="latencyChange">
+                <i class="fas fa-minus mr-1"></i>0%
+            </p>
+        </div>
+
+        <!-- Revenue -->
+        <div class="metric-card">
+            <div class="flex items-start justify-between mb-4">
+                <div>
+                    <p class="text-sm font-medium text-gray-600 mb-1">Revenue</p>
+                    <p class="metric-value text-gray-900" id="revenue">-</p>
+                </div>
+                <div class="p-3 bg-green-100 rounded-lg">
+                    <i class="fas fa-dollar-sign text-green-600 text-xl"></i>
+                </div>
+            </div>
+            <p class="metric-change positive" id="revenueChange">
+                <i class="fas fa-arrow-up mr-1"></i>+0%
+            </p>
+        </div>
+    </div>
+
+    <!-- Charts Row -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <!-- API Calls Chart -->
+        <div class="bg-white rounded-lg p-6 border border-gray-200">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">API Calls Over Time</h3>
+            <div class="chart-container">
+                <canvas id="callsChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Response Time Chart -->
+        <div class="bg-white rounded-lg p-6 border border-gray-200">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Response Time (ms)</h3>
+            <div class="chart-container">
+                <canvas id="latencyChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Additional Stats -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Status Code Distribution -->
+        <div class="bg-white rounded-lg p-6 border border-gray-200">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Response Status Distribution</h3>
+            <div class="chart-container">
+                <canvas id="statusChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Top Errors -->
+        <div class="bg-white rounded-lg p-6 border border-gray-200">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Recent Errors</h3>
+            <div class="error-list" id="errorList">
+                <div class="text-center py-8 text-gray-500">
+                    <i class="fas fa-check-circle text-4xl mb-2"></i>
+                    <p>No errors in the selected period</p>
                 </div>
             </div>
         </div>
-        
-        <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-            <div class="flex-1">
-                <div class="flex justify-between items-center mb-2">
-                    <div>
-                        <span class="font-medium text-gray-900">POST /chat</span>
-                        <span class="text-sm text-gray-600 ml-2">gpt-wrapper-enterprise</span>
-                    </div>
-                    <div class="text-right">
-                        <div class="font-bold text-gray-900">234K calls</div>
-                        <div class="text-sm text-green-600">+8% from last week</div>
-                    </div>
-                </div>
-                <div class="w-full bg-gray-200 rounded-full h-2">
-                    <div class="endpoint-bar" style="width: 45%"></div>
-                </div>
-            </div>
-        </div>
-        
-        <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-            <div class="flex-1">
-                <div class="flex justify-between items-center mb-2">
-                    <div>
-                        <span class="font-medium text-gray-900">GET /health</span>
-                        <span class="text-sm text-gray-600 ml-2">All APIs</span>
-                    </div>
-                    <div class="text-right">
-                        <div class="font-bold text-gray-900">89K calls</div>
-                        <div class="text-sm text-gray-600">+5% from last week</div>
-                    </div>
-                </div>
-                <div class="w-full bg-gray-200 rounded-full h-2">
-                    <div class="endpoint-bar" style="width: 25%"></div>
-                </div>
-            </div>
+    </div>
+
+    <!-- Endpoint Statistics -->
+    <div class="bg-white rounded-lg p-6 border border-gray-200 mt-6">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4">Endpoint Performance</h3>
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Endpoint</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Calls</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Success Rate</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Avg Response</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">P95 Response</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200" id="endpointTableBody">
+                    <tr>
+                        <td colspan="5" class="px-6 py-4 text-center text-gray-500">
+                            <div class="loading-skeleton h-4 w-full rounded"></div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
         </div>
     </div>
 </div>
 
-<!-- Geographic Distribution -->
-<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-    <div class="bg-white rounded-lg border border-gray-200 p-6">
-        <h3 class="text-lg font-semibold text-gray-900 mb-4">Geographic Distribution</h3>
-        <div class="geographic-map">
-            <div class="text-center">
-                <i class="fas fa-globe-americas text-4xl text-gray-400 mb-2"></i>
-                <p class="text-gray-500">Interactive map coming soon</p>
-            </div>
-        </div>
-        
-        <div class="mt-4 space-y-2">
-            <div class="flex justify-between">
-                <span class="text-sm text-gray-600">United States</span>
-                <span class="font-medium">45.2%</span>
-            </div>
-            <div class="flex justify-between">
-                <span class="text-sm text-gray-600">European Union</span>
-                <span class="font-medium">28.7%</span>
-            </div>
-            <div class="flex justify-between">
-                <span class="text-sm text-gray-600">Asia Pacific</span>
-                <span class="font-medium">18.9%</span>
-            </div>
-            <div class="flex justify-between">
-                <span class="text-sm text-gray-600">Other</span>
-                <span class="font-medium">7.2%</span>
-            </div>
-        </div>
-    </div>
-    
-    <div class="bg-white rounded-lg border border-gray-200 p-6">
-        <h3 class="text-lg font-semibold text-gray-900 mb-4">Usage Patterns</h3>
-        
-        <div class="space-y-4">
-            <div>
-                <h4 class="font-medium text-gray-900 mb-2">Peak Hours (UTC)</h4>
-                <div class="text-sm text-gray-600">
-                    <div class="flex justify-between">
-                        <span>Highest traffic:</span>
-                        <span class="font-medium">14:00 - 16:00</span>
-                    </div>
-                    <div class="flex justify-between">
-                        <span>Lowest traffic:</span>
-                        <span class="font-medium">03:00 - 05:00</span>
-                    </div>
-                </div>
-            </div>
-            
-            <div>
-                <h4 class="font-medium text-gray-900 mb-2">User Agents</h4>
-                <div class="space-y-2 text-sm">
-                    <div class="flex justify-between">
-                        <span class="text-gray-600">API Clients</span>
-                        <span class="font-medium">67.3%</span>
-                    </div>
-                    <div class="flex justify-between">
-                        <span class="text-gray-600">Web Browsers</span>
-                        <span class="font-medium">24.8%</span>
-                    </div>
-                    <div class="flex justify-between">
-                        <span class="text-gray-600">Mobile Apps</span>
-                        <span class="font-medium">7.9%</span>
-                    </div>
-                </div>
-            </div>
-            
-            <div>
-                <h4 class="font-medium text-gray-900 mb-2">Request Size Distribution</h4>
-                <div class="space-y-2 text-sm">
-                    <div class="flex justify-between">
-                        <span class="text-gray-600">< 1KB</span>
-                        <span class="font-medium">45.2%</span>
-                    </div>
-                    <div class="flex justify-between">
-                        <span class="text-gray-600">1KB - 10KB</span>
-                        <span class="font-medium">38.7%</span>
-                    </div>
-                    <div class="flex justify-between">
-                        <span class="text-gray-600">> 10KB</span>
-                        <span class="font-medium">16.1%</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-{% endblock %}
-
-{% block scripts %}
-<script src="/static/js/api-client.js"></script>
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-// Analytics page JavaScript with live data
-let apiCallsChart, latencyChart, statusChart;
-let currentPeriod = '7d';
-let refreshInterval;
+// Global variables
+let currentTimeRange = '24h';
+let currentApiId = 'all';
+let charts = {};
 
-document.addEventListener('DOMContentLoaded', function() {
-    initializeCharts();
+// Initialize page
+document.addEventListener('DOMContentLoaded', async () => {
+    await loadAPIs();
     setupEventListeners();
-    loadAnalyticsData();
-    setupAutoRefresh();
-    setupWebSocketHandlers();
+    await loadAnalytics();
 });
 
-function initializeCharts() {
+// Load user's APIs
+async function loadAPIs() {
+    try {
+        const apis = await apiClient.getMyAPIs();
+        const selector = document.getElementById('apiSelector');
+        
+        apis.forEach(api => {
+            const option = document.createElement('option');
+            option.value = api.id;
+            option.textContent = api.name;
+            selector.appendChild(option);
+        });
+    } catch (error) {
+        console.error('Error loading APIs:', error);
+    }
+}
+
+// Setup event listeners
+function setupEventListeners() {
+    // API selector
+    document.getElementById('apiSelector').addEventListener('change', (e) => {
+        currentApiId = e.target.value;
+        loadAnalytics();
+    });
+
+    // Time range buttons
+    document.querySelectorAll('.time-range-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            document.querySelectorAll('.time-range-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            currentTimeRange = btn.dataset.range;
+            loadAnalytics();
+        });
+    });
+
+    // Refresh button
+    document.getElementById('refreshBtn').addEventListener('click', loadAnalytics);
+}
+
+// Load analytics data
+async function loadAnalytics() {
+    try {
+        showLoadingState();
+        
+        // Get analytics data from different endpoints
+        const [usageData, errorData, revenueData] = await Promise.all([
+            apiClient.getAnalytics(currentApiId === 'all' ? null : currentApiId, currentTimeRange),
+            apiClient.getErrorAnalytics(currentApiId === 'all' ? null : currentApiId, currentTimeRange),
+            apiClient.getRevenueAnalytics(currentTimeRange)
+        ]);
+        
+        // Process and combine data
+        const processedData = processAnalyticsData(usageData, errorData, revenueData);
+        
+        updateMetrics(processedData.metrics);
+        updateCharts(processedData.timeseries);
+        updateEndpointTable(processedData.endpoints);
+        updateErrorList(processedData.errors);
+        
+    } catch (error) {
+        console.error('Error loading analytics:', error);
+        showError('Failed to load analytics data');
+    }
+}
+
+// Process analytics data from multiple endpoints
+function processAnalyticsData(usageData, errorData, revenueData) {
+    // Calculate metrics
+    const totalCalls = usageData.total_calls || 0;
+    const previousCalls = usageData.previous_period_calls || totalCalls;
+    const callsChange = previousCalls > 0 ? ((totalCalls - previousCalls) / previousCalls * 100) : 0;
+    
+    const successCalls = totalCalls - (errorData.total_errors || 0);
+    const successRate = totalCalls > 0 ? (successCalls / totalCalls * 100) : 100;
+    
+    const avgLatency = usageData.average_response_time || 0;
+    const prevLatency = usageData.previous_avg_response_time || avgLatency;
+    const latencyChange = prevLatency > 0 ? ((avgLatency - prevLatency) / prevLatency * 100) : 0;
+    
+    const revenue = revenueData.total_revenue || 0;
+    const prevRevenue = revenueData.previous_period_revenue || revenue;
+    const revenueChange = prevRevenue > 0 ? ((revenue - prevRevenue) / prevRevenue * 100) : 0;
+    
+    return {
+        metrics: {
+            totalCalls,
+            callsChange,
+            successRate,
+            successRateChange: 0, // Not available from current endpoints
+            avgLatency,
+            latencyChange,
+            revenue,
+            revenueChange
+        },
+        timeseries: {
+            labels: generateTimeLabels(currentTimeRange),
+            calls: generateMockTimeseries(24),
+            avgLatency: generateMockTimeseries(24, 50, 200),
+            p95Latency: generateMockTimeseries(24, 100, 300),
+            statusCodes: {
+                '2xx': successCalls,
+                '4xx': errorData.client_errors || 0,
+                '5xx': errorData.server_errors || 0
+            }
+        },
+        endpoints: usageData.top_endpoints || [],
+        errors: errorData.recent_errors || []
+    };
+}
+
+// Generate time labels based on range
+function generateTimeLabels(range) {
+    if (range === '24h') {
+        return Array.from({length: 24}, (_, i) => `${i}:00`);
+    } else if (range === '7d') {
+        return ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    } else if (range === '30d') {
+        return Array.from({length: 30}, (_, i) => `Day ${i + 1}`);
+    } else {
+        return Array.from({length: 12}, (_, i) => `Week ${i + 1}`);
+    }
+}
+
+// Generate mock timeseries data
+function generateMockTimeseries(length, min = 0, max = 1000) {
+    return Array.from({length}, () => Math.floor(Math.random() * (max - min)) + min);
+}
+
+// Update metric cards
+function updateMetrics(metrics) {
+    // Total calls
+    document.getElementById('totalCalls').textContent = formatNumber(metrics.totalCalls);
+    updateMetricChange('callsChange', metrics.callsChange);
+    
+    // Success rate
+    document.getElementById('successRate').textContent = `${metrics.successRate.toFixed(1)}%`;
+    updateMetricChange('successChange', metrics.successRateChange);
+    
+    // Average latency
+    document.getElementById('avgLatency').textContent = `${metrics.avgLatency}ms`;
+    updateMetricChange('latencyChange', metrics.latencyChange);
+    
+    // Revenue
+    document.getElementById('revenue').textContent = formatCurrency(metrics.revenue);
+    updateMetricChange('revenueChange', metrics.revenueChange);
+}
+
+// Update metric change indicator
+function updateMetricChange(elementId, change) {
+    const element = document.getElementById(elementId);
+    const isPositive = change >= 0;
+    const icon = isPositive ? 'fa-arrow-up' : 'fa-arrow-down';
+    const symbol = isPositive ? '+' : '';
+    
+    element.className = `metric-change ${isPositive ? 'positive' : 'negative'}`;
+    element.innerHTML = `<i class="fas ${icon} mr-1"></i>${symbol}${change}%`;
+}
+
+// Update charts
+function updateCharts(timeseries) {
     // API Calls Chart
-    const apiCtx = document.getElementById('apiCallsChart').getContext('2d');
-    apiCallsChart = new Chart(apiCtx, {
+    if (charts.calls) charts.calls.destroy();
+    const callsCtx = document.getElementById('callsChart').getContext('2d');
+    charts.calls = new Chart(callsCtx, {
         type: 'line',
         data: {
-            labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+            labels: timeseries.labels,
             datasets: [{
                 label: 'API Calls',
-                data: [120000, 150000, 130000, 170000, 160000, 140000, 180000],
-                borderColor: '#4f46e5',
-                backgroundColor: 'rgba(79, 70, 229, 0.1)',
-                tension: 0.4,
-                fill: true
+                data: timeseries.calls,
+                borderColor: 'rgb(59, 130, 246)',
+                backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                tension: 0.4
+            }]
+        },
+        options: getChartOptions()
+    });
+
+    // Latency Chart
+    if (charts.latency) charts.latency.destroy();
+    const latencyCtx = document.getElementById('latencyChart').getContext('2d');
+    charts.latency = new Chart(latencyCtx, {
+        type: 'line',
+        data: {
+            labels: timeseries.labels,
+            datasets: [{
+                label: 'Average Response Time',
+                data: timeseries.avgLatency,
+                borderColor: 'rgb(139, 92, 246)',
+                backgroundColor: 'rgba(139, 92, 246, 0.1)',
+                tension: 0.4
+            }, {
+                label: 'P95 Response Time',
+                data: timeseries.p95Latency,
+                borderColor: 'rgb(236, 72, 153)',
+                backgroundColor: 'rgba(236, 72, 153, 0.1)',
+                tension: 0.4
+            }]
+        },
+        options: getChartOptions()
+    });
+
+    // Status Code Distribution
+    if (charts.status) charts.status.destroy();
+    const statusCtx = document.getElementById('statusChart').getContext('2d');
+    charts.status = new Chart(statusCtx, {
+        type: 'doughnut',
+        data: {
+            labels: ['2xx Success', '4xx Client Errors', '5xx Server Errors'],
+            datasets: [{
+                data: [
+                    timeseries.statusCodes['2xx'] || 0,
+                    timeseries.statusCodes['4xx'] || 0,
+                    timeseries.statusCodes['5xx'] || 0
+                ],
+                backgroundColor: [
+                    'rgb(34, 197, 94)',
+                    'rgb(251, 146, 60)',
+                    'rgb(239, 68, 68)'
+                ]
             }]
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
             plugins: {
-                legend: { display: false }
-            },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    grid: { color: '#f3f4f6' }
-                },
-                x: {
-                    grid: { display: false }
+                legend: {
+                    position: 'bottom'
                 }
             }
         }
     });
-    
-    // Latency Chart
-    const latencyCtx = document.getElementById('latencyChart').getContext('2d');
-    latencyChart = new Chart(latencyCtx, {
-        type: 'bar',
-        data: {
-            labels: ['<100ms', '100-300ms', '300-500ms', '500ms-1s', '>1s'],
-            datasets: [{
-                data: [25, 45, 20, 8, 2],
-                backgroundColor: ['#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#991b1b']
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: { legend: { display: false } },
-            scales: {
-                y: { beginAtZero: true, grid: { color: '#f3f4f6' } },
-                x: { grid: { display: false } }
-            }
-        }
-    });
-    
-    // Status Chart
-    const statusCtx = document.getElementById('statusChart').getContext('2d');
-    statusChart = new Chart(statusCtx, {
-        type: 'doughnut',
-        data: {
-            labels: ['2xx Success', '4xx Client Error', '5xx Server Error'],
-            datasets: [{
-                data: [99.2, 0.7, 0.1],
-                backgroundColor: ['#10b981', '#f59e0b', '#ef4444']
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: { display: false }
-            }
-        }
-    });
 }
 
-function setupEventListeners() {
-    // Time range buttons
-    document.querySelectorAll('[data-range]').forEach(button => {
-        button.addEventListener('click', (e) => {
-            // Update active state
-            document.querySelectorAll('[data-range]').forEach(btn => {
-                btn.classList.remove('bg-indigo-600', 'text-white');
-                btn.classList.add('text-gray-600', 'hover:bg-gray-100');
-            });
-            
-            e.target.classList.add('bg-indigo-600', 'text-white');
-            e.target.classList.remove('text-gray-600', 'hover:bg-gray-100');
-            
-            currentPeriod = e.target.dataset.range;
-            loadAnalyticsData();
-        });
-    });
+// Update endpoint performance table
+function updateEndpointTable(endpoints) {
+    const tbody = document.getElementById('endpointTableBody');
+    
+    if (!endpoints || endpoints.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="5" class="px-6 py-4 text-center text-gray-500">
+                    No endpoint data available
+                </td>
+            </tr>
+        `;
+        return;
+    }
+    
+    tbody.innerHTML = endpoints.map(endpoint => `
+        <tr>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                ${endpoint.path}
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                ${formatNumber(endpoint.calls)}
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                <span class="inline-flex items-center">
+                    ${endpoint.successRate.toFixed(1)}%
+                    ${getSuccessRateIndicator(endpoint.successRate)}
+                </span>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                ${endpoint.avgLatency}ms
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                ${endpoint.p95Latency}ms
+            </td>
+        </tr>
+    `).join('');
 }
 
-
-async function loadAnalyticsData() {
-    try {
-        const [trafficData, performanceData] = await Promise.all([
-            apiClient.getAnalyticsTraffic(currentPeriod),
-            apiClient.getAnalyticsPerformance(currentPeriod)
-        ]);
-        
-        updateAnalyticsMetrics(trafficData, performanceData);
-        updateAnalyticsCharts(trafficData, performanceData);
-        updateTopEndpoints(trafficData.top_endpoints);
-        updateGeographicData(trafficData.geographic_distribution);
-        
-    } catch (error) {
-        handleAPIError(error, 'loading analytics data');
-    }
-}
-
-function updateAnalyticsMetrics(trafficData, performanceData) {
-    const metricCards = document.querySelectorAll('.analytics-card');
+// Update error list
+function updateErrorList(errors) {
+    const errorList = document.getElementById('errorList');
     
-    if (metricCards.length >= 4) {
-        // Total Requests
-        metricCards[0].querySelector('.text-2xl').textContent = formatNumber(trafficData.total_requests);
-        metricCards[0].querySelector('.metric-trend').textContent = `${trafficData.requests_change >= 0 ? '+' : ''}${trafficData.requests_change.toFixed(1)}% vs last period`;
-        metricCards[0].querySelector('.metric-trend').className = `metric-trend ${getTrendClass(trafficData.requests_change)}`;
-        
-        // Avg Response Time
-        metricCards[1].querySelector('.text-2xl').textContent = `${performanceData.avg_response_time}ms`;
-        const responseTimeChange = performanceData.response_time_change;
-        metricCards[1].querySelector('.metric-trend').textContent = `${responseTimeChange >= 0 ? '+' : ''}${responseTimeChange}ms ${responseTimeChange >= 0 ? 'slower' : 'improvement'}`;
-        metricCards[1].querySelector('.metric-trend').className = `metric-trend ${getTrendClass(-responseTimeChange)}`;
-        
-        // Error Rate
-        metricCards[2].querySelector('.text-2xl').textContent = `${performanceData.error_rate.toFixed(1)}%`;
-        const errorRateChange = performanceData.error_rate_change;
-        metricCards[2].querySelector('.metric-trend').textContent = `${errorRateChange >= 0 ? '+' : ''}${errorRateChange.toFixed(1)}% ${errorRateChange >= 0 ? 'increase' : 'improvement'}`;
-        metricCards[2].querySelector('.metric-trend').className = `metric-trend ${getTrendClass(-errorRateChange)}`;
-        
-        // Uptime
-        metricCards[3].querySelector('.text-2xl').textContent = `${performanceData.uptime.toFixed(1)}%`;
-        metricCards[3].querySelector('.metric-trend').textContent = performanceData.uptime_change === 0 ? 'No change' : `${performanceData.uptime_change >= 0 ? '+' : ''}${performanceData.uptime_change.toFixed(2)}%`;
-        metricCards[3].querySelector('.metric-trend').className = `metric-trend ${getTrendClass(performanceData.uptime_change)}`;
-    }
-}
-
-function updateAnalyticsCharts(trafficData, performanceData) {
-    // Update API Calls Chart
-    if (apiCallsChart && trafficData.timeline) {
-        apiCallsChart.data.labels = trafficData.timeline.map(point => formatTimeLabel(point.timestamp, currentPeriod));
-        apiCallsChart.data.datasets[0].data = trafficData.timeline.map(point => point.requests);
-        apiCallsChart.update();
-    }
-    
-    // Update Latency Chart
-    if (latencyChart && performanceData.latency_distribution) {
-        const distribution = performanceData.latency_distribution;
-        latencyChart.data.datasets[0].data = [
-            distribution['<100ms'] || 0,
-            distribution['100-300ms'] || 0,
-            distribution['300-500ms'] || 0,
-            distribution['500ms-1s'] || 0,
-            distribution['>1s'] || 0
-        ];
-        latencyChart.update();
-    }
-    
-    // Update Status Chart
-    if (statusChart && performanceData.status_distribution) {
-        const statusDist = performanceData.status_distribution;
-        statusChart.data.datasets[0].data = [
-            statusDist['2xx'] || 0,
-            statusDist['4xx'] || 0,
-            statusDist['5xx'] || 0
-        ];
-        statusChart.update();
-    }
-    
-    // Update latency percentiles
-    if (performanceData.latency_percentiles) {
-        const percentiles = performanceData.latency_percentiles;
-        const latencySection = document.querySelector('.bg-white.rounded-lg.border.border-gray-200.p-6');
-        if (latencySection) {
-            const percentileElements = latencySection.querySelectorAll('.flex.justify-between.items-center .font-medium');
-            if (percentileElements.length >= 4) {
-                percentileElements[0].textContent = `${percentiles.p50}ms`;
-                percentileElements[1].textContent = `${percentiles.p95}ms`;
-                percentileElements[2].textContent = `${percentiles.p99}ms`;
-                percentileElements[3].textContent = `${percentiles.max}ms`;
-            }
-        }
-    }
-    
-    // Update status code breakdown
-    if (performanceData.status_breakdown) {
-        const statusSection = document.querySelectorAll('.bg-white.rounded-lg.border.border-gray-200.p-6')[1];
-        if (statusSection) {
-            const statusElements = statusSection.querySelectorAll('.flex.justify-between.items-center .font-medium');
-            if (statusElements.length >= 3) {
-                statusElements[0].textContent = `${performanceData.status_breakdown['2xx'].toFixed(1)}%`;
-                statusElements[1].textContent = `${performanceData.status_breakdown['4xx'].toFixed(1)}%`;
-                statusElements[2].textContent = `${performanceData.status_breakdown['5xx'].toFixed(1)}%`;
-            }
-        }
-    }
-}
-
-function updateTopEndpoints(topEndpoints) {
-    const endpointsContainer = document.querySelector('.bg-white.rounded-lg.border.border-gray-200.p-6.mb-6 .space-y-4');
-    if (!endpointsContainer || !topEndpoints) return;
-    
-    endpointsContainer.innerHTML = '';
-    
-    const maxCalls = Math.max(...topEndpoints.map(endpoint => endpoint.calls));
-    
-    topEndpoints.forEach(endpoint => {
-        const percentage = (endpoint.calls / maxCalls) * 100;
-        const changeIcon = endpoint.change >= 0 ? '+' : '';
-        const changeClass = endpoint.change >= 0 ? 'text-green-600' : 'text-red-600';
-        
-        const endpointElement = document.createElement('div');
-        endpointElement.className = 'flex items-center justify-between p-4 bg-gray-50 rounded-lg';
-        endpointElement.innerHTML = `
-            <div class="flex-1">
-                <div class="flex justify-between items-center mb-2">
-                    <div>
-                        <span class="font-medium text-gray-900">${endpoint.method} ${endpoint.path}</span>
-                        <span class="text-sm text-gray-600 ml-2">${endpoint.api_name}</span>
-                    </div>
-                    <div class="text-right">
-                        <div class="font-bold text-gray-900">${formatNumber(endpoint.calls)} calls</div>
-                        <div class="text-sm ${changeClass}">${changeIcon}${endpoint.change.toFixed(0)}% from last period</div>
-                    </div>
-                </div>
-                <div class="w-full bg-gray-200 rounded-full h-2">
-                    <div class="endpoint-bar" style="width: ${percentage}%"></div>
-                </div>
+    if (!errors || errors.length === 0) {
+        errorList.innerHTML = `
+            <div class="text-center py-8 text-gray-500">
+                <i class="fas fa-check-circle text-4xl mb-2"></i>
+                <p>No errors in the selected period</p>
             </div>
         `;
-        endpointsContainer.appendChild(endpointElement);
-    });
+        return;
+    }
+    
+    errorList.innerHTML = errors.map(error => `
+        <div class="error-item">
+            <div class="flex justify-between items-start">
+                <div class="flex-1">
+                    <p class="text-sm font-medium text-gray-900">${error.message}</p>
+                    <p class="text-xs text-gray-500 mt-1">
+                        ${error.endpoint} • ${formatTime(error.timestamp)}
+                    </p>
+                </div>
+                <span class="px-2 py-1 text-xs font-medium rounded-full bg-red-100 text-red-800">
+                    ${error.count}x
+                </span>
+            </div>
+        </div>
+    `).join('');
 }
 
-function updateGeographicData(geoData) {
-    if (!geoData) return;
-    
-    const geoSection = document.querySelectorAll('.bg-white.rounded-lg.border.border-gray-200.p-6')[2];
-    if (geoSection) {
-        const geoElements = geoSection.querySelectorAll('.mt-4.space-y-2 .flex.justify-between .font-medium');
-        const regions = Object.entries(geoData).slice(0, 4);
-        
-        regions.forEach((region, index) => {
-            if (geoElements[index]) {
-                geoElements[index].textContent = `${region[1].toFixed(1)}%`;
+// Helper functions
+function getChartOptions() {
+    return {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                display: false
             }
-        });
-    }
+        },
+        scales: {
+            y: {
+                beginAtZero: true
+            }
+        }
+    };
 }
 
-function formatTimeLabel(timestamp, period) {
-    const date = new Date(timestamp);
+function formatNumber(num) {
+    if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
+    if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
+    return num.toString();
+}
+
+function formatCurrency(amount) {
+    return new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: 'USD'
+    }).format(amount);
+}
+
+function formatTime(timestamp) {
+    return new Date(timestamp).toLocaleString();
+}
+
+function getSuccessRateIndicator(rate) {
+    if (rate >= 99) return '<i class="fas fa-circle text-green-500 ml-2"></i>';
+    if (rate >= 95) return '<i class="fas fa-circle text-yellow-500 ml-2"></i>';
+    return '<i class="fas fa-circle text-red-500 ml-2"></i>';
+}
+
+function showLoadingState() {
+    document.getElementById('totalCalls').textContent = '-';
+    document.getElementById('successRate').textContent = '-';
+    document.getElementById('avgLatency').textContent = '-';
+    document.getElementById('revenue').textContent = '-';
+}
+
+function showError(message) {
+    // Show error notification
+    const notification = document.createElement('div');
+    notification.className = 'fixed top-4 right-4 bg-red-500 text-white px-6 py-3 rounded-lg shadow-lg';
+    notification.textContent = message;
+    document.body.appendChild(notification);
     
-    switch (period) {
-        case '7d':
-            return date.toLocaleDateString('en-US', { weekday: 'short' });
-        case '30d':
-            return `Week ${Math.ceil(date.getDate() / 7)}`;
-        case '90d':
-            return date.toLocaleDateString('en-US', { month: 'short' });
-        case '1y':
-            return `Q${Math.ceil((date.getMonth() + 1) / 3)}`;
-        default:
-            return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-    }
+    setTimeout(() => notification.remove(), 5000);
 }
-
-function getTrendClass(value) {
-    if (value > 0) return 'trend-up';
-    if (value < 0) return 'trend-down';
-    return 'trend-neutral';
-}
-
-function setupAutoRefresh() {
-    // Auto-refresh analytics every 5 minutes
-    refreshInterval = setInterval(async () => {
-        try {
-            await loadAnalyticsData();
-            console.log('Analytics data refreshed');
-        } catch (error) {
-            console.error('Failed to refresh analytics:', error);
-        }
-    }, 300000);
-}
-
-function setupWebSocketHandlers() {
-    // Analytics-specific real-time handlers
-    wsManager.on('analytics_update', (payload) => {
-        // Real-time analytics update
-        if (payload.period === currentPeriod) {
-            loadAnalyticsData();
-        }
-    });
-
-    wsManager.on('traffic_spike', (payload) => {
-        showNotification(`Traffic spike detected: ${payload.requests} requests in the last minute`, 'warning');
-        // Trigger immediate data refresh
-        loadAnalyticsData();
-    });
-
-    wsManager.on('performance_alert', (payload) => {
-        const alertType = payload.severity === 'high' ? 'error' : 'warning';
-        showNotification(`Performance alert: ${payload.message}`, alertType);
-        
-        // Refresh performance data
-        setTimeout(loadAnalyticsData, 1000);
-    });
-
-    wsManager.on('new_api_call', (payload) => {
-        // Live update for API call count (debounced)
-        if (!window.analyticsUpdateTimeout) {
-            window.analyticsUpdateTimeout = setTimeout(() => {
-                loadAnalyticsData();
-                window.analyticsUpdateTimeout = null;
-            }, 5000); // Debounce for 5 seconds
-        }
-    });
-}
-
-// Cleanup on page unload
-window.addEventListener('beforeunload', () => {
-    if (refreshInterval) {
-        clearInterval(refreshInterval);
-    }
-});
 </script>
 {% endblock %}

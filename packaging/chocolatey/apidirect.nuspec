@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2015/06/nuspec.xsd">
+  <metadata>
+    <id>apidirect</id>
+    <version>1.0.0</version>
+    <title>API Direct CLI</title>
+    <authors>API Direct Team</authors>
+    <owners>api-direct</owners>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <licenseUrl>https://github.com/api-direct/cli/blob/main/LICENSE</licenseUrl>
+    <projectUrl>https://github.com/api-direct/cli</projectUrl>
+    <iconUrl>https://raw.githubusercontent.com/api-direct/cli/main/assets/icon.png</iconUrl>
+    <description>API Direct CLI - Rapid API deployment and marketplace management tool. Transform your code into deployed APIs in minutes.</description>
+    <summary>CLI tool for deploying and managing APIs with built-in marketplace features</summary>
+    <releaseNotes>https://github.com/api-direct/cli/releases/latest</releaseNotes>
+    <copyright>Copyright 2024 API Direct</copyright>
+    <tags>api deployment marketplace cli developer-tools</tags>
+    <packageSourceUrl>https://github.com/api-direct/cli</packageSourceUrl>
+    <docsUrl>https://docs.apidirect.io</docsUrl>
+    <bugTrackerUrl>https://github.com/api-direct/cli/issues</bugTrackerUrl>
+  </metadata>
+  <files>
+    <file src="tools\**" target="tools" />
+  </files>
+</package>

@@ -91,10 +91,26 @@
                 <div class="mb-8">
                     <h3 class="text-sm font-semibold text-gray-900 uppercase tracking-wide mb-3">Developer Tools</h3>
                     <ul class="space-y-1">
-                        <li><a href="#cli-setup" class="nav-item block px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md">CLI Setup</a></li>
+                        <li><a href="#deploy-api" class="nav-item block px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md">Deploy API</a></li>
+                        <li><a href="#import-api" class="nav-item block px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md">Import Project</a></li>
                         <li><a href="#api-keys" class="nav-item block px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md">API Keys</a></li>
                         <li><a href="#templates" class="nav-item block px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md">Templates</a></li>
-                        <li><a href="#logs" class="nav-item block px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md">Logs</a></li>
+                        <li><a href="#logs" class="nav-item block px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md">Logs & Status</a></li>
+                        <li><a href="#env-vars" class="nav-item block px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md">Environment Vars</a></li>
+                        <li><a href="#scaling" class="nav-item block px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md">Scaling</a></li>
+                    </ul>
+                </div>
+
+                <!-- Marketplace -->
+                <div class="mb-8">
+                    <h3 class="text-sm font-semibold text-gray-900 uppercase tracking-wide mb-3">Marketplace</h3>
+                    <ul class="space-y-1">
+                        <li><a href="#marketplace-browse" class="nav-item block px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md">Browse APIs</a></li>
+                        <li><a href="#marketplace-search" class="nav-item block px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md">Search</a></li>
+                        <li><a href="#marketplace-featured" class="nav-item block px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md">Featured</a></li>
+                        <li><a href="#marketplace-trending" class="nav-item block px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md">Trending</a></li>
+                        <li><a href="#subscriptions" class="nav-item block px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md">My Subscriptions</a></li>
+                        <li><a href="#publish" class="nav-item block px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md">Publish API</a></li>
                     </ul>
                 </div>
 
@@ -137,7 +153,7 @@
             <section id="overview" class="mb-16">
                 <div class="mb-8">
                     <h1 class="text-3xl font-bold text-gray-900 mb-2">Welcome to API-Direct Console</h1>
-                    <p class="text-gray-600">Manage your APIs, monitor performance, and access documentation all in one place.</p>
+                    <p class="text-gray-600">Deploy, manage, and monetize your APIs - all from your browser. No CLI required.</p>
                 </div>
 
                 <!-- Quick Stats -->
@@ -202,28 +218,36 @@
                 <!-- Quick Actions -->
                 <div class="bg-white rounded-lg border border-gray-200 p-6 mb-8">
                     <h3 class="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <button class="flex items-center p-4 bg-indigo-50 hover:bg-indigo-100 rounded-lg border border-indigo-200 transition-colors">
-                            <i class="fas fa-plus text-indigo-600 mr-3"></i>
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                        <button onclick="showSection('deploy-api')" class="flex items-center p-4 bg-indigo-50 hover:bg-indigo-100 rounded-lg border border-indigo-200 transition-colors">
+                            <i class="fas fa-rocket text-indigo-600 mr-3"></i>
                             <div class="text-left">
                                 <div class="font-medium text-gray-900">Deploy New API</div>
-                                <div class="text-sm text-gray-600">Create from template</div>
+                                <div class="text-sm text-gray-600">From template or import</div>
                             </div>
                         </button>
                         
-                        <button class="flex items-center p-4 bg-green-50 hover:bg-green-100 rounded-lg border border-green-200 transition-colors">
-                            <i class="fas fa-terminal text-green-600 mr-3"></i>
+                        <button onclick="showSection('api-keys')" class="flex items-center p-4 bg-green-50 hover:bg-green-100 rounded-lg border border-green-200 transition-colors">
+                            <i class="fas fa-key text-green-600 mr-3"></i>
                             <div class="text-left">
-                                <div class="font-medium text-gray-900">CLI Setup</div>
-                                <div class="text-sm text-gray-600">Install & configure CLI</div>
+                                <div class="font-medium text-gray-900">Generate API Key</div>
+                                <div class="text-sm text-gray-600">For your consumers</div>
                             </div>
                         </button>
                         
-                        <button class="flex items-center p-4 bg-yellow-50 hover:bg-yellow-100 rounded-lg border border-yellow-200 transition-colors">
-                            <i class="fas fa-book text-yellow-600 mr-3"></i>
+                        <button onclick="showSection('marketplace-browse')" class="flex items-center p-4 bg-purple-50 hover:bg-purple-100 rounded-lg border border-purple-200 transition-colors">
+                            <i class="fas fa-shopping-cart text-purple-600 mr-3"></i>
                             <div class="text-left">
-                                <div class="font-medium text-gray-900">View Docs</div>
-                                <div class="text-sm text-gray-600">Get started guide</div>
+                                <div class="font-medium text-gray-900">Browse Marketplace</div>
+                                <div class="text-sm text-gray-600">Discover APIs</div>
+                            </div>
+                        </button>
+                        
+                        <button onclick="showSection('analytics')" class="flex items-center p-4 bg-yellow-50 hover:bg-yellow-100 rounded-lg border border-yellow-200 transition-colors">
+                            <i class="fas fa-chart-bar text-yellow-600 mr-3"></i>
+                            <div class="text-left">
+                                <div class="font-medium text-gray-900">View Analytics</div>
+                                <div class="text-sm text-gray-600">Usage & revenue</div>
                             </div>
                         </button>
                     </div>
@@ -748,6 +772,1283 @@ apidirect deploy --hosted --yes --output json</code></pre>
                     </div>
                 </div>
             </section>
+
+            <!-- Deploy API Section -->
+            <section id="deploy-api" class="mb-16 hidden">
+                <h2 class="text-2xl font-bold text-gray-900 mb-6">Deploy New API</h2>
+                
+                <div class="bg-white rounded-lg border border-gray-200 p-6">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">Choose Deployment Method</h3>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Create from Template -->
+                        <div class="border border-gray-200 rounded-lg p-6 hover:border-indigo-300 cursor-pointer transition-colors" onclick="showDeployTemplate()">
+                            <div class="flex items-center mb-4">
+                                <div class="w-12 h-12 bg-indigo-100 rounded-lg flex items-center justify-center mr-4">
+                                    <i class="fas fa-cube text-indigo-600 text-xl"></i>
+                                </div>
+                                <div>
+                                    <h4 class="font-semibold text-gray-900">Create from Template</h4>
+                                    <p class="text-sm text-gray-600">Start with pre-built API templates</p>
+                                </div>
+                            </div>
+                            <div class="space-y-2 text-sm text-gray-600">
+                                <div class="flex items-center">
+                                    <i class="fas fa-check text-green-500 mr-2"></i>
+                                    <span>Weather, GPT, Sentiment Analysis APIs</span>
+                                </div>
+                                <div class="flex items-center">
+                                    <i class="fas fa-check text-green-500 mr-2"></i>
+                                    <span>Pre-configured monetization</span>
+                                </div>
+                                <div class="flex items-center">
+                                    <i class="fas fa-check text-green-500 mr-2"></i>
+                                    <span>Deploy in minutes</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Import Existing -->
+                        <div class="border border-gray-200 rounded-lg p-6 hover:border-indigo-300 cursor-pointer transition-colors" onclick="showSection('import-api')">
+                            <div class="flex items-center mb-4">
+                                <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mr-4">
+                                    <i class="fas fa-file-import text-green-600 text-xl"></i>
+                                </div>
+                                <div>
+                                    <h4 class="font-semibold text-gray-900">Import Existing Project</h4>
+                                    <p class="text-sm text-gray-600">Deploy your existing API</p>
+                                </div>
+                            </div>
+                            <div class="space-y-2 text-sm text-gray-600">
+                                <div class="flex items-center">
+                                    <i class="fas fa-check text-green-500 mr-2"></i>
+                                    <span>Auto-detect Python, Node.js, Go</span>
+                                </div>
+                                <div class="flex items-center">
+                                    <i class="fas fa-check text-green-500 mr-2"></i>
+                                    <span>Generate manifest automatically</span>
+                                </div>
+                                <div class="flex items-center">
+                                    <i class="fas fa-check text-green-500 mr-2"></i>
+                                    <span>Add monetization easily</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Template Selection (hidden by default) -->
+                    <div id="deploy-template-section" class="mt-8 hidden">
+                        <h4 class="font-semibold text-gray-900 mb-4">Select a Template</h4>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <!-- Weather API Template -->
+                            <div class="border border-gray-200 rounded-lg p-4 hover:border-indigo-300 cursor-pointer transition-colors">
+                                <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center mb-3">
+                                    <i class="fas fa-cloud-sun text-blue-600"></i>
+                                </div>
+                                <h5 class="font-medium text-gray-900 mb-1">Weather API</h5>
+                                <p class="text-sm text-gray-600 mb-3">Real-time weather data with forecasts</p>
+                                <div class="text-xs text-gray-500">
+                                    <div>Free tier: 1000 calls/day</div>
+                                    <div>Premium: $0.001/call</div>
+                                </div>
+                                <button class="mt-3 w-full bg-indigo-600 text-white py-2 rounded text-sm hover:bg-indigo-700 transition-colors" onclick="deployTemplate('weather')">
+                                    Deploy Weather API
+                                </button>
+                            </div>
+                            
+                            <!-- GPT Wrapper Template -->
+                            <div class="border border-gray-200 rounded-lg p-4 hover:border-indigo-300 cursor-pointer transition-colors">
+                                <div class="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center mb-3">
+                                    <i class="fas fa-robot text-purple-600"></i>
+                                </div>
+                                <h5 class="font-medium text-gray-900 mb-1">GPT Wrapper</h5>
+                                <p class="text-sm text-gray-600 mb-3">OpenAI integration with caching</p>
+                                <div class="text-xs text-gray-500">
+                                    <div>Free tier: 100 calls/day</div>
+                                    <div>Premium: $0.01/call</div>
+                                </div>
+                                <button class="mt-3 w-full bg-indigo-600 text-white py-2 rounded text-sm hover:bg-indigo-700 transition-colors" onclick="deployTemplate('gpt-wrapper')">
+                                    Deploy GPT API
+                                </button>
+                            </div>
+                            
+                            <!-- Sentiment Analysis Template -->
+                            <div class="border border-gray-200 rounded-lg p-4 hover:border-indigo-300 cursor-pointer transition-colors">
+                                <div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center mb-3">
+                                    <i class="fas fa-heart text-green-600"></i>
+                                </div>
+                                <h5 class="font-medium text-gray-900 mb-1">Sentiment Analysis</h5>
+                                <p class="text-sm text-gray-600 mb-3">Advanced emotion detection API</p>
+                                <div class="text-xs text-gray-500">
+                                    <div>Free tier: 500 calls/day</div>
+                                    <div>Premium: $0.005/call</div>
+                                </div>
+                                <button class="mt-3 w-full bg-indigo-600 text-white py-2 rounded text-sm hover:bg-indigo-700 transition-colors" onclick="deployTemplate('sentiment')">
+                                    Deploy Sentiment API
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Import API Section -->
+            <section id="import-api" class="mb-16 hidden">
+                <h2 class="text-2xl font-bold text-gray-900 mb-6">Import Existing Project</h2>
+                
+                <div class="bg-white rounded-lg border border-gray-200 p-6">
+                    <div class="mb-6">
+                        <h3 class="text-lg font-semibold text-gray-900 mb-2">Import from GitHub</h3>
+                        <p class="text-gray-600 mb-4">Paste your GitHub repository URL and we'll automatically detect your project type</p>
+                        
+                        <div class="flex gap-4">
+                            <input type="text" placeholder="https://github.com/username/repo" class="flex-1 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" id="github-url">
+                            <button class="bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 transition-colors" onclick="importFromGitHub()">
+                                Import
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="border-t pt-6">
+                        <h3 class="text-lg font-semibold text-gray-900 mb-2">Or Upload Project Files</h3>
+                        <p class="text-gray-600 mb-4">Upload your project as a ZIP file</p>
+                        
+                        <div class="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-gray-400 transition-colors">
+                            <i class="fas fa-cloud-upload-alt text-4xl text-gray-400 mb-4"></i>
+                            <p class="text-gray-600 mb-2">Drag and drop your project ZIP here</p>
+                            <p class="text-sm text-gray-500 mb-4">or</p>
+                            <button class="bg-gray-100 text-gray-700 px-4 py-2 rounded hover:bg-gray-200 transition-colors">
+                                Choose File
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Import Progress (hidden by default) -->
+                    <div id="import-progress" class="mt-6 hidden">
+                        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                            <div class="flex items-center">
+                                <div class="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600 mr-3"></div>
+                                <span class="text-blue-800">Analyzing project structure...</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Import Results (hidden by default) -->
+                    <div id="import-results" class="mt-6 hidden">
+                        <div class="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
+                            <div class="flex items-center">
+                                <i class="fas fa-check-circle text-green-600 mr-3"></i>
+                                <span class="text-green-800">Project detected: Python FastAPI</span>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-gray-50 rounded-lg p-4">
+                            <h4 class="font-medium text-gray-900 mb-3">Generated Manifest</h4>
+                            <pre class="bg-gray-900 text-gray-100 p-4 rounded text-sm overflow-x-auto"><code>name: my-api
+version: 1.0.0
+runtime: python3.9
+framework: fastapi
+
+endpoints:
+  - path: /
+    method: GET
+    description: Root endpoint
+  - path: /items
+    method: GET
+    description: List items
+  - path: /items/{id}
+    method: GET
+    description: Get item by ID
+
+dependencies:
+  - fastapi==0.95.0
+  - uvicorn==0.21.0
+  - pydantic==1.10.0
+
+deploy:
+  type: hosted
+  resources:
+    memory: 512MB
+    cpu: 0.5</code></pre>
+                        </div>
+                        
+                        <div class="mt-4 flex gap-4">
+                            <button class="bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700 transition-colors">
+                                Deploy Now
+                            </button>
+                            <button class="border border-gray-300 text-gray-700 px-6 py-2 rounded-lg hover:bg-gray-50 transition-colors">
+                                Edit Manifest
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Marketplace Browse Section -->
+            <section id="marketplace-browse" class="mb-16 hidden">
+                <h2 class="text-2xl font-bold text-gray-900 mb-6">Browse API Marketplace</h2>
+                
+                <!-- Categories -->
+                <div class="bg-white rounded-lg border border-gray-200 p-6 mb-6">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">Categories</h3>
+                    
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <button class="p-4 bg-gray-50 hover:bg-gray-100 rounded-lg text-center transition-colors">
+                            <i class="fas fa-robot text-2xl text-purple-600 mb-2"></i>
+                            <div class="font-medium text-gray-900">AI/ML</div>
+                            <div class="text-sm text-gray-600">23 APIs</div>
+                        </button>
+                        
+                        <button class="p-4 bg-gray-50 hover:bg-gray-100 rounded-lg text-center transition-colors">
+                            <i class="fas fa-database text-2xl text-blue-600 mb-2"></i>
+                            <div class="font-medium text-gray-900">Data</div>
+                            <div class="text-sm text-gray-600">18 APIs</div>
+                        </button>
+                        
+                        <button class="p-4 bg-gray-50 hover:bg-gray-100 rounded-lg text-center transition-colors">
+                            <i class="fas fa-credit-card text-2xl text-green-600 mb-2"></i>
+                            <div class="font-medium text-gray-900">Finance</div>
+                            <div class="text-sm text-gray-600">12 APIs</div>
+                        </button>
+                        
+                        <button class="p-4 bg-gray-50 hover:bg-gray-100 rounded-lg text-center transition-colors">
+                            <i class="fas fa-cloud text-2xl text-yellow-600 mb-2"></i>
+                            <div class="font-medium text-gray-900">Weather</div>
+                            <div class="text-sm text-gray-600">7 APIs</div>
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Featured APIs -->
+                <div class="bg-white rounded-lg border border-gray-200 p-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg font-semibold text-gray-900">All APIs</h3>
+                        <select class="p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500">
+                            <option>Most Popular</option>
+                            <option>Newest</option>
+                            <option>Price: Low to High</option>
+                            <option>Price: High to Low</option>
+                        </select>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- API Card 1 -->
+                        <div class="border border-gray-200 rounded-lg p-6 hover:shadow-lg transition-shadow">
+                            <div class="flex items-start justify-between mb-4">
+                                <div class="flex items-center">
+                                    <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mr-4">
+                                        <i class="fas fa-brain text-purple-600 text-xl"></i>
+                                    </div>
+                                    <div>
+                                        <h4 class="font-semibold text-gray-900">sentiment-analyzer-pro</h4>
+                                        <p class="text-sm text-gray-600">by @aidevlabs</p>
+                                    </div>
+                                </div>
+                                <div class="text-right">
+                                    <div class="flex items-center text-yellow-500 text-sm mb-1">
+                                        <i class="fas fa-star"></i>
+                                        <i class="fas fa-star"></i>
+                                        <i class="fas fa-star"></i>
+                                        <i class="fas fa-star"></i>
+                                        <i class="fas fa-star-half-alt"></i>
+                                        <span class="text-gray-600 ml-1">4.8</span>
+                                    </div>
+                                    <div class="text-xs text-gray-500">142 reviews</div>
+                                </div>
+                            </div>
+                            
+                            <p class="text-gray-600 mb-4">Advanced emotion detection with support for 50+ languages and real-time processing</p>
+                            
+                            <div class="flex items-center justify-between mb-4">
+                                <div class="text-sm text-gray-600">
+                                    <i class="fas fa-bolt text-yellow-500 mr-1"></i>
+                                    47K calls/month
+                                </div>
+                                <div class="text-sm font-medium text-gray-900">
+                                    Free tier + $0.005/call
+                                </div>
+                            </div>
+                            
+                            <button class="w-full bg-indigo-600 text-white py-2 rounded-lg hover:bg-indigo-700 transition-colors">
+                                Subscribe
+                            </button>
+                        </div>
+                        
+                        <!-- API Card 2 -->
+                        <div class="border border-gray-200 rounded-lg p-6 hover:shadow-lg transition-shadow">
+                            <div class="flex items-start justify-between mb-4">
+                                <div class="flex items-center">
+                                    <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mr-4">
+                                        <i class="fas fa-cloud-sun text-blue-600 text-xl"></i>
+                                    </div>
+                                    <div>
+                                        <h4 class="font-semibold text-gray-900">global-weather-api</h4>
+                                        <p class="text-sm text-gray-600">by @weathertech</p>
+                                    </div>
+                                </div>
+                                <div class="text-right">
+                                    <div class="flex items-center text-yellow-500 text-sm mb-1">
+                                        <i class="fas fa-star"></i>
+                                        <i class="fas fa-star"></i>
+                                        <i class="fas fa-star"></i>
+                                        <i class="fas fa-star"></i>
+                                        <i class="fas fa-star"></i>
+                                        <span class="text-gray-600 ml-1">5.0</span>
+                                    </div>
+                                    <div class="text-xs text-gray-500">89 reviews</div>
+                                </div>
+                            </div>
+                            
+                            <p class="text-gray-600 mb-4">Real-time weather data for 200K+ cities worldwide with 14-day forecasts</p>
+                            
+                            <div class="flex items-center justify-between mb-4">
+                                <div class="text-sm text-gray-600">
+                                    <i class="fas fa-bolt text-yellow-500 mr-1"></i>
+                                    125K calls/month
+                                </div>
+                                <div class="text-sm font-medium text-gray-900">
+                                    Free tier + $0.001/call
+                                </div>
+                            </div>
+                            
+                            <button class="w-full bg-indigo-600 text-white py-2 rounded-lg hover:bg-indigo-700 transition-colors">
+                                Subscribe
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Scaling Section -->
+            <section id="scaling" class="mb-16 hidden">
+                <h2 class="text-2xl font-bold text-gray-900 mb-6">API Scaling & Performance</h2>
+                
+                <!-- Select API -->
+                <div class="bg-white rounded-lg border border-gray-200 p-6 mb-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-semibold text-gray-900">Select API to Scale</h3>
+                        <select class="p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500" onchange="loadScalingConfig(this.value)">
+                            <option value="">Choose an API...</option>
+                            <option value="sentiment-api">sentiment-api</option>
+                            <option value="weather-api">weather-api</option>
+                            <option value="gpt-wrapper">gpt-wrapper</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <!-- Scaling Configuration -->
+                <div id="scaling-config" class="hidden">
+                    <div class="bg-white rounded-lg border border-gray-200 p-6 mb-6">
+                        <h3 class="text-lg font-semibold text-gray-900 mb-4">Scaling Configuration</h3>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <!-- Manual Scaling -->
+                            <div>
+                                <h4 class="font-medium text-gray-900 mb-3">Manual Scaling</h4>
+                                <div class="space-y-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Replicas</label>
+                                        <div class="flex items-center gap-4">
+                                            <input type="range" min="1" max="10" value="3" class="flex-1" id="replica-slider" oninput="updateReplicaCount(this.value)">
+                                            <span class="font-medium text-gray-900 w-8" id="replica-count">3</span>
+                                        </div>
+                                    </div>
+                                    
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Instance Type</label>
+                                        <select class="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500">
+                                            <option>Small (0.5 CPU, 512MB RAM)</option>
+                                            <option selected>Medium (1 CPU, 1GB RAM)</option>
+                                            <option>Large (2 CPU, 2GB RAM)</option>
+                                            <option>XLarge (4 CPU, 4GB RAM)</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Auto Scaling -->
+                            <div>
+                                <h4 class="font-medium text-gray-900 mb-3">Auto Scaling</h4>
+                                <div class="space-y-4">
+                                    <div class="flex items-center justify-between">
+                                        <span class="text-sm font-medium text-gray-700">Enable Auto Scaling</span>
+                                        <label class="relative inline-flex items-center cursor-pointer">
+                                            <input type="checkbox" checked class="sr-only peer">
+                                            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+                                        </label>
+                                    </div>
+                                    
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Min Replicas</label>
+                                        <input type="number" value="2" min="1" max="5" class="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500">
+                                    </div>
+                                    
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Max Replicas</label>
+                                        <input type="number" value="10" min="2" max="20" class="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500">
+                                    </div>
+                                    
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Target CPU %</label>
+                                        <input type="number" value="70" min="50" max="90" class="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-6 flex gap-4">
+                            <button class="bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700 transition-colors">
+                                Apply Scaling Configuration
+                            </button>
+                            <button class="border border-gray-300 text-gray-700 px-6 py-2 rounded-lg hover:bg-gray-50 transition-colors">
+                                Cancel
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Current Metrics -->
+                    <div class="bg-white rounded-lg border border-gray-200 p-6">
+                        <h3 class="text-lg font-semibold text-gray-900 mb-4">Current Metrics</h3>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                            <div class="text-center">
+                                <div class="text-3xl font-bold text-blue-600">3</div>
+                                <div class="text-sm text-gray-600">Active Replicas</div>
+                            </div>
+                            <div class="text-center">
+                                <div class="text-3xl font-bold text-green-600">68%</div>
+                                <div class="text-sm text-gray-600">Avg CPU Usage</div>
+                            </div>
+                            <div class="text-center">
+                                <div class="text-3xl font-bold text-purple-600">512MB</div>
+                                <div class="text-sm text-gray-600">Memory per Instance</div>
+                            </div>
+                            <div class="text-center">
+                                <div class="text-3xl font-bold text-yellow-600">42ms</div>
+                                <div class="text-sm text-gray-600">Avg Response Time</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Environment Variables Section -->
+            <section id="env-vars" class="mb-16 hidden">
+                <h2 class="text-2xl font-bold text-gray-900 mb-6">Environment Variables</h2>
+                
+                <!-- Select API -->
+                <div class="bg-white rounded-lg border border-gray-200 p-6 mb-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-semibold text-gray-900">Select API</h3>
+                        <select class="p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500">
+                            <option value="">Choose an API...</option>
+                            <option value="sentiment-api">sentiment-api</option>
+                            <option value="weather-api">weather-api</option>
+                            <option value="gpt-wrapper">gpt-wrapper</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <!-- Environment Variables -->
+                <div class="bg-white rounded-lg border border-gray-200 p-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg font-semibold text-gray-900">Environment Variables</h3>
+                        <button class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors text-sm" onclick="addEnvVar()">
+                            <i class="fas fa-plus mr-2"></i>Add Variable
+                        </button>
+                    </div>
+                    
+                    <div class="space-y-4" id="env-vars-list">
+                        <div class="flex gap-4 items-center">
+                            <input type="text" value="DATABASE_URL" class="flex-1 p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 font-mono text-sm" readonly>
+                            <input type="password" value="postgresql://user:pass@host:5432/db" class="flex-1 p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 font-mono text-sm">
+                            <button class="text-gray-500 hover:text-gray-700">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            <button class="text-red-500 hover:text-red-700">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                        
+                        <div class="flex gap-4 items-center">
+                            <input type="text" value="OPENAI_API_KEY" class="flex-1 p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 font-mono text-sm" readonly>
+                            <input type="password" value="sk-1234567890abcdef" class="flex-1 p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 font-mono text-sm">
+                            <button class="text-gray-500 hover:text-gray-700">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            <button class="text-red-500 hover:text-red-700">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                        
+                        <div class="flex gap-4 items-center">
+                            <input type="text" value="REDIS_URL" class="flex-1 p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 font-mono text-sm" readonly>
+                            <input type="password" value="redis://default:pass@redis:6379" class="flex-1 p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 font-mono text-sm">
+                            <button class="text-gray-500 hover:text-gray-700">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            <button class="text-red-500 hover:text-red-700">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-6 flex gap-4">
+                        <button class="bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700 transition-colors">
+                            Save Changes
+                        </button>
+                        <button class="border border-gray-300 text-gray-700 px-6 py-2 rounded-lg hover:bg-gray-50 transition-colors">
+                            Cancel
+                        </button>
+                    </div>
+                    
+                    <div class="mt-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                        <div class="flex">
+                            <i class="fas fa-exclamation-triangle text-yellow-600 mr-3"></i>
+                            <div class="text-sm text-yellow-800">
+                                <p class="font-medium mb-1">Security Notice</p>
+                                <p>Environment variables are encrypted at rest and in transit. Changes will trigger a rolling deployment.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Publish API Section -->
+            <section id="publish" class="mb-16 hidden">
+                <h2 class="text-2xl font-bold text-gray-900 mb-6">Publish API to Marketplace</h2>
+                
+                <!-- Select API to Publish -->
+                <div class="bg-white rounded-lg border border-gray-200 p-6 mb-6">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">Select API to Publish</h3>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="border border-gray-200 rounded-lg p-4 hover:border-indigo-300 cursor-pointer transition-colors">
+                            <div class="flex items-center justify-between mb-2">
+                                <h4 class="font-medium text-gray-900">sentiment-api</h4>
+                                <span class="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">DEPLOYED</span>
+                            </div>
+                            <p class="text-sm text-gray-600 mb-2">Advanced emotion detection API</p>
+                            <div class="text-xs text-gray-500">Last updated: 2 hours ago</div>
+                        </div>
+                        
+                        <div class="border border-gray-200 rounded-lg p-4 hover:border-indigo-300 cursor-pointer transition-colors">
+                            <div class="flex items-center justify-between mb-2">
+                                <h4 class="font-medium text-gray-900">weather-api</h4>
+                                <span class="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">DEPLOYED</span>
+                            </div>
+                            <p class="text-sm text-gray-600 mb-2">Real-time weather data and forecasts</p>
+                            <div class="text-xs text-gray-500">Last updated: 1 day ago</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Publishing Form -->
+                <div class="bg-white rounded-lg border border-gray-200 p-6">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">API Details</h3>
+                    
+                    <div class="space-y-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">API Name</label>
+                            <input type="text" value="sentiment-api" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Description</label>
+                            <textarea rows="3" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">Advanced emotion detection API with support for 50+ languages, real-time processing, and batch analysis capabilities.</textarea>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Category</label>
+                            <select class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                                <option>AI/ML</option>
+                                <option>Data Processing</option>
+                                <option>Finance</option>
+                                <option>Weather</option>
+                                <option>Social Media</option>
+                            </select>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Tags</label>
+                            <input type="text" value="sentiment, emotion, nlp, ai, machine-learning" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                        </div>
+                        
+                        <!-- Pricing Configuration -->
+                        <div>
+                            <h4 class="font-medium text-gray-900 mb-3">Pricing Model</h4>
+                            
+                            <div class="space-y-4">
+                                <div class="border border-gray-200 rounded-lg p-4">
+                                    <div class="flex items-center mb-3">
+                                        <input type="radio" name="pricing" id="freemium" checked class="mr-2">
+                                        <label for="freemium" class="font-medium text-gray-900">Freemium</label>
+                                    </div>
+                                    <div class="ml-6 space-y-2">
+                                        <div class="flex items-center gap-4">
+                                            <label class="text-sm text-gray-700 w-32">Free calls/month:</label>
+                                            <input type="number" value="1000" class="p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 w-32">
+                                        </div>
+                                        <div class="flex items-center gap-4">
+                                            <label class="text-sm text-gray-700 w-32">Price per call:</label>
+                                            <input type="text" value="$0.005" class="p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 w-32">
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="border border-gray-200 rounded-lg p-4">
+                                    <div class="flex items-center mb-3">
+                                        <input type="radio" name="pricing" id="subscription" class="mr-2">
+                                        <label for="subscription" class="font-medium text-gray-900">Subscription</label>
+                                    </div>
+                                    <div class="ml-6 space-y-2 opacity-50">
+                                        <div class="flex items-center gap-4">
+                                            <label class="text-sm text-gray-700 w-32">Monthly price:</label>
+                                            <input type="text" value="$29.99" disabled class="p-2 border border-gray-300 rounded-lg bg-gray-100 w-32">
+                                        </div>
+                                        <div class="flex items-center gap-4">
+                                            <label class="text-sm text-gray-700 w-32">Calls included:</label>
+                                            <input type="text" value="50000" disabled class="p-2 border border-gray-300 rounded-lg bg-gray-100 w-32">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="flex gap-4">
+                            <button class="bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700 transition-colors">
+                                Publish to Marketplace
+                            </button>
+                            <button class="border border-gray-300 text-gray-700 px-6 py-2 rounded-lg hover:bg-gray-50 transition-colors">
+                                Save Draft
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Templates Section -->
+            <section id="templates" class="mb-16 hidden">
+                <h2 class="text-2xl font-bold text-gray-900 mb-6">API Templates</h2>
+                
+                <div class="bg-blue-50 border-l-4 border-blue-400 p-6 mb-8">
+                    <div class="flex">
+                        <div class="flex-shrink-0">
+                            <i class="fas fa-info-circle text-blue-400 text-xl"></i>
+                        </div>
+                        <div class="ml-3">
+                            <h3 class="text-lg font-medium text-blue-900">Pre-built API Templates</h3>
+                            <p class="text-blue-700">
+                                Choose from our collection of production-ready API templates. Each template includes 
+                                built-in monetization, documentation, and deployment configuration.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Template Categories -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <!-- AI/ML Templates -->
+                    <div class="bg-white rounded-lg border border-gray-200 p-6">
+                        <div class="flex items-center mb-4">
+                            <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mr-4">
+                                <i class="fas fa-brain text-purple-600 text-xl"></i>
+                            </div>
+                            <h3 class="text-lg font-semibold text-gray-900">AI/ML Templates</h3>
+                        </div>
+                        
+                        <div class="space-y-3 mb-4">
+                            <div class="p-3 bg-gray-50 rounded hover:bg-gray-100 cursor-pointer transition-colors">
+                                <h4 class="font-medium text-gray-900">GPT Wrapper</h4>
+                                <p class="text-sm text-gray-600">OpenAI integration with caching</p>
+                            </div>
+                            <div class="p-3 bg-gray-50 rounded hover:bg-gray-100 cursor-pointer transition-colors">
+                                <h4 class="font-medium text-gray-900">Image Classification</h4>
+                                <p class="text-sm text-gray-600">Computer vision API</p>
+                            </div>
+                            <div class="p-3 bg-gray-50 rounded hover:bg-gray-100 cursor-pointer transition-colors">
+                                <h4 class="font-medium text-gray-900">Sentiment Analysis</h4>
+                                <p class="text-sm text-gray-600">Emotion detection API</p>
+                            </div>
+                        </div>
+                        
+                        <button class="w-full bg-purple-600 text-white py-2 rounded-lg hover:bg-purple-700 transition-colors">
+                            Browse AI/ML Templates
+                        </button>
+                    </div>
+                    
+                    <!-- Data Processing Templates -->
+                    <div class="bg-white rounded-lg border border-gray-200 p-6">
+                        <div class="flex items-center mb-4">
+                            <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mr-4">
+                                <i class="fas fa-database text-blue-600 text-xl"></i>
+                            </div>
+                            <h3 class="text-lg font-semibold text-gray-900">Data Processing</h3>
+                        </div>
+                        
+                        <div class="space-y-3 mb-4">
+                            <div class="p-3 bg-gray-50 rounded hover:bg-gray-100 cursor-pointer transition-colors">
+                                <h4 class="font-medium text-gray-900">ETL Pipeline</h4>
+                                <p class="text-sm text-gray-600">Data transformation API</p>
+                            </div>
+                            <div class="p-3 bg-gray-50 rounded hover:bg-gray-100 cursor-pointer transition-colors">
+                                <h4 class="font-medium text-gray-900">CSV Processor</h4>
+                                <p class="text-sm text-gray-600">File processing service</p>
+                            </div>
+                            <div class="p-3 bg-gray-50 rounded hover:bg-gray-100 cursor-pointer transition-colors">
+                                <h4 class="font-medium text-gray-900">Data Validator</h4>
+                                <p class="text-sm text-gray-600">Schema validation API</p>
+                            </div>
+                        </div>
+                        
+                        <button class="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition-colors">
+                            Browse Data Templates
+                        </button>
+                    </div>
+                    
+                    <!-- Integration Templates -->
+                    <div class="bg-white rounded-lg border border-gray-200 p-6">
+                        <div class="flex items-center mb-4">
+                            <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mr-4">
+                                <i class="fas fa-plug text-green-600 text-xl"></i>
+                            </div>
+                            <h3 class="text-lg font-semibold text-gray-900">Integrations</h3>
+                        </div>
+                        
+                        <div class="space-y-3 mb-4">
+                            <div class="p-3 bg-gray-50 rounded hover:bg-gray-100 cursor-pointer transition-colors">
+                                <h4 class="font-medium text-gray-900">Webhook Handler</h4>
+                                <p class="text-sm text-gray-600">Event processing API</p>
+                            </div>
+                            <div class="p-3 bg-gray-50 rounded hover:bg-gray-100 cursor-pointer transition-colors">
+                                <h4 class="font-medium text-gray-900">OAuth Gateway</h4>
+                                <p class="text-sm text-gray-600">Authentication service</p>
+                            </div>
+                            <div class="p-3 bg-gray-50 rounded hover:bg-gray-100 cursor-pointer transition-colors">
+                                <h4 class="font-medium text-gray-900">Email Service</h4>
+                                <p class="text-sm text-gray-600">Transactional email API</p>
+                            </div>
+                        </div>
+                        
+                        <button class="w-full bg-green-600 text-white py-2 rounded-lg hover:bg-green-700 transition-colors">
+                            Browse Integration Templates
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Subscriptions Section -->
+            <section id="subscriptions" class="mb-16 hidden">
+                <h2 class="text-2xl font-bold text-gray-900 mb-6">My Subscriptions</h2>
+                
+                <!-- Active Subscriptions -->
+                <div class="bg-white rounded-lg border border-gray-200 p-6 mb-6">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">Active Subscriptions</h3>
+                    
+                    <div class="space-y-4">
+                        <!-- Subscription 1 -->
+                        <div class="border border-gray-200 rounded-lg p-4">
+                            <div class="flex items-start justify-between">
+                                <div class="flex items-start">
+                                    <div class="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center mr-4">
+                                        <i class="fas fa-brain text-purple-600"></i>
+                                    </div>
+                                    <div>
+                                        <h4 class="font-semibold text-gray-900">sentiment-analyzer-pro</h4>
+                                        <p class="text-sm text-gray-600 mb-2">by @aidevlabs</p>
+                                        <div class="flex items-center gap-4 text-sm">
+                                            <span class="text-gray-600">
+                                                <i class="fas fa-key text-gray-400 mr-1"></i>
+                                                API Key: apidirect_sk_1234...
+                                            </span>
+                                            <button class="text-indigo-600 hover:text-indigo-700">Copy</button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="text-right">
+                                    <div class="text-sm font-medium text-gray-900 mb-1">$0.005/call</div>
+                                    <div class="text-xs text-gray-500">after 1000 free</div>
+                                    <button class="mt-2 text-sm text-red-600 hover:text-red-700">Cancel</button>
+                                </div>
+                            </div>
+                            
+                            <div class="mt-4 grid grid-cols-3 gap-4 p-3 bg-gray-50 rounded">
+                                <div class="text-center">
+                                    <div class="text-lg font-semibold text-gray-900">2,847</div>
+                                    <div class="text-xs text-gray-600">Calls this month</div>
+                                </div>
+                                <div class="text-center">
+                                    <div class="text-lg font-semibold text-gray-900">$9.24</div>
+                                    <div class="text-xs text-gray-600">Current charges</div>
+                                </div>
+                                <div class="text-center">
+                                    <div class="text-lg font-semibold text-gray-900">38ms</div>
+                                    <div class="text-xs text-gray-600">Avg response</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Subscription 2 -->
+                        <div class="border border-gray-200 rounded-lg p-4">
+                            <div class="flex items-start justify-between">
+                                <div class="flex items-start">
+                                    <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center mr-4">
+                                        <i class="fas fa-cloud-sun text-blue-600"></i>
+                                    </div>
+                                    <div>
+                                        <h4 class="font-semibold text-gray-900">global-weather-api</h4>
+                                        <p class="text-sm text-gray-600 mb-2">by @weathertech</p>
+                                        <div class="flex items-center gap-4 text-sm">
+                                            <span class="text-gray-600">
+                                                <i class="fas fa-key text-gray-400 mr-1"></i>
+                                                API Key: apidirect_sk_5678...
+                                            </span>
+                                            <button class="text-indigo-600 hover:text-indigo-700">Copy</button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="text-right">
+                                    <div class="text-sm font-medium text-gray-900 mb-1">$0.001/call</div>
+                                    <div class="text-xs text-gray-500">after 1000 free</div>
+                                    <button class="mt-2 text-sm text-red-600 hover:text-red-700">Cancel</button>
+                                </div>
+                            </div>
+                            
+                            <div class="mt-4 grid grid-cols-3 gap-4 p-3 bg-gray-50 rounded">
+                                <div class="text-center">
+                                    <div class="text-lg font-semibold text-gray-900">892</div>
+                                    <div class="text-xs text-gray-600">Calls this month</div>
+                                </div>
+                                <div class="text-center">
+                                    <div class="text-lg font-semibold text-gray-900">Free</div>
+                                    <div class="text-xs text-gray-600">Current charges</div>
+                                </div>
+                                <div class="text-center">
+                                    <div class="text-lg font-semibold text-gray-900">23ms</div>
+                                    <div class="text-xs text-gray-600">Avg response</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Usage Summary -->
+                <div class="bg-white rounded-lg border border-gray-200 p-6">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">Usage Summary</h3>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div class="text-center">
+                            <div class="text-3xl font-bold text-indigo-600">3,739</div>
+                            <div class="text-sm text-gray-600">Total API Calls</div>
+                            <div class="text-xs text-gray-500">This month</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-3xl font-bold text-green-600">$9.24</div>
+                            <div class="text-sm text-gray-600">Total Charges</div>
+                            <div class="text-xs text-gray-500">Billed monthly</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-3xl font-bold text-blue-600">99.9%</div>
+                            <div class="text-sm text-gray-600">Uptime</div>
+                            <div class="text-xs text-gray-500">All subscriptions</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Marketplace Search Section -->
+            <section id="marketplace-search" class="mb-16 hidden">
+                <h2 class="text-2xl font-bold text-gray-900 mb-6">Search API Marketplace</h2>
+                
+                <!-- Search Bar -->
+                <div class="bg-white rounded-lg border border-gray-200 p-6 mb-6">
+                    <div class="flex gap-4 mb-4">
+                        <input type="text" placeholder="Search for APIs..." class="flex-1 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                        <button class="bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 transition-colors">
+                            <i class="fas fa-search mr-2"></i>Search
+                        </button>
+                    </div>
+                    
+                    <!-- Filters -->
+                    <div class="flex flex-wrap gap-4">
+                        <select class="p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500">
+                            <option>All Categories</option>
+                            <option>AI/ML</option>
+                            <option>Data</option>
+                            <option>Finance</option>
+                            <option>Weather</option>
+                        </select>
+                        
+                        <select class="p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500">
+                            <option>Any Price</option>
+                            <option>Free Only</option>
+                            <option>< $0.01/call</option>
+                            <option>< $0.1/call</option>
+                            <option>< $1/call</option>
+                        </select>
+                        
+                        <select class="p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500">
+                            <option>Sort by: Relevance</option>
+                            <option>Sort by: Popular</option>
+                            <option>Sort by: Newest</option>
+                            <option>Sort by: Rating</option>
+                        </select>
+                        
+                        <label class="flex items-center">
+                            <input type="checkbox" class="mr-2 rounded">
+                            <span class="text-sm text-gray-700">Verified APIs only</span>
+                        </label>
+                    </div>
+                </div>
+                
+                <!-- Search Results -->
+                <div class="bg-white rounded-lg border border-gray-200 p-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg font-semibold text-gray-900">24 APIs found</h3>
+                        <span class="text-sm text-gray-600">Page 1 of 3</span>
+                    </div>
+                    
+                    <div class="space-y-4">
+                        <!-- Search Result 1 -->
+                        <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                            <div class="flex items-start justify-between">
+                                <div class="flex items-start">
+                                    <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mr-4">
+                                        <i class="fas fa-language text-green-600 text-xl"></i>
+                                    </div>
+                                    <div>
+                                        <h4 class="font-semibold text-gray-900">translation-api</h4>
+                                        <p class="text-sm text-gray-600 mb-2">by @linguatech</p>
+                                        <p class="text-gray-700 mb-2">Real-time translation API supporting 100+ languages with context awareness</p>
+                                        <div class="flex items-center gap-4 text-sm">
+                                            <span class="text-gray-600">
+                                                <i class="fas fa-bolt text-yellow-500 mr-1"></i>
+                                                23K calls/month
+                                            </span>
+                                            <span class="text-gray-600">
+                                                <i class="fas fa-star text-yellow-500 mr-1"></i>
+                                                4.7 (89 reviews)
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="text-right">
+                                    <div class="text-lg font-medium text-gray-900">$0.002/call</div>
+                                    <div class="text-sm text-gray-600 mb-2">500 free/month</div>
+                                    <button class="bg-indigo-600 text-white px-4 py-2 rounded text-sm hover:bg-indigo-700 transition-colors">
+                                        View Details
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- More search results would go here -->
+                    </div>
+                    
+                    <!-- Pagination -->
+                    <div class="mt-6 flex justify-center gap-2">
+                        <button class="px-3 py-1 border border-gray-300 rounded hover:bg-gray-50">Previous</button>
+                        <button class="px-3 py-1 bg-indigo-600 text-white rounded">1</button>
+                        <button class="px-3 py-1 border border-gray-300 rounded hover:bg-gray-50">2</button>
+                        <button class="px-3 py-1 border border-gray-300 rounded hover:bg-gray-50">3</button>
+                        <button class="px-3 py-1 border border-gray-300 rounded hover:bg-gray-50">Next</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Marketplace Featured Section -->
+            <section id="marketplace-featured" class="mb-16 hidden">
+                <h2 class="text-2xl font-bold text-gray-900 mb-6">Featured APIs</h2>
+                
+                <!-- Featured Banner -->
+                <div class="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-lg p-8 text-white mb-8">
+                    <div class="max-w-3xl">
+                        <h3 class="text-2xl font-bold mb-2">API of the Month: GPT-4 Vision Wrapper</h3>
+                        <p class="text-indigo-100 mb-4">
+                            Advanced image understanding API with GPT-4 Vision integration. Process images, 
+                            extract text, analyze content, and generate descriptions with state-of-the-art AI.
+                        </p>
+                        <button class="bg-white text-indigo-600 px-6 py-2 rounded-lg font-medium hover:bg-gray-100 transition-colors">
+                            Learn More
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Featured Categories -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Editor's Choice -->
+                    <div class="bg-white rounded-lg border border-gray-200 p-6">
+                        <h3 class="text-lg font-semibold text-gray-900 mb-4">
+                            <i class="fas fa-award text-yellow-500 mr-2"></i>Editor's Choice
+                        </h3>
+                        
+                        <div class="space-y-4">
+                            <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                                <div class="flex items-center">
+                                    <div class="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center mr-3">
+                                        <i class="fas fa-robot text-purple-600"></i>
+                                    </div>
+                                    <div>
+                                        <h4 class="font-medium text-gray-900">ai-code-reviewer</h4>
+                                        <p class="text-sm text-gray-600">Automated code review with AI</p>
+                                    </div>
+                                </div>
+                                <button class="text-indigo-600 hover:text-indigo-700 text-sm font-medium">
+                                    View
+                                </button>
+                            </div>
+                            
+                            <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                                <div class="flex items-center">
+                                    <div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center mr-3">
+                                        <i class="fas fa-chart-line text-green-600"></i>
+                                    </div>
+                                    <div>
+                                        <h4 class="font-medium text-gray-900">crypto-analytics-api</h4>
+                                        <p class="text-sm text-gray-600">Real-time crypto market data</p>
+                                    </div>
+                                </div>
+                                <button class="text-indigo-600 hover:text-indigo-700 text-sm font-medium">
+                                    View
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- New & Noteworthy -->
+                    <div class="bg-white rounded-lg border border-gray-200 p-6">
+                        <h3 class="text-lg font-semibold text-gray-900 mb-4">
+                            <i class="fas fa-sparkles text-blue-500 mr-2"></i>New & Noteworthy
+                        </h3>
+                        
+                        <div class="space-y-4">
+                            <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                                <div class="flex items-center">
+                                    <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center mr-3">
+                                        <i class="fas fa-video text-blue-600"></i>
+                                    </div>
+                                    <div>
+                                        <h4 class="font-medium text-gray-900">video-summarizer</h4>
+                                        <p class="text-sm text-gray-600">AI video content analysis</p>
+                                    </div>
+                                </div>
+                                <button class="text-indigo-600 hover:text-indigo-700 text-sm font-medium">
+                                    View
+                                </button>
+                            </div>
+                            
+                            <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                                <div class="flex items-center">
+                                    <div class="w-10 h-10 bg-yellow-100 rounded-lg flex items-center justify-center mr-3">
+                                        <i class="fas fa-file-pdf text-yellow-600"></i>
+                                    </div>
+                                    <div>
+                                        <h4 class="font-medium text-gray-900">pdf-ai-processor</h4>
+                                        <p class="text-sm text-gray-600">Extract & analyze PDF content</p>
+                                    </div>
+                                </div>
+                                <button class="text-indigo-600 hover:text-indigo-700 text-sm font-medium">
+                                    View
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Marketplace Trending Section -->
+            <section id="marketplace-trending" class="mb-16 hidden">
+                <h2 class="text-2xl font-bold text-gray-900 mb-6">Trending APIs</h2>
+                
+                <!-- Time Filter -->
+                <div class="bg-white rounded-lg border border-gray-200 p-4 mb-6">
+                    <div class="flex gap-4">
+                        <button class="px-4 py-2 bg-indigo-600 text-white rounded-lg">Today</button>
+                        <button class="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg">This Week</button>
+                        <button class="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg">This Month</button>
+                        <button class="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg">All Time</button>
+                    </div>
+                </div>
+                
+                <!-- Trending List -->
+                <div class="bg-white rounded-lg border border-gray-200 p-6">
+                    <div class="space-y-4">
+                        <!-- Trending Item 1 -->
+                        <div class="flex items-center justify-between p-4 hover:bg-gray-50 rounded-lg transition-colors">
+                            <div class="flex items-center">
+                                <div class="text-2xl font-bold text-gray-400 mr-6 w-8">1</div>
+                                <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mr-4">
+                                    <i class="fas fa-brain text-purple-600 text-xl"></i>
+                                </div>
+                                <div>
+                                    <h4 class="font-semibold text-gray-900">gpt-4-turbo-wrapper</h4>
+                                    <p class="text-sm text-gray-600">Latest GPT-4 Turbo with vision capabilities</p>
+                                    <div class="flex items-center gap-4 text-sm mt-1">
+                                        <span class="text-green-600">
+                                            <i class="fas fa-arrow-up mr-1"></i>342% growth
+                                        </span>
+                                        <span class="text-gray-600">
+                                            <i class="fas fa-fire text-orange-500 mr-1"></i>12.5K calls today
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                            <button class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors">
+                                Subscribe
+                            </button>
+                        </div>
+                        
+                        <!-- Trending Item 2 -->
+                        <div class="flex items-center justify-between p-4 hover:bg-gray-50 rounded-lg transition-colors">
+                            <div class="flex items-center">
+                                <div class="text-2xl font-bold text-gray-400 mr-6 w-8">2</div>
+                                <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mr-4">
+                                    <i class="fas fa-chart-line text-green-600 text-xl"></i>
+                                </div>
+                                <div>
+                                    <h4 class="font-semibold text-gray-900">stock-market-predictor</h4>
+                                    <p class="text-sm text-gray-600">AI-powered stock analysis and predictions</p>
+                                    <div class="flex items-center gap-4 text-sm mt-1">
+                                        <span class="text-green-600">
+                                            <i class="fas fa-arrow-up mr-1"></i>218% growth
+                                        </span>
+                                        <span class="text-gray-600">
+                                            <i class="fas fa-fire text-orange-500 mr-1"></i>8.3K calls today
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                            <button class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors">
+                                Subscribe
+                            </button>
+                        </div>
+                        
+                        <!-- More trending items would go here -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- Logs Section -->
+            <section id="logs" class="mb-16 hidden">
+                <h2 class="text-2xl font-bold text-gray-900 mb-6">Logs & Status</h2>
+                
+                <!-- API Selection and Controls -->
+                <div class="bg-white rounded-lg border border-gray-200 p-6 mb-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="flex items-center gap-4">
+                            <select class="p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500">
+                                <option>sentiment-api</option>
+                                <option>weather-api</option>
+                                <option>gpt-wrapper</option>
+                            </select>
+                            <div class="flex items-center gap-2">
+                                <div class="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+                                <span class="text-sm font-medium text-gray-900">HEALTHY</span>
+                            </div>
+                        </div>
+                        <div class="flex gap-2">
+                            <button class="text-gray-600 hover:text-gray-900 px-3 py-1 rounded hover:bg-gray-100">
+                                <i class="fas fa-sync mr-1"></i> Refresh
+                            </button>
+                            <button class="text-gray-600 hover:text-gray-900 px-3 py-1 rounded hover:bg-gray-100">
+                                <i class="fas fa-download mr-1"></i> Export
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Log Filters -->
+                    <div class="flex items-center gap-4">
+                        <select class="p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 text-sm">
+                            <option>All Levels</option>
+                            <option>Error</option>
+                            <option>Warning</option>
+                            <option>Info</option>
+                            <option>Debug</option>
+                        </select>
+                        <input type="text" placeholder="Search logs..." class="flex-1 p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 text-sm">
+                        <div class="flex items-center gap-2">
+                            <input type="checkbox" id="stream-logs" checked class="rounded">
+                            <label for="stream-logs" class="text-sm text-gray-700">Stream</label>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Log Viewer -->
+                <div class="bg-gray-900 text-gray-100 rounded-lg p-4 font-mono text-sm h-96 overflow-y-auto">
+                    <div class="space-y-1">
+                        <div class="flex">
+                            <span class="text-gray-500 mr-4">2025-01-27 15:42:31</span>
+                            <span class="text-blue-400 mr-4">[INFO]</span>
+                            <span>API server started on port 8000</span>
+                        </div>
+                        <div class="flex">
+                            <span class="text-gray-500 mr-4">2025-01-27 15:42:32</span>
+                            <span class="text-green-400 mr-4">[SUCCESS]</span>
+                            <span>Database connection established</span>
+                        </div>
+                        <div class="flex">
+                            <span class="text-gray-500 mr-4">2025-01-27 15:42:33</span>
+                            <span class="text-blue-400 mr-4">[INFO]</span>
+                            <span>Loading ML model from cache...</span>
+                        </div>
+                        <div class="flex">
+                            <span class="text-gray-500 mr-4">2025-01-27 15:42:35</span>
+                            <span class="text-green-400 mr-4">[SUCCESS]</span>
+                            <span>Model loaded successfully (2.3s)</span>
+                        </div>
+                        <div class="flex">
+                            <span class="text-gray-500 mr-4">2025-01-27 15:42:45</span>
+                            <span class="text-blue-400 mr-4">[REQUEST]</span>
+                            <span>POST /analyze {"text": "I love this product!"} - 200 OK (45ms)</span>
+                        </div>
+                        <div class="flex">
+                            <span class="text-gray-500 mr-4">2025-01-27 15:42:47</span>
+                            <span class="text-blue-400 mr-4">[REQUEST]</span>
+                            <span>POST /analyze {"text": "This is terrible"} - 200 OK (38ms)</span>
+                        </div>
+                        <div class="flex">
+                            <span class="text-gray-500 mr-4">2025-01-27 15:42:52</span>
+                            <span class="text-yellow-400 mr-4">[WARN]</span>
+                            <span>Rate limit approaching for user: api_key_abc123</span>
+                        </div>
+                        <div class="flex">
+                            <span class="text-gray-500 mr-4">2025-01-27 15:43:01</span>
+                            <span class="text-red-400 mr-4">[ERROR]</span>
+                            <span>Invalid API key: api_key_xyz789</span>
+                        </div>
+                        <div class="flex">
+                            <span class="text-gray-500 mr-4">2025-01-27 15:43:15</span>
+                            <span class="text-blue-400 mr-4">[INFO]</span>
+                            <span>Health check passed - all systems operational</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Status Metrics -->
+                <div class="mt-6 grid grid-cols-1 md:grid-cols-4 gap-6">
+                    <div class="bg-white rounded-lg border border-gray-200 p-4">
+                        <div class="text-sm text-gray-600 mb-1">Uptime</div>
+                        <div class="text-2xl font-bold text-gray-900">99.98%</div>
+                        <div class="text-xs text-gray-500">Last 30 days</div>
+                    </div>
+                    <div class="bg-white rounded-lg border border-gray-200 p-4">
+                        <div class="text-sm text-gray-600 mb-1">Response Time</div>
+                        <div class="text-2xl font-bold text-gray-900">42ms</div>
+                        <div class="text-xs text-gray-500">P50 latency</div>
+                    </div>
+                    <div class="bg-white rounded-lg border border-gray-200 p-4">
+                        <div class="text-sm text-gray-600 mb-1">Error Rate</div>
+                        <div class="text-2xl font-bold text-gray-900">0.12%</div>
+                        <div class="text-xs text-gray-500">Last 24 hours</div>
+                    </div>
+                    <div class="bg-white rounded-lg border border-gray-200 p-4">
+                        <div class="text-sm text-gray-600 mb-1">Active Instances</div>
+                        <div class="text-2xl font-bold text-gray-900">3</div>
+                        <div class="text-xs text-gray-500">Auto-scaled</div>
+                    </div>
+                </div>
+            </section>
         </main>
     </div>
 
@@ -778,6 +2079,27 @@ apidirect deploy --hosted --yes --output json</code></pre>
             });
         });
 
+        // Show specific section programmatically
+        function showSection(sectionId) {
+            // Remove active class from all nav items
+            document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
+            
+            // Find and activate the nav item
+            const navItem = document.querySelector(`[href="#${sectionId}"]`);
+            if (navItem) {
+                navItem.classList.add('active');
+            }
+            
+            // Hide all sections
+            document.querySelectorAll('section').forEach(section => section.classList.add('hidden'));
+            
+            // Show target section
+            const targetSection = document.getElementById(sectionId);
+            if (targetSection) {
+                targetSection.classList.remove('hidden');
+            }
+        }
+
         // Copy to clipboard function
         function copyToClipboard(elementId) {
             const element = document.getElementById(elementId);
@@ -792,9 +2114,115 @@ apidirect deploy --hosted --yes --output json</code></pre>
             });
         }
 
+        // Deploy template functionality
+        function showDeployTemplate() {
+            document.getElementById('deploy-template-section').classList.remove('hidden');
+        }
+
+        function deployTemplate(templateName) {
+            // Show deployment progress
+            alert(`Deploying ${templateName} API... In a real implementation, this would trigger the deployment process.`);
+            
+            // In real implementation, this would:
+            // 1. Call backend API to create project from template
+            // 2. Show progress indicators
+            // 3. Redirect to deployment status page
+        }
+
+        // Import from GitHub
+        function importFromGitHub() {
+            const url = document.getElementById('github-url').value;
+            if (!url) {
+                alert('Please enter a GitHub repository URL');
+                return;
+            }
+            
+            // Show progress
+            document.getElementById('import-progress').classList.remove('hidden');
+            document.getElementById('import-results').classList.add('hidden');
+            
+            // Simulate import process
+            setTimeout(() => {
+                document.getElementById('import-progress').classList.add('hidden');
+                document.getElementById('import-results').classList.remove('hidden');
+            }, 2000);
+        }
+
+        // Scaling configuration
+        function loadScalingConfig(apiName) {
+            if (apiName) {
+                document.getElementById('scaling-config').classList.remove('hidden');
+            } else {
+                document.getElementById('scaling-config').classList.add('hidden');
+            }
+        }
+
+        function updateReplicaCount(value) {
+            document.getElementById('replica-count').textContent = value;
+        }
+
+        // Environment variables
+        function addEnvVar() {
+            const envVarsList = document.getElementById('env-vars-list');
+            const newVar = document.createElement('div');
+            newVar.className = 'flex gap-4 items-center';
+            newVar.innerHTML = `
+                <input type="text" placeholder="VARIABLE_NAME" class="flex-1 p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 font-mono text-sm">
+                <input type="password" placeholder="value" class="flex-1 p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 font-mono text-sm">
+                <button class="text-gray-500 hover:text-gray-700" onclick="togglePasswordVisibility(this)">
+                    <i class="fas fa-eye"></i>
+                </button>
+                <button class="text-red-500 hover:text-red-700" onclick="removeEnvVar(this)">
+                    <i class="fas fa-trash"></i>
+                </button>
+            `;
+            envVarsList.appendChild(newVar);
+        }
+
+        function removeEnvVar(button) {
+            button.closest('.flex').remove();
+        }
+
+        function togglePasswordVisibility(button) {
+            const input = button.previousElementSibling;
+            if (input.type === 'password') {
+                input.type = 'text';
+                button.innerHTML = '<i class="fas fa-eye-slash"></i>';
+            } else {
+                input.type = 'password';
+                button.innerHTML = '<i class="fas fa-eye"></i>';
+            }
+        }
+
         // Initialize - show overview by default
         document.addEventListener('DOMContentLoaded', function() {
             document.querySelector('[href="#overview"]').classList.add('active');
+            
+            // Simulate loading stats
+            setTimeout(() => {
+                // Update stats with realistic values
+                const stats = {
+                    'total-apis': '3',
+                    'api-calls': '47,238',
+                    'monthly-revenue': '$247.52',
+                    'active-subscriptions': '12'
+                };
+                
+                Object.entries(stats).forEach(([key, value]) => {
+                    const element = document.querySelector(`[data-stat="${key}"]`);
+                    if (element) {
+                        element.innerHTML = value;
+                    }
+                });
+            }, 1000);
+        });
+
+        // Handle toggle switches for all checkboxes
+        document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+            checkbox.addEventListener('change', function() {
+                // Handle toggle state changes
+                console.log(`Toggle ${this.id || 'unnamed'}: ${this.checked}`);
+            });
         });
     </script>
     

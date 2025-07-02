@@ -41,9 +41,9 @@
             <h2 class="text-2xl font-bold text-gray-900 mb-2">APIs & Deployments</h2>
             <p class="text-gray-600">Manage all your deployed APIs and monitor their status.</p>
         </div>
-        <button class="bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 transition-colors" onclick="openDeployModal()">
+        <a href="/deploy" class="inline-flex items-center bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 transition-colors">
             <i class="fas fa-plus mr-2"></i>Deploy New API
-        </button>
+        </a>
     </div>
 </div>
 
@@ -503,6 +503,7 @@ function createAPIRow(api) {
                 <div id="menu-${api.id}" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-10">
                     <div class="py-1">
                         <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" onclick="editAPI('${api.id}')">Edit Configuration</a>
+                        <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" onclick="viewDocs('${api.id}')">View Documentation</a>
                         <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" onclick="viewLogs('${api.id}')">View Logs</a>
                         <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" onclick="restartAPI('${api.id}')">Restart</a>
                         <hr class="my-1">
@@ -550,6 +551,28 @@ function formatDate(dateString) {
     });
 }
 
+function formatCurrency(amount) {
+    return new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: 'USD',
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0
+    }).format(amount || 0);
+}
+
+function formatNumber(num) {
+    if (!num) return '0';
+    if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
+    if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
+    return num.toString();
+}
+
+function handleAPIError(error, action) {
+    console.error(`Error ${action}:`, error);
+    const message = error.message || `Failed to ${action}`;
+    showNotification(message, 'error');
+}
+
 async function deployAPI() {
     const apiName = document.querySelector('[placeholder="my-awesome-api"]').value;
     const template = document.querySelector('select').value;
@@ -579,34 +602,39 @@ async function deployAPI() {
     }
 }
 
-async function deleteAPIConfirm(apiId) {
+function deleteAPIConfirm(apiId) {
     if (confirm('Are you sure you want to delete this API? This action cannot be undone.')) {
-        try {
-            await apiClient.deleteAPI(apiId);
-            showNotification('API deleted successfully', 'success');
-            loadAPIs(); // Refresh list
-        } catch (error) {
-            handleAPIError(error, 'deleting API');
-        }
+        apiClient.deleteAPI(apiId)
+            .then(() => {
+                showNotification('API deleted successfully', 'success');
+                loadAPIs(); // Refresh the list
+            })
+            .catch(err => showNotification('Failed to delete API', 'error'));
     }
 }
 
 async function restartAPI(apiId) {
-    try {
-        await apiClient.post(`/api/apis/${apiId}/restart`);
-        showNotification('API restart initiated', 'success');
-        setTimeout(loadAPIs, 2000); // Refresh after restart
-    } catch (error) {
-        handleAPIError(error, 'restarting API');
+    if (confirm('Are you sure you want to restart this API?')) {
+        try {
+            await apiClient.restartAPI(apiId);
+            showNotification('API restart initiated', 'success');
+            setTimeout(loadAPIs, 2000); // Refresh after restart
+        } catch (error) {
+            handleAPIError(error, 'restarting API');
+        }
     }
 }
 
 function viewLogs(apiId) {
-    window.open(`/apis/${apiId}/logs`, '_blank');
+    window.location.href = `/api-logs?api_id=${apiId}`;
 }
 
 function editAPI(apiId) {
-    window.location.href = `/apis/${apiId}/edit`;
+    window.location.href = `/api-config?api_id=${apiId}`;
+}
+
+function viewDocs(apiId) {
+    window.location.href = `/api-docs?api_id=${apiId}`;
 }
 
 function setupAutoRefresh() {

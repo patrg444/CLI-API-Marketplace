@@ -252,6 +252,11 @@ coverage.xml
 *.cover
 .hypothesis/
 
+# Environment
+.env
+.env.local
+.env.*.local
+
 # API-Direct
 .apidirect/
 *.log
@@ -480,6 +485,11 @@ yarn-debug.log*
 yarn-error.log*
 .npm
 .yarn-integrity
+
+# Environment
+.env
+.env.local
+.env.*.local
 
 # API-Direct
 .apidirect/
@@ -736,9 +746,9 @@ func getProjectDirs(template APITemplate, features []string) []string {
 		switch feature {
 		case "Docker support":
 			// Dockerfile will be created in root
-		case "GitHub Actions CI/CD":
-			dirs = append(dirs, ".github/workflows")
-		case "API documentation generation":
+		case "CI/CD", "GitHub Actions CI/CD":
+			dirs = append(dirs, ".github", ".github/workflows")
+		case "API documentation", "API documentation generation":
 			dirs = append(dirs, "docs")
 		}
 	}
@@ -764,9 +774,9 @@ func getPythonTemplateFiles(apiName, runtime string, template APITemplate, featu
 		case "Docker support":
 			files["Dockerfile"] = getPythonDockerfile(runtime)
 			files[".dockerignore"] = getDockerignore()
-		case "GitHub Actions CI/CD":
+		case "CI/CD", "GitHub Actions CI/CD":
 			files[".github/workflows/deploy.yml"] = getGitHubActionsWorkflow()
-		case "API documentation generation":
+		case "API documentation", "API documentation generation":
 			files["docs/api.md"] = getAPIDocumentation(template)
 		}
 	}
@@ -791,9 +801,9 @@ func getNodeTemplateFiles(apiName, runtime string, template APITemplate, feature
 		case "Docker support":
 			files["Dockerfile"] = getNodeDockerfile(runtime)
 			files[".dockerignore"] = getDockerignore()
-		case "GitHub Actions CI/CD":
+		case "CI/CD", "GitHub Actions CI/CD":
 			files[".github/workflows/deploy.yml"] = getGitHubActionsWorkflow()
-		case "API documentation generation":
+		case "API documentation", "API documentation generation":
 			files["docs/api.md"] = getAPIDocumentation(template)
 		}
 	}
@@ -1504,8 +1514,7 @@ func getTemplateReadme(apiName, language string, template APITemplate, features 
 **Template:** %s  
 **Runtime:** %s  
 **Category:** %s
-
-%s%s
+%s
 
 ## Template Features
 %s
@@ -1555,7 +1564,7 @@ func getTemplateReadme(apiName, language string, template APITemplate, features 
 }
 
 func getInstallCommand(language string) string {
-	if strings.Contains(language, "Node") {
+	if strings.Contains(strings.ToLower(language), "node") {
 		return "npm install"
 	}
 	return "pip install -r requirements.txt"

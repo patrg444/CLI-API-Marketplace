@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Marketplace API Test</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-section {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 { color: #333; }
+        h2 { color: #666; margin-top: 0; }
+        .status { 
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+        .status.success { background: #d4edda; color: #155724; }
+        .status.error { background: #f8d7da; color: #721c24; }
+        .status.pending { background: #fff3cd; color: #856404; }
+        pre {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 6px;
+            overflow-x: auto;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+        .api-card {
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px 0;
+            background: #fafafa;
+        }
+        .api-card h3 { margin: 0 0 10px 0; color: #333; }
+        .api-card .meta { font-size: 14px; color: #666; }
+        .api-card .tags { margin-top: 10px; }
+        .api-card .tag {
+            display: inline-block;
+            background: #e3f2fd;
+            color: #1976d2;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            margin-right: 5px;
+        }
+        button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover { background: #45a049; }
+    </style>
+</head>
+<body>
+    <h1>Marketplace API Integration Test</h1>
+    
+    <div class="test-section">
+        <h2>Test Configuration</h2>
+        <p><strong>Base URL:</strong> <span id="baseUrl"></span></p>
+        <button onclick="runAllTests()">Run All Tests</button>
+    </div>
+    
+    <div id="test-results"></div>
+
+    <script>
+        // Configure API base URL
+        const API_BASE_URL = window.location.hostname === 'localhost' 
+            ? 'http://localhost:3000/api' 
+            : '/api';
+        
+        document.getElementById('baseUrl').textContent = API_BASE_URL;
+        
+        async function testEndpoint(name, url, description) {
+            const section = document.createElement('div');
+            section.className = 'test-section';
+            section.innerHTML = `
+                <h2>${name} <span class="status pending">Testing...</span></h2>
+                <p>${description}</p>
+                <div class="result"></div>
+            `;
+            document.getElementById('test-results').appendChild(section);
+            
+            const statusEl = section.querySelector('.status');
+            const resultEl = section.querySelector('.result');
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}${url}`);
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    statusEl.className = 'status success';
+                    statusEl.textContent = 'Success';
+                    
+                    // Display results based on endpoint
+                    if (url.includes('categories')) {
+                        resultEl.innerHTML = `
+                            <h3>Categories Found: ${data.data.length}</h3>
+                            ${data.data.map(cat => `
+                                <div class="api-card">
+                                    <h3>${cat.name}</h3>
+                                    <div class="meta">ID: ${cat.id} | APIs: ${cat.count}</div>
+                                </div>
+                            `).join('')}
+                        `;
+                    } else if (url.includes('featured') || url.includes('trending')) {
+                        resultEl.innerHTML = `
+                            <h3>APIs Found: ${data.data.length}</h3>
+                            ${data.data.map(api => createAPICard(api)).join('')}
+                        `;
+                    } else if (url.includes('/apis/') && !url.includes('featured') && !url.includes('trending')) {
+                        // Single API
+                        resultEl.innerHTML = createAPICard(data.data);
+                    } else if (url.includes('/apis')) {
+                        // API list
+                        resultEl.innerHTML = `
+                            <h3>APIs Found: ${data.data.length} (Total: ${data.meta?.total || data.data.length})</h3>
+                            ${data.data.map(api => createAPICard(api)).join('')}
+                        `;
+                    }
+                    
+                    // Show raw response
+                    resultEl.innerHTML += `
+                        <details style="margin-top: 20px;">
+                            <summary style="cursor: pointer;">View Raw Response</summary>
+                            <pre>${JSON.stringify(data, null, 2)}</pre>
+                        </details>
+                    `;
+                } else {
+                    throw new Error(data.error || 'Request failed');
+                }
+            } catch (error) {
+                statusEl.className = 'status error';
+                statusEl.textContent = 'Failed';
+                resultEl.innerHTML = `<pre style="color: red;">Error: ${error.message}</pre>`;
+            }
+        }
+        
+        function createAPICard(api) {
+            return `
+                <div class="api-card">
+                    <h3>${api.name}</h3>
+                    <div class="meta">
+                        By ${api.author} | Category: ${api.category} | 
+                        Rating: ${api.rating}/5 (${api.reviews} reviews) | 
+                        ${api.calls.toLocaleString()} calls
+                    </div>
+                    <p>${api.description}</p>
+                    <div class="tags">
+                        ${api.tags.map(tag => `<span class="tag">#${tag}</span>`).join('')}
+                    </div>
+                    <div class="meta" style="margin-top: 10px;">
+                        Pricing: ${api.pricing.type} 
+                        ${api.pricing.freeCalls ? `(${api.pricing.freeCalls} free calls)` : ''}
+                        ${api.pricing.pricePerCall ? `- $${api.pricing.pricePerCall}/call` : ''}
+                        ${api.pricing.monthlyPrice ? `- $${api.pricing.monthlyPrice}/month` : ''}
+                    </div>
+                </div>
+            `;
+        }
+        
+        async function runAllTests() {
+            document.getElementById('test-results').innerHTML = '';
+            
+            // Test all endpoints
+            await testEndpoint('Categories', '/categories', 'Fetch all API categories');
+            await testEndpoint('All APIs', '/apis', 'Fetch all APIs with pagination');
+            await testEndpoint('Featured APIs', '/apis/featured', 'Fetch featured APIs');
+            await testEndpoint('Trending APIs', '/apis/trending', 'Fetch trending APIs with growth metrics');
+            await testEndpoint('Search APIs', '/apis?search=weather', 'Search for weather-related APIs');
+            await testEndpoint('Filter by Category', '/apis?category=ai-ml', 'Filter APIs by AI/ML category');
+            await testEndpoint('Specific API', '/apis/global-weather-api', 'Fetch details for a specific API');
+            await testEndpoint('Pagination', '/apis?page=1&limit=3', 'Test pagination with 3 items per page');
+        }
+        
+        // Auto-run tests on page load
+        window.addEventListener('load', runAllTests);
+    </script>
+</body>
+</html>

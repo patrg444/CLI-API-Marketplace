@@ -5,16 +5,24 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sync"
 	"time"
+)
+
+var (
+	// configMutex protects concurrent access to config file
+	configMutex sync.RWMutex
 )
 
 // Config represents the CLI configuration
 type Config struct {
-	Auth        AuthConfig        `json:"auth"`
-	API         APIConfig         `json:"api"`
-	Preferences PreferencesConfig `json:"preferences"`
-	AuthToken   string            `json:"-"` // Temporary for backward compatibility
-	APIEndpoint string            `json:"-"` // Temporary for backward compatibility
+	Auth        AuthConfig                  `json:"auth"`
+	API         APIConfig                   `json:"api"`
+	Preferences PreferencesConfig           `json:"preferences"`
+	User        UserConfig                  `json:"user,omitempty"`
+	Deployments map[string]interface{}      `json:"deployments,omitempty"`
+	AuthToken   string                      `json:"-"` // Temporary for backward compatibility
+	APIEndpoint string                      `json:"-"` // Temporary for backward compatibility
 }
 
 // AuthConfig stores authentication information
@@ -39,6 +47,13 @@ type APIConfig struct {
 type PreferencesConfig struct {
 	DefaultRuntime string `json:"default_runtime,omitempty"`
 	OutputFormat   string `json:"output_format,omitempty"`
+}
+
+// UserConfig stores user information
+type UserConfig struct {
+	Email    string `json:"email,omitempty"`
+	Username string `json:"username,omitempty"`
+	UserID   string `json:"user_id,omitempty"`
 }
 
 // DefaultConfig returns the default configuration
@@ -93,18 +108,42 @@ func Get() *Config {
 
 // LoadConfig loads the configuration from disk
 func LoadConfig() (*Config, error) {
+	// Always acquire read lock first
+	configMutex.RLock()
+	
 	path, err := ConfigPath()
 	if err != nil {
+		configMutex.RUnlock()
 		return nil, err
 	}
 
-	// Create default config if file doesn't exist
+	// Check if file exists with read lock
 	if _, err := os.Stat(path); os.IsNotExist(err) {
-		config := DefaultConfig()
-		if err := SaveConfig(config); err != nil {
-			return nil, fmt.Errorf("failed to save default config: %w", err)
+		// Upgrade to write lock to create default config
+		configMutex.RUnlock()
+		configMutex.Lock()
+		defer configMutex.Unlock()
+		
+		// Double-check after acquiring write lock
+		if _, err := os.Stat(path); os.IsNotExist(err) {
+			config := DefaultConfig()
+			// Check environment variables for default config
+			if envURL := os.Getenv("APIDIRECT_API_ENDPOINT"); envURL != "" {
+				config.API.BaseURL = envURL
+			}
+			if envToken := os.Getenv("APIDIRECT_AUTH_TOKEN"); envToken != "" {
+				config.Auth.AccessToken = envToken
+			}
+			if err := saveConfigLocked(config); err != nil {
+				return nil, fmt.Errorf("failed to save default config: %w", err)
+			}
+			return config, nil
 		}
-		return config, nil
+		// File was created by another goroutine, fall through to read it
+		// Note: we hold the write lock but that's OK for reading
+	} else {
+		// File exists, keep read lock
+		defer configMutex.RUnlock()
 	}
 
 	data, err := os.ReadFile(path)
@@ -120,7 +159,12 @@ func LoadConfig() (*Config, error) {
 	// Merge with defaults for any missing fields
 	defaultConfig := DefaultConfig()
 	if config.API.BaseURL == "" {
-		config.API.BaseURL = defaultConfig.API.BaseURL
+		// Check environment variable first
+		if envURL := os.Getenv("APIDIRECT_API_ENDPOINT"); envURL != "" {
+			config.API.BaseURL = envURL
+		} else {
+			config.API.BaseURL = defaultConfig.API.BaseURL
+		}
 	}
 	if config.API.Region == "" {
 		config.API.Region = defaultConfig.API.Region
@@ -131,12 +175,25 @@ func LoadConfig() (*Config, error) {
 	if config.Preferences.OutputFormat == "" {
 		config.Preferences.OutputFormat = defaultConfig.Preferences.OutputFormat
 	}
+	
+	// Check for auth token environment variable
+	if envToken := os.Getenv("APIDIRECT_AUTH_TOKEN"); envToken != "" && config.Auth.AccessToken == "" {
+		config.Auth.AccessToken = envToken
+	}
 
 	return &config, nil
 }
 
 // SaveConfig saves the configuration to disk
 func SaveConfig(config *Config) error {
+	configMutex.Lock()
+	defer configMutex.Unlock()
+	
+	return saveConfigLocked(config)
+}
+
+// saveConfigLocked saves the configuration to disk without locking (caller must hold lock)
+func saveConfigLocked(config *Config) error {
 	path, err := ConfigPath()
 	if err != nil {
 		return err
@@ -168,6 +225,15 @@ func UpdateAuth(auth AuthConfig) error {
 	}
 
 	config.Auth = auth
+	
+	// Also update user info if available
+	if auth.Email != "" {
+		config.User.Email = auth.Email
+	}
+	if auth.Username != "" {
+		config.User.Username = auth.Username
+	}
+	
 	return SaveConfig(config)
 }
 

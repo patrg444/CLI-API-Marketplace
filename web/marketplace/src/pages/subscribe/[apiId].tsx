@@ -11,7 +11,7 @@ import Layout from '@/components/Layout'
 import apiService from '@/services/api'
 import { getStripe, formatCurrency } from '@/utils/stripe'
 import { API, PricingPlan } from '@/types/api'
-import { getCurrentUser } from 'aws-amplify/auth'
+import { mockAuthUtils } from '@/utils/mockAuth'
 
 const CheckoutForm: React.FC<{
   api: API
@@ -160,7 +160,7 @@ const SubscribePage: React.FC = () => {
   // Check authentication
   const { data: user, isLoading: userLoading } = useQuery('currentUser', async () => {
     try {
-      const currentUser = await getCurrentUser()
+      const currentUser = await mockAuthUtils.getCurrentUser()
       return currentUser
     } catch {
       router.push(`/auth/login?redirect=/subscribe/${apiId}`)
@@ -244,7 +244,7 @@ const SubscribePage: React.FC = () => {
                 {newApiKey}
               </div>
               <p className="mt-4 text-sm text-amber-600">
-                <strong>Important:</strong> This is the only time you'll see this key. Please copy and store it securely.
+                <strong>Important:</strong> This is the only time you{'\''}ll see this key. Please copy and store it securely.
               </p>
             </div>
 

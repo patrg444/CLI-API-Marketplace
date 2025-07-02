@@ -1,0 +1,37 @@
+# Copy this file to terraform.tfvars and fill in your values
+
+# Basic Configuration
+project_name = "apidirect"
+environment  = "dev"  # Options: dev, staging, production
+aws_region   = "us-east-1"
+
+# Domain Configuration
+domain_name = "api-marketplace.example.com"
+email_from_address = "noreply@example.com"
+
+# Database Configuration
+db_password = "CHANGE_ME_SECURE_PASSWORD_32_CHARS"  # Generate with: openssl rand -base64 32
+
+# Redis Configuration
+redis_auth_token = "CHANGE_ME_SECURE_TOKEN_32_CHARS"  # Generate with: openssl rand -base64 32
+
+# Optional: ACM Certificate ARN (leave empty to create new)
+# certificate_arn = "arn:aws:acm:us-east-1:123456789012:certificate/..."
+
+# Instance Sizing (adjust based on your needs and budget)
+# Development
+rds_instance_class = "db.t3.micro"      # ~$15/month
+redis_node_type    = "cache.t3.micro"   # ~$13/month
+
+# Production (uncomment for production)
+# rds_instance_class = "db.t3.small"    # ~$30/month
+# redis_node_type    = "cache.t3.small" # ~$26/month
+
+# Storage
+rds_allocated_storage = 20  # GB, minimum 20 for PostgreSQL
+
+# Networking (usually don't need to change)
+vpc_cidr         = "10.0.0.0/16"
+public_subnets   = ["10.0.1.0/24", "10.0.2.0/24"]
+private_subnets  = ["10.0.11.0/24", "10.0.12.0/24"]
+database_subnets = ["10.0.21.0/24", "10.0.22.0/24"]

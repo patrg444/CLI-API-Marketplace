@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"os"
 
 	"github.com/api-direct/cli/pkg/auth"
 	"github.com/api-direct/cli/pkg/config"
@@ -54,33 +53,29 @@ Example pricing configuration file:
   ]
 }`,
 	Args: cobra.ExactArgs(1),
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
 		apiIdentifier := args[0]
 
 		if pricingPlanFile == "" {
-			fmt.Println("Error: Please specify a pricing plan file with --plan-file")
-			os.Exit(1)
+			return fmt.Errorf("please specify a pricing plan file with --plan-file")
 		}
 
 		// Read pricing plan file
 		planData, err := ioutil.ReadFile(pricingPlanFile)
 		if err != nil {
-			fmt.Printf("Error reading pricing plan file: %v\n", err)
-			os.Exit(1)
+			return fmt.Errorf("reading pricing plan file: %w", err)
 		}
 
 		// Validate JSON
 		var pricingConfig map[string]interface{}
 		if err := json.Unmarshal(planData, &pricingConfig); err != nil {
-			fmt.Printf("Error: Invalid JSON in pricing plan file: %v\n", err)
-			os.Exit(1)
+			return fmt.Errorf("invalid JSON in pricing plan file: %w", err)
 		}
 
 		// Get authentication token
 		token, err := auth.GetToken()
 		if err != nil {
-			fmt.Printf("Error: Not authenticated. Please run 'apidirect auth login' first.\n")
-			os.Exit(1)
+			return fmt.Errorf("not authenticated. Please run 'apidirect auth login' first")
 		}
 
 		// Make API request to set pricing
@@ -89,8 +84,7 @@ Example pricing configuration file:
 
 		resp, err := auth.MakeAuthenticatedRequest("PUT", url, token, planData)
 		if err != nil {
-			fmt.Printf("Error setting pricing plans: %v\n", err)
-			os.Exit(1)
+			return fmt.Errorf("setting pricing plans: %w", err)
 		}
 		defer resp.Body.Close()
 
@@ -109,9 +103,9 @@ Example pricing configuration file:
 		} else {
 			var errorResp map[string]string
 			json.NewDecoder(resp.Body).Decode(&errorResp)
-			fmt.Printf("Error: Failed to set pricing plans - %s\n", errorResp["error"])
-			os.Exit(1)
+			return fmt.Errorf("failed to set pricing plans - %s", errorResp["error"])
 		}
+		return nil
 	},
 }
 
@@ -120,14 +114,13 @@ var getPricingCmd = &cobra.Command{
 	Short: "Get current pricing plans for an API",
 	Long:  `Retrieve and display the current pricing plans configured for an API.`,
 	Args:  cobra.ExactArgs(1),
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
 		apiIdentifier := args[0]
 
 		// Get authentication token
 		token, err := auth.GetToken()
 		if err != nil {
-			fmt.Printf("Error: Not authenticated. Please run 'apidirect auth login' first.\n")
-			os.Exit(1)
+			return fmt.Errorf("not authenticated. Please run 'apidirect auth login' first")
 		}
 
 		// Make API request to get pricing
@@ -136,16 +129,14 @@ var getPricingCmd = &cobra.Command{
 
 		resp, err := auth.MakeAuthenticatedRequest("GET", url, token, nil)
 		if err != nil {
-			fmt.Printf("Error getting pricing plans: %v\n", err)
-			os.Exit(1)
+			return fmt.Errorf("getting pricing plans: %w", err)
 		}
 		defer resp.Body.Close()
 
 		if resp.StatusCode == 200 {
 			var pricingData map[string]interface{}
 			if err := json.NewDecoder(resp.Body).Decode(&pricingData); err != nil {
-				fmt.Printf("Error parsing response: %v\n", err)
-				os.Exit(1)
+				return fmt.Errorf("parsing response: %w", err)
 			}
 
 			// Pretty print the pricing plans
@@ -184,9 +175,9 @@ var getPricingCmd = &cobra.Command{
 		} else {
 			var errorResp map[string]string
 			json.NewDecoder(resp.Body).Decode(&errorResp)
-			fmt.Printf("Error: Failed to get pricing plans - %s\n", errorResp["error"])
-			os.Exit(1)
+			return fmt.Errorf("failed to get pricing plans - %s", errorResp["error"])
 		}
+		return nil
 	},
 }
 

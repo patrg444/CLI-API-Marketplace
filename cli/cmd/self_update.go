@@ -1,11 +1,15 @@
 package cmd
 
 import (
+	"archive/tar"
+	"archive/zip"
+	"compress/gzip"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
 	"os"
+	"path/filepath"
 	"runtime"
 	"strings"
 
@@ -53,7 +57,7 @@ func runSelfUpdate(cmd *cobra.Command, args []string) error {
 	// Get latest release info
 	latestVersion, downloadURL, err := getLatestRelease()
 	if err != nil {
-		return fmt.Errorf("failed to check for updates: %w", err)
+		return fmt.Errorf("Failed to check for updates: %w", err)
 	}
 	
 	fmt.Printf("Current version: %s\n", color.YellowString(currentVersion))
@@ -85,7 +89,7 @@ func runSelfUpdate(cmd *cobra.Command, args []string) error {
 	// Download and install update
 	fmt.Println("\n📥 Downloading update...")
 	if err := downloadAndInstall(downloadURL); err != nil {
-		return fmt.Errorf("failed to install update: %w", err)
+		return fmt.Errorf("Failed to install update: %w", err)
 	}
 	
 	fmt.Println(color.GreenString("\n✅ Update completed successfully!"))
@@ -136,7 +140,7 @@ func getLatestRelease() (version, downloadURL string, err error) {
 	}
 	
 	if downloadURL == "" {
-		return "", "", fmt.Errorf("no compatible binary found for %s/%s", osName, archName)
+		return "", "", fmt.Errorf("No compatible binary found for %s/%s", osName, archName)
 	}
 	
 	return version, downloadURL, nil
@@ -158,22 +162,35 @@ func downloadAndInstall(url string) error {
 	defer resp.Body.Close()
 	
 	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("download failed with status %d", resp.StatusCode)
+		return fmt.Errorf("Download failed with status %d", resp.StatusCode)
 	}
 	
 	// Handle compressed files
-	var reader io.Reader = resp.Body
 	if strings.HasSuffix(url, ".tar.gz") {
-		// TODO: Add tar.gz extraction logic
-		return fmt.Errorf("tar.gz extraction not yet implemented")
+		if err := extractTarGz(resp.Body, tmpFile); err != nil {
+			return fmt.Errorf("Failed to extract tar.gz: %w", err)
+		}
 	} else if strings.HasSuffix(url, ".zip") {
-		// TODO: Add zip extraction logic
-		return fmt.Errorf("zip extraction not yet implemented")
-	}
-	
-	// Write to temporary file
-	if _, err := io.Copy(tmpFile, reader); err != nil {
-		return err
+		// For zip files, we need to download to a temporary file first
+		zipFile, err := os.CreateTemp("", "apidirect-*.zip")
+		if err != nil {
+			return err
+		}
+		defer os.Remove(zipFile.Name())
+		
+		if _, err := io.Copy(zipFile, resp.Body); err != nil {
+			return err
+		}
+		zipFile.Close()
+		
+		if err := extractZip(zipFile.Name(), tmpFile); err != nil {
+			return fmt.Errorf("Failed to extract zip: %w", err)
+		}
+	} else {
+		// Direct binary download
+		if _, err := io.Copy(tmpFile, resp.Body); err != nil {
+			return err
+		}
 	}
 	tmpFile.Close()
 	
@@ -192,7 +209,7 @@ func downloadAndInstall(url string) error {
 	if runtime.GOOS == "windows" {
 		backupPath := execPath + ".backup"
 		if err := os.Rename(execPath, backupPath); err != nil {
-			return fmt.Errorf("failed to backup current executable: %w", err)
+			return fmt.Errorf("Failed to backup current executable: %w", err)
 		}
 		defer os.Remove(backupPath)
 	}
@@ -205,10 +222,10 @@ func downloadAndInstall(url string) error {
 		// Use sudo on Unix-like systems
 		if runtime.GOOS != "windows" {
 			if err := runElevated("mv", tmpFile.Name(), execPath); err != nil {
-				return fmt.Errorf("failed to install update with elevated permissions: %w", err)
+				return fmt.Errorf("Failed to install update with elevated permissions: %w", err)
 			}
 		} else {
-			return fmt.Errorf("please run this command as Administrator")
+			return fmt.Errorf("Please run this command as Administrator")
 		}
 	}
 	
@@ -218,5 +235,76 @@ func downloadAndInstall(url string) error {
 func runElevated(command string, args ...string) error {
 	// This is a simplified version - in production, use proper elevation
 	fmt.Printf("sudo %s %s\n", command, strings.Join(args, " "))
-	return fmt.Errorf("automatic elevation not implemented - please run manually with sudo")
+	return fmt.Errorf("Automatic elevation not implemented - please run manually with sudo")
+}
+
+// extractTarGz extracts a tar.gz archive and finds the binary
+func extractTarGz(r io.Reader, output *os.File) error {
+	gzr, err := gzip.NewReader(r)
+	if err != nil {
+		return err
+	}
+	defer gzr.Close()
+	
+	tr := tar.NewReader(gzr)
+	
+	// Look for the binary in the archive
+	binaryName := "apidirect"
+	if runtime.GOOS == "windows" {
+		binaryName += ".exe"
+	}
+	
+	for {
+		header, err := tr.Next()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return err
+		}
+		
+		// Check if this is our binary
+		if filepath.Base(header.Name) == binaryName {
+			// Copy the binary to our output file
+			if _, err := io.Copy(output, tr); err != nil {
+				return err
+			}
+			return nil
+		}
+	}
+	
+	return fmt.Errorf("Binary %s not found in archive", binaryName)
+}
+
+// extractZip extracts a zip archive and finds the binary
+func extractZip(zipPath string, output *os.File) error {
+	r, err := zip.OpenReader(zipPath)
+	if err != nil {
+		return err
+	}
+	defer r.Close()
+	
+	// Look for the binary in the archive
+	binaryName := "apidirect"
+	if runtime.GOOS == "windows" {
+		binaryName += ".exe"
+	}
+	
+	for _, f := range r.File {
+		if filepath.Base(f.Name) == binaryName {
+			rc, err := f.Open()
+			if err != nil {
+				return err
+			}
+			defer rc.Close()
+			
+			// Copy the binary to our output file
+			if _, err := io.Copy(output, rc); err != nil {
+				return err
+			}
+			return nil
+		}
+	}
+	
+	return fmt.Errorf("Binary %s not found in archive", binaryName)
 }

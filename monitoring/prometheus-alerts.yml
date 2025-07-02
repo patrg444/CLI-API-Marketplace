@@ -1,0 +1,287 @@
+# Prometheus Alert Rules for API Direct Marketplace
+# These rules define when alerts should be triggered
+
+groups:
+  - name: infrastructure
+    interval: 30s
+    rules:
+      # High CPU Usage
+      - alert: HighCPUUsage
+        expr: 100 - (avg(rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 80
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High CPU usage detected"
+          description: "CPU usage is above 80% (current value: {{ $value }}%)"
+
+      - alert: CriticalCPUUsage
+        expr: 100 - (avg(rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 95
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Critical CPU usage detected"
+          description: "CPU usage is above 95% (current value: {{ $value }}%)"
+
+      # Memory Usage
+      - alert: HighMemoryUsage
+        expr: (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100 > 85
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High memory usage detected"
+          description: "Memory usage is above 85% (current value: {{ $value }}%)"
+
+      - alert: CriticalMemoryUsage
+        expr: (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100 > 95
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Critical memory usage detected"
+          description: "Memory usage is above 95% (current value: {{ $value }}%)"
+
+      # Disk Space
+      - alert: LowDiskSpace
+        expr: (node_filesystem_avail_bytes{mountpoint="/"} / node_filesystem_size_bytes{mountpoint="/"}) * 100 < 20
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Low disk space warning"
+          description: "Disk space is below 20% (current value: {{ $value }}%)"
+
+      - alert: CriticalDiskSpace
+        expr: (node_filesystem_avail_bytes{mountpoint="/"} / node_filesystem_size_bytes{mountpoint="/"}) * 100 < 10
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Critical disk space alert"
+          description: "Disk space is below 10% (current value: {{ $value }}%)"
+
+  - name: services
+    interval: 30s
+    rules:
+      # Service Health
+      - alert: ServiceDown
+        expr: up{job=~"backend|marketplace|gateway|apikey|billing|metering"} == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Service {{ $labels.job }} is down"
+          description: "{{ $labels.job }} has been down for more than 2 minutes"
+
+      # Database Health
+      - alert: PostgresDown
+        expr: pg_up == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "PostgreSQL database is down"
+          description: "PostgreSQL has been unreachable for more than 1 minute"
+
+      - alert: RedisDown
+        expr: redis_up == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Redis cache is down"
+          description: "Redis has been unreachable for more than 2 minutes"
+
+      # Container Health
+      - alert: ContainerRestarting
+        expr: rate(container_restarts_total[5m]) > 0
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Container {{ $labels.container }} is restarting"
+          description: "Container has restarted {{ $value }} times in the last 5 minutes"
+
+  - name: api_performance
+    interval: 30s
+    rules:
+      # API Response Time
+      - alert: SlowAPIResponse
+        expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m])) > 1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Slow API response time"
+          description: "95th percentile response time is above 1 second (current: {{ $value }}s)"
+
+      - alert: CriticalAPIResponse
+        expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m])) > 5
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Critical API response time"
+          description: "95th percentile response time is above 5 seconds (current: {{ $value }}s)"
+
+      # API Error Rate
+      - alert: HighAPIErrorRate
+        expr: (sum(rate(http_requests_total{status=~"5.."}[5m])) / sum(rate(http_requests_total[5m]))) * 100 > 5
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High API error rate"
+          description: "API error rate is above 5% (current: {{ $value }}%)"
+
+      - alert: CriticalAPIErrorRate
+        expr: (sum(rate(http_requests_total{status=~"5.."}[5m])) / sum(rate(http_requests_total[5m]))) * 100 > 20
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Critical API error rate"
+          description: "API error rate is above 20% (current: {{ $value }}%)"
+
+      # Request Rate
+      - alert: HighRequestRate
+        expr: sum(rate(http_requests_total[1m])) > 10000
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High request rate detected"
+          description: "Request rate is above 10,000 req/min (current: {{ $value }})"
+
+  - name: business_metrics
+    interval: 60s
+    rules:
+      # Payment Failures
+      - alert: HighPaymentFailureRate
+        expr: (sum(rate(payment_failures_total[15m])) / sum(rate(payment_attempts_total[15m]))) * 100 > 10
+        for: 15m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High payment failure rate"
+          description: "Payment failure rate is above 10% (current: {{ $value }}%)"
+
+      # API Usage Anomaly
+      - alert: UnusualAPIUsageSpike
+        expr: (sum(rate(api_calls_total[5m])) / sum(rate(api_calls_total[5m] offset 1h))) > 5
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Unusual API usage spike detected"
+          description: "API usage is 5x higher than the same time 1 hour ago"
+
+      # No New Signups
+      - alert: NoNewSignups
+        expr: increase(user_registrations_total[6h]) == 0
+        for: 6h
+        labels:
+          severity: warning
+        annotations:
+          summary: "No new user registrations"
+          description: "No new users have registered in the last 6 hours"
+
+  - name: security
+    interval: 30s
+    rules:
+      # Authentication Failures
+      - alert: HighAuthFailureRate
+        expr: sum(rate(auth_failures_total[5m])) > 100
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High authentication failure rate"
+          description: "More than 100 auth failures per minute detected"
+
+      # Potential DDoS
+      - alert: PotentialDDoS
+        expr: sum(rate(nginx_requests_total[1m])) by (remote_addr) > 1000
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Potential DDoS attack"
+          description: "IP {{ $labels.remote_addr }} is making more than 1000 requests per minute"
+
+      # SSL Certificate Expiry
+      - alert: SSLCertificateExpiringSoon
+        expr: (ssl_cert_expiry_timestamp_seconds - time()) / 86400 < 30
+        for: 1h
+        labels:
+          severity: warning
+        annotations:
+          summary: "SSL certificate expiring soon"
+          description: "SSL certificate for {{ $labels.domain }} expires in {{ $value }} days"
+
+      - alert: SSLCertificateExpiryCritical
+        expr: (ssl_cert_expiry_timestamp_seconds - time()) / 86400 < 7
+        for: 1h
+        labels:
+          severity: critical
+        annotations:
+          summary: "SSL certificate expiring critically soon"
+          description: "SSL certificate for {{ $labels.domain }} expires in {{ $value }} days"
+
+  - name: database
+    interval: 30s
+    rules:
+      # Database Connection Pool
+      - alert: DatabaseConnectionPoolExhausted
+        expr: (pg_stat_database_numbackends / pg_settings_max_connections) > 0.8
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Database connection pool nearly exhausted"
+          description: "Database is using {{ $value }}% of available connections"
+
+      # Slow Queries
+      - alert: SlowDatabaseQueries
+        expr: pg_stat_statements_mean_time_seconds > 1
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Slow database queries detected"
+          description: "Average query time is above 1 second (current: {{ $value }}s)"
+
+      # Replication Lag
+      - alert: DatabaseReplicationLag
+        expr: pg_replication_lag_seconds > 10
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Database replication lag detected"
+          description: "Replication lag is {{ $value }} seconds"
+
+  - name: backups
+    interval: 300s
+    rules:
+      # Backup Failure
+      - alert: BackupFailed
+        expr: backup_last_success_timestamp_seconds < (time() - 86400)
+        for: 1h
+        labels:
+          severity: critical
+        annotations:
+          summary: "Backup has not completed successfully"
+          description: "Last successful backup was more than 24 hours ago"
+
+      # Backup Size Anomaly
+      - alert: BackupSizeAnomaly
+        expr: abs((backup_size_bytes - backup_size_bytes offset 1d) / backup_size_bytes offset 1d) > 0.5
+        for: 1h
+        labels:
+          severity: warning
+        annotations:
+          summary: "Backup size anomaly detected"
+          description: "Backup size changed by more than 50% compared to yesterday"

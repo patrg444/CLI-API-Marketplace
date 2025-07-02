@@ -1,0 +1,113 @@
+# API-Direct Hosted Platform - Local Development Setup
+# This provides a local version of the hosted infrastructure for testing
+
+version: '3.8'
+
+services:
+  # Multi-tenant PostgreSQL
+  postgres-hosted:
+    image: postgres:15
+    container_name: api-direct-postgres-hosted
+    environment:
+      POSTGRES_DB: api_direct_hosted
+      POSTGRES_USER: api_direct_admin
+      POSTGRES_PASSWORD: hosted_dev_password_123
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_hosted_data:/var/lib/postgresql/data
+      - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U api_direct_admin -d api_direct_hosted"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # Redis for caching and session management
+  redis-hosted:
+    image: redis:7-alpine
+    container_name: api-direct-redis-hosted
+    ports:
+      - "6380:6379"
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_hosted_data:/data
+
+  # Container registry for user images
+  registry:
+    image: registry:2.8
+    container_name: api-direct-registry
+    ports:
+      - "5001:5000"
+    environment:
+      REGISTRY_STORAGE_FILESYSTEM_ROOTDIRECTORY: /var/lib/registry
+    volumes:
+      - registry_data:/var/lib/registry
+
+  # Nginx for API routing (simulates Kubernetes ingress)
+  nginx-gateway:
+    image: nginx:alpine
+    container_name: api-direct-nginx
+    ports:
+      - "8080:80"
+      - "8443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+      - ./ssl:/etc/nginx/ssl
+    depends_on:
+      - postgres-hosted
+      - redis-hosted
+
+  # API-Direct Platform Services (from existing services/)
+  storage-service:
+    build: ../../services/storage
+    container_name: api-direct-storage-hosted
+    environment:
+      - DATABASE_URL=postgresql://api_direct_admin:hosted_dev_password_123@postgres-hosted:5432/api_direct_hosted
+      - REDIS_URL=redis://redis-hosted:6379
+      - STORAGE_BACKEND=local
+      - LOCAL_STORAGE_PATH=/app/storage
+    ports:
+      - "8081:8080"
+    volumes:
+      - storage_data:/app/storage
+    depends_on:
+      postgres-hosted:
+        condition: service_healthy
+
+  deployment-service:
+    build: ../../services/deployment
+    container_name: api-direct-deployment-hosted
+    environment:
+      - DATABASE_URL=postgresql://api_direct_admin:hosted_dev_password_123@postgres-hosted:5432/api_direct_hosted
+      - REDIS_URL=redis://redis-hosted:6379
+      - KUBERNETES_MODE=local
+      - DOCKER_REGISTRY=localhost:5001
+    ports:
+      - "8082:8080"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    depends_on:
+      postgres-hosted:
+        condition: service_healthy
+      registry:
+        condition: service_started
+
+  gateway-service:
+    build: ../../services/gateway
+    container_name: api-direct-gateway-hosted
+    environment:
+      - DATABASE_URL=postgresql://api_direct_admin:hosted_dev_password_123@postgres-hosted:5432/api_direct_hosted
+      - REDIS_URL=redis://redis-hosted:6379
+      - DEPLOYMENT_SERVICE_URL=http://deployment-service:8080
+    ports:
+      - "8083:8080"
+    depends_on:
+      postgres-hosted:
+        condition: service_healthy
+
+volumes:
+  postgres_hosted_data:
+  redis_hosted_data:
+  registry_data:
+  storage_data:

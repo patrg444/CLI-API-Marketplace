@@ -3,7 +3,7 @@ package cmd
 import (
 	"encoding/json"
 	"fmt"
-	"os"
+	"io"
 	"os/exec"
 	"runtime"
 	"strings"
@@ -23,14 +23,22 @@ func formatNumber(n int64) string {
 }
 
 // outputJSON formats and outputs data as JSON
-func outputJSON(data interface{}) error {
-	encoder := json.NewEncoder(os.Stdout)
+func outputJSON(w io.Writer, data interface{}) error {
+	encoder := json.NewEncoder(w)
 	encoder.SetIndent("", "  ")
 	return encoder.Encode(data)
 }
 
+// browserOpener is a variable that can be overridden in tests
+var browserOpener = defaultBrowserOpener
+
 // openBrowser opens a URL in the default browser
 func openBrowser(url string) error {
+	return browserOpener(url)
+}
+
+// defaultBrowserOpener is the default implementation
+func defaultBrowserOpener(url string) error {
 	var cmd string
 	var args []string
 

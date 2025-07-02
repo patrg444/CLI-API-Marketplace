@@ -1,0 +1,52 @@
+#!/bin/bash
+
+echo "🔐 AWS Environment Setup for API-Direct"
+echo "======================================"
+echo ""
+echo "⚠️  SECURITY REMINDER:"
+echo "1. Create NEW AWS credentials (the previous ones were compromised)"
+echo "2. Never share AWS credentials in chat/email/text"
+echo "3. Use IAM roles with minimal permissions"
+echo ""
+echo "📝 Steps to set up AWS securely:"
+echo ""
+echo "1. Create new IAM user with programmatic access:"
+echo "   - Go to AWS Console → IAM → Users → Add User"
+echo "   - Username: apidirect-dev"
+echo "   - Access type: Programmatic access"
+echo "   - Attach policies:"
+echo "     • AmazonS3FullAccess (for code storage)"
+echo "     • AmazonCognitoPowerUser (for auth)"
+echo "     • AmazonEKSClusterPolicy (for deployments)"
+echo ""
+echo "2. Save the new credentials and add them to .env:"
+echo "   AWS_ACCESS_KEY_ID=your-new-access-key"
+echo "   AWS_SECRET_ACCESS_KEY=your-new-secret-key"
+echo ""
+echo "3. Create Cognito User Pool:"
+echo "   aws cognito-idp create-user-pool \\"
+echo "     --pool-name apidirect-users \\"
+echo "     --auto-verified-attributes email"
+echo ""
+echo "4. Create S3 buckets:"
+echo "   aws s3 mb s3://apidirect-code-storage-$(date +%s)"
+echo "   aws s3 mb s3://apidirect-artifacts-$(date +%s)"
+echo ""
+echo "Press Enter when you have new AWS credentials ready..."
+read -r
+
+# Check if .env exists
+if [ ! -f .env ]; then
+    cp .env.example .env
+    echo "✅ Created .env file from template"
+fi
+
+echo ""
+echo "📝 Next steps:"
+echo "1. Edit .env and add your NEW AWS credentials"
+echo "2. Run: source .env"
+echo "3. Run: ./start-platform.sh"
+echo ""
+echo "For testing without AWS:"
+echo "- Keep USE_MOCK_AUTH=true in .env"
+echo "- The platform will work with mock authentication"

@@ -1,0 +1,399 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Deploy API - API-Direct Console{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto">
+    <!-- Header -->
+    <div class="mb-8">
+        <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-2">Deploy New API</h1>
+        <p class="text-gray-600 dark:text-gray-400">Deploy your API to API-Direct infrastructure or bring your own account</p>
+    </div>
+
+    <!-- Deployment Form -->
+    <form id="deploymentForm" class="space-y-8">
+        <!-- Step 1: Basic Information -->
+        <div class="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
+            <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-4">
+                <span class="inline-flex items-center justify-center w-8 h-8 bg-blue-100 text-blue-600 rounded-full mr-2">1</span>
+                Basic Information
+            </h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label for="apiName" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        API Name <span class="text-red-500">*</span>
+                    </label>
+                    <input type="text" id="apiName" name="apiName" required
+                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                           placeholder="my-awesome-api">
+                    <p class="mt-1 text-sm text-gray-500">Lowercase letters, numbers, and hyphens only</p>
+                </div>
+                
+                <div>
+                    <label for="version" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Version
+                    </label>
+                    <input type="text" id="version" name="version" value="1.0.0"
+                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                           placeholder="1.0.0">
+                </div>
+                
+                <div class="md:col-span-2">
+                    <label for="description" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Description
+                    </label>
+                    <textarea id="description" name="description" rows="3"
+                              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                              placeholder="Describe what your API does..."></textarea>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 2: Deployment Type -->
+        <div class="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
+            <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-4">
+                <span class="inline-flex items-center justify-center w-8 h-8 bg-blue-100 text-blue-600 rounded-full mr-2">2</span>
+                Deployment Type
+            </h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <label class="relative flex items-start p-4 border-2 border-gray-200 rounded-lg cursor-pointer hover:border-blue-500 transition-colors deployment-type-option">
+                    <input type="radio" name="deploymentType" value="hosted" checked class="sr-only">
+                    <div class="flex items-center">
+                        <div class="flex items-center justify-center w-12 h-12 bg-blue-100 rounded-lg mr-4">
+                            <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z"></path>
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 class="font-semibold text-gray-900 dark:text-white">API-Direct Hosted</h3>
+                            <p class="text-sm text-gray-500 dark:text-gray-400">We handle the infrastructure</p>
+                        </div>
+                    </div>
+                    <div class="absolute top-4 right-4 w-5 h-5 bg-blue-600 rounded-full hidden deployment-check">
+                        <svg class="w-5 h-5 text-white p-0.5" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                        </svg>
+                    </div>
+                </label>
+                
+                <label class="relative flex items-start p-4 border-2 border-gray-200 rounded-lg cursor-pointer hover:border-blue-500 transition-colors deployment-type-option">
+                    <input type="radio" name="deploymentType" value="byoa" class="sr-only">
+                    <div class="flex items-center">
+                        <div class="flex items-center justify-center w-12 h-12 bg-purple-100 rounded-lg mr-4">
+                            <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 class="font-semibold text-gray-900 dark:text-white">Bring Your Own Account</h3>
+                            <p class="text-sm text-gray-500 dark:text-gray-400">Use your cloud infrastructure</p>
+                        </div>
+                    </div>
+                    <div class="absolute top-4 right-4 w-5 h-5 bg-purple-600 rounded-full hidden deployment-check">
+                        <svg class="w-5 h-5 text-white p-0.5" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                        </svg>
+                    </div>
+                </label>
+            </div>
+            
+            <!-- BYOA Configuration -->
+            <div id="byoaConfig" class="mt-6 hidden">
+                <h3 class="font-medium text-gray-900 dark:text-white mb-3">BYOA Configuration</h3>
+                <div class="space-y-4">
+                    <div>
+                        <label for="customEndpoint" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            Your API Endpoint URL <span class="text-red-500">*</span>
+                        </label>
+                        <input type="url" id="customEndpoint" name="customEndpoint"
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-purple-500 focus:border-purple-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                               placeholder="https://api.yourdomain.com">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 3: Code & Runtime -->
+        <div class="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
+            <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-4">
+                <span class="inline-flex items-center justify-center w-8 h-8 bg-blue-100 text-blue-600 rounded-full mr-2">3</span>
+                Code & Runtime
+            </h2>
+            
+            <!-- Source Code Options -->
+            <div class="mb-6">
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Source Code</label>
+                <div class="space-y-3">
+                    <label class="flex items-center">
+                        <input type="radio" name="codeSource" value="upload" checked class="mr-2">
+                        <span class="text-gray-900 dark:text-white">Upload ZIP file</span>
+                    </label>
+                    <label class="flex items-center">
+                        <input type="radio" name="codeSource" value="git" class="mr-2">
+                        <span class="text-gray-900 dark:text-white">Git repository URL</span>
+                    </label>
+                    <label class="flex items-center">
+                        <input type="radio" name="codeSource" value="editor" class="mr-2">
+                        <span class="text-gray-900 dark:text-white">Code editor</span>
+                    </label>
+                </div>
+            </div>
+            
+            <!-- Code Upload -->
+            <div id="codeUpload" class="mb-6">
+                <div class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-gray-400 transition-colors">
+                    <input type="file" id="codeFile" accept=".zip" class="hidden">
+                    <svg class="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48">
+                        <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                    <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
+                        <button type="button" onclick="document.getElementById('codeFile').click()" class="font-medium text-blue-600 hover:text-blue-500">
+                            Upload a ZIP file
+                        </button>
+                        or drag and drop
+                    </p>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">ZIP up to 50MB</p>
+                </div>
+            </div>
+            
+            <!-- Git URL -->
+            <div id="gitUrl" class="mb-6 hidden">
+                <input type="url" name="gitRepo" 
+                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                       placeholder="https://github.com/username/repo.git">
+            </div>
+            
+            <!-- Code Editor -->
+            <div id="codeEditor" class="mb-6 hidden">
+                <div class="border border-gray-300 rounded-md overflow-hidden">
+                    <div class="bg-gray-100 dark:bg-gray-700 px-3 py-2 border-b border-gray-300 dark:border-gray-600">
+                        <span class="text-sm font-medium text-gray-700 dark:text-gray-300">main.py</span>
+                    </div>
+                    <textarea name="sourceCode" rows="15" 
+                              class="w-full p-3 font-mono text-sm bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100"
+                              placeholder="# Your API code here&#10;from fastapi import FastAPI&#10;&#10;app = FastAPI()&#10;&#10;@app.get('/')&#10;def hello():&#10;    return {'message': 'Hello, World!'}"></textarea>
+                </div>
+            </div>
+            
+            <!-- Runtime Selection -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label for="runtime" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Runtime <span class="text-red-500">*</span>
+                    </label>
+                    <select id="runtime" name="runtime" required
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                        <option value="python:3.9">Python 3.9</option>
+                        <option value="python:3.10">Python 3.10</option>
+                        <option value="python:3.11">Python 3.11</option>
+                        <option value="node:16">Node.js 16</option>
+                        <option value="node:18">Node.js 18</option>
+                        <option value="node:20">Node.js 20</option>
+                        <option value="go:1.19">Go 1.19</option>
+                        <option value="go:1.20">Go 1.20</option>
+                    </select>
+                </div>
+                
+                <div>
+                    <label for="entrypoint" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Entrypoint
+                    </label>
+                    <input type="text" id="entrypoint" name="entrypoint" 
+                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                           placeholder="main.py (default)">
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 4: Environment Variables -->
+        <div class="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
+            <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-4">
+                <span class="inline-flex items-center justify-center w-8 h-8 bg-blue-100 text-blue-600 rounded-full mr-2">4</span>
+                Environment Variables
+            </h2>
+            
+            <div id="envVarsContainer" class="space-y-3">
+                <div class="flex gap-3 env-var-row">
+                    <input type="text" placeholder="KEY" class="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white env-key">
+                    <input type="text" placeholder="VALUE" class="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white env-value">
+                    <button type="button" onclick="removeEnvVar(this)" class="p-2 text-red-600 hover:text-red-700">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+            
+            <button type="button" onclick="addEnvVar()" class="mt-4 inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-600">
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                </svg>
+                Add Variable
+            </button>
+        </div>
+
+        <!-- Step 5: Advanced Settings -->
+        <div class="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
+            <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-4">
+                <span class="inline-flex items-center justify-center w-8 h-8 bg-blue-100 text-blue-600 rounded-full mr-2">5</span>
+                Advanced Settings
+            </h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label for="memory" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Memory Limit
+                    </label>
+                    <select id="memory" name="memory"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                        <option value="256">256 MB</option>
+                        <option value="512" selected>512 MB</option>
+                        <option value="1024">1 GB</option>
+                        <option value="2048">2 GB</option>
+                    </select>
+                </div>
+                
+                <div>
+                    <label for="timeout" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Request Timeout
+                    </label>
+                    <select id="timeout" name="timeout"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                        <option value="10">10 seconds</option>
+                        <option value="30" selected>30 seconds</option>
+                        <option value="60">60 seconds</option>
+                        <option value="120">120 seconds</option>
+                    </select>
+                </div>
+                
+                <div>
+                    <label for="minInstances" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Min Instances
+                    </label>
+                    <input type="number" id="minInstances" name="minInstances" value="0" min="0" max="10"
+                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                </div>
+                
+                <div>
+                    <label for="maxInstances" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Max Instances
+                    </label>
+                    <input type="number" id="maxInstances" name="maxInstances" value="10" min="1" max="100"
+                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                </div>
+            </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="flex justify-between items-center">
+            <a href="/apis" class="text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200">
+                ← Back to APIs
+            </a>
+            
+            <div class="space-x-4">
+                <button type="button" onclick="saveDraft()" class="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-600">
+                    Save as Draft
+                </button>
+                <button type="submit" class="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                    Deploy API
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- Deployment Progress Modal -->
+<div id="deploymentModal" class="hidden fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center z-50">
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full mx-4">
+        <div class="p-6">
+            <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">Deploying API</h3>
+            
+            <div class="space-y-4">
+                <!-- Progress Steps -->
+                <div class="space-y-3" id="deploymentSteps">
+                    <div class="flex items-center deployment-step" data-step="upload">
+                        <div class="flex-shrink-0 w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center mr-3 step-icon">
+                            <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                            </svg>
+                        </div>
+                        <div class="flex-1">
+                            <p class="text-sm font-medium text-gray-900 dark:text-gray-100">Uploading code</p>
+                            <p class="text-xs text-gray-500 dark:text-gray-400 step-detail"></p>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-center deployment-step" data-step="build">
+                        <div class="flex-shrink-0 w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center mr-3 step-icon">
+                            <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path>
+                            </svg>
+                        </div>
+                        <div class="flex-1">
+                            <p class="text-sm font-medium text-gray-900 dark:text-gray-100">Building container</p>
+                            <p class="text-xs text-gray-500 dark:text-gray-400 step-detail"></p>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-center deployment-step" data-step="deploy">
+                        <div class="flex-shrink-0 w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center mr-3 step-icon">
+                            <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M12 5l7 7-7 7"></path>
+                            </svg>
+                        </div>
+                        <div class="flex-1">
+                            <p class="text-sm font-medium text-gray-900 dark:text-gray-100">Starting deployment</p>
+                            <p class="text-xs text-gray-500 dark:text-gray-400 step-detail"></p>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-center deployment-step" data-step="verify">
+                        <div class="flex-shrink-0 w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center mr-3 step-icon">
+                            <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                        </div>
+                        <div class="flex-1">
+                            <p class="text-sm font-medium text-gray-900 dark:text-gray-100">Verifying deployment</p>
+                            <p class="text-xs text-gray-500 dark:text-gray-400 step-detail"></p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Progress Bar -->
+                <div class="w-full bg-gray-200 rounded-full h-2">
+                    <div id="deploymentProgress" class="bg-blue-600 h-2 rounded-full transition-all duration-500" style="width: 0%"></div>
+                </div>
+                
+                <!-- Error Message -->
+                <div id="deploymentError" class="hidden bg-red-50 border border-red-200 rounded-md p-4">
+                    <div class="flex">
+                        <div class="flex-shrink-0">
+                            <svg class="h-5 w-5 text-red-400" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                            </svg>
+                        </div>
+                        <div class="ml-3">
+                            <p class="text-sm text-red-800" id="deploymentErrorMsg"></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Actions -->
+            <div class="mt-6 flex justify-end space-x-3">
+                <button type="button" onclick="cancelDeployment()" class="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600">
+                    Cancel
+                </button>
+                <button type="button" id="viewApiBtn" onclick="viewDeployedAPI()" class="hidden px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700">
+                    View API
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="/js/deploy.js"></script>
+{% endblock %}

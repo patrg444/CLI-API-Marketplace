@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"os"
 	"strings"
 	"text/tabwriter"
 	"time"
@@ -174,15 +173,15 @@ func runSubscriptionsList(cmd *cobra.Command, args []string) error {
 	// Output based on format
 	switch subscriptionFormat {
 	case "json":
-		encoder := json.NewEncoder(os.Stdout)
+		encoder := json.NewEncoder(cmd.OutOrStdout())
 		encoder.SetIndent("", "  ")
 		return encoder.Encode(subscriptions)
 		
 	default:
 		// Table format
-		fmt.Println()
+		fmt.Fprintln(cmd.OutOrStdout())
 		if len(subscriptions) == 0 {
-			fmt.Println("No subscriptions found")
+			fmt.Fprintln(cmd.OutOrStdout(), "No subscriptions found")
 			return nil
 		}
 		
@@ -242,9 +241,9 @@ func runSubscriptionsList(cmd *cobra.Command, args []string) error {
 		
 		// Show active subscriptions
 		if len(active) > 0 {
-			color.New(color.FgGreen, color.Bold).Printf("✅ Active Subscriptions (%d)\n\n", len(active))
+			color.New(color.FgGreen, color.Bold).Fprintf(cmd.OutOrStdout(), "✅ Active Subscriptions (%d)\n\n", len(active))
 			
-			w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
+			w := tabwriter.NewWriter(cmd.OutOrStdout(), 0, 0, 2, ' ', 0)
 			fmt.Fprintf(w, "API\tPLAN\tUSAGE\tCOST\tNEXT BILLING\n")
 			
 			for _, sub := range active {
@@ -264,14 +263,14 @@ func runSubscriptionsList(cmd *cobra.Command, args []string) error {
 				)
 			}
 			w.Flush()
-			fmt.Println()
+			fmt.Fprintln(cmd.OutOrStdout())
 		}
 		
 		// Show inactive subscriptions
 		if len(inactive) > 0 {
-			color.New(color.FgYellow, color.Bold).Printf("⏸️  Inactive Subscriptions (%d)\n\n", len(inactive))
+			color.New(color.FgYellow, color.Bold).Fprintf(cmd.OutOrStdout(), "⏸️  Inactive Subscriptions (%d)\n\n", len(inactive))
 			
-			w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
+			w := tabwriter.NewWriter(cmd.OutOrStdout(), 0, 0, 2, ' ', 0)
 			fmt.Fprintf(w, "API\tPLAN\tSTATUS\tCREATED\n")
 			
 			for _, sub := range inactive {
@@ -286,7 +285,7 @@ func runSubscriptionsList(cmd *cobra.Command, args []string) error {
 		}
 		
 		// Summary
-		fmt.Printf("\nTotal: %d subscriptions (%d active)\n", len(subscriptions), len(active))
+		fmt.Fprintf(cmd.OutOrStdout(), "\nTotal: %d subscriptions (%d active)\n", len(subscriptions), len(active))
 		
 		return nil
 	}
@@ -379,74 +378,83 @@ func runSubscriptionsShow(cmd *cobra.Command, args []string) error {
 	// Output based on format
 	switch subscriptionFormat {
 	case "json":
-		encoder := json.NewEncoder(os.Stdout)
+		encoder := json.NewEncoder(cmd.OutOrStdout())
 		encoder.SetIndent("", "  ")
 		return encoder.Encode(subscription)
 		
 	default:
 		// Table format
-		fmt.Println()
-		color.New(color.FgCyan, color.Bold).Printf("📋 Subscription Details\n\n")
+		fmt.Fprintln(cmd.OutOrStdout())
+		color.New(color.FgCyan, color.Bold).Fprintf(cmd.OutOrStdout(), "📋 Subscription Details\n\n")
 		
 		// Basic info
-		fmt.Printf("ID: %s\n", subscription.ID)
-		fmt.Printf("API: %s\n", color.CyanString(subscription.APIName))
-		fmt.Printf("Plan: %s (%s)\n", subscription.PlanName, subscription.PlanType)
+		fmt.Fprintf(cmd.OutOrStdout(), "ID: %s\n", subscription.ID)
+		fmt.Fprintf(cmd.OutOrStdout(), "API: %s\n", color.CyanString(subscription.APIName))
+		fmt.Fprintf(cmd.OutOrStdout(), "Plan: %s (%s)\n", subscription.PlanName, subscription.PlanType)
 		
 		// Status
 		statusColor := color.FgGreen
 		if subscription.Status != "active" {
 			statusColor = color.FgYellow
 		}
-		fmt.Printf("Status: %s\n", color.New(statusColor).Sprint(subscription.Status))
-		fmt.Printf("Created: %s\n", subscription.CreatedAt.Format("2006-01-02"))
+		fmt.Fprintf(cmd.OutOrStdout(), "Status: %s\n", color.New(statusColor).Sprint(subscription.Status))
+		fmt.Fprintf(cmd.OutOrStdout(), "Created: %s\n", subscription.CreatedAt.Format("2006-01-02"))
 		
 		// API Access
-		fmt.Printf("\n🔌 API Access\n")
-		fmt.Printf("Endpoint: %s\n", color.BlueString(subscription.APIEndpoint))
-		fmt.Printf("API Key: %s...%s\n", subscription.APIKey.Key[:8], subscription.APIKey.Key[len(subscription.APIKey.Key)-4:])
+		fmt.Fprintf(cmd.OutOrStdout(), "\n🔌 API Access\n")
+		fmt.Fprintf(cmd.OutOrStdout(), "Endpoint: %s\n", color.BlueString(subscription.APIEndpoint))
+		
+		// Safely display API key
+		apiKey := subscription.APIKey.Key
+		if len(apiKey) > 12 {
+			fmt.Fprintf(cmd.OutOrStdout(), "API Key: %s...%s\n", apiKey[:10], apiKey[len(apiKey)-4:])
+		} else {
+			// For short keys, just show them partially
+			fmt.Fprintf(cmd.OutOrStdout(), "API Key: %s...\n", apiKey[:min(4, len(apiKey))])
+		}
+		
 		if !subscription.APIKey.LastUsed.IsZero() {
-			fmt.Printf("Last Used: %s\n", subscription.APIKey.LastUsed.Format("2006-01-02 15:04:05"))
+			fmt.Fprintf(cmd.OutOrStdout(), "Last Used: %s\n", subscription.APIKey.LastUsed.Format("2006-01-02 15:04:05"))
 		}
 		
 		// Usage
-		fmt.Printf("\n📊 Usage (Current Period: %s to %s)\n", 
+		fmt.Fprintf(cmd.OutOrStdout(), "\n📊 Usage (Current Period: %s to %s)\n", 
 			subscription.CurrentPeriod.Start.Format("Jan 02"),
 			subscription.CurrentPeriod.End.Format("Jan 02"))
 		
 		if subscription.Usage.Limit > 0 {
 			usagePercent := float64(subscription.Usage.Calls) / float64(subscription.Usage.Limit) * 100
-			fmt.Printf("API Calls: %d / %d (%.1f%%)\n", 
+			fmt.Fprintf(cmd.OutOrStdout(), "API Calls: %d / %d (%.1f%%)\n", 
 				subscription.Usage.Calls, subscription.Usage.Limit, usagePercent)
-			fmt.Printf("Remaining: %d calls\n", subscription.Usage.Remaining)
+			fmt.Fprintf(cmd.OutOrStdout(), "Remaining: %d calls\n", subscription.Usage.Remaining)
 		} else {
-			fmt.Printf("API Calls: %d (unlimited)\n", subscription.Usage.Calls)
+			fmt.Fprintf(cmd.OutOrStdout(), "API Calls: %d (unlimited)\n", subscription.Usage.Calls)
 		}
 		
 		if subscription.Usage.DataTransferGB > 0 {
-			fmt.Printf("Data Transfer: %.2f GB\n", subscription.Usage.DataTransferGB)
+			fmt.Fprintf(cmd.OutOrStdout(), "Data Transfer: %.2f GB\n", subscription.Usage.DataTransferGB)
 		}
 		if subscription.Usage.AverageLatency > 0 {
-			fmt.Printf("Avg Latency: %d ms\n", subscription.Usage.AverageLatency)
+			fmt.Fprintf(cmd.OutOrStdout(), "Avg Latency: %d ms\n", subscription.Usage.AverageLatency)
 		}
 		if subscription.Usage.ErrorRate > 0 {
-			fmt.Printf("Error Rate: %.2f%%\n", subscription.Usage.ErrorRate*100)
+			fmt.Fprintf(cmd.OutOrStdout(), "Error Rate: %.2f%%\n", subscription.Usage.ErrorRate*100)
 		}
 		
 		// Billing
-		fmt.Printf("\n💳 Billing\n")
-		fmt.Printf("Cost: %s%.2f / %s\n", 
+		fmt.Fprintf(cmd.OutOrStdout(), "\n💳 Billing\n")
+		fmt.Fprintf(cmd.OutOrStdout(), "Cost: %s%.2f / %s\n", 
 			getCurrencySymbol(subscription.Billing.Currency),
 			subscription.Billing.Amount,
 			subscription.Billing.Interval)
-		fmt.Printf("Next Billing: %s\n", subscription.Billing.NextBillingDate)
-		fmt.Printf("Payment Method: %s\n", subscription.Billing.PaymentMethod)
+		fmt.Fprintf(cmd.OutOrStdout(), "Next Billing: %s\n", subscription.Billing.NextBillingDate)
+		fmt.Fprintf(cmd.OutOrStdout(), "Payment Method: %s\n", subscription.Billing.PaymentMethod)
 		
 		// Features
 		if len(subscription.Features) > 0 {
-			fmt.Printf("\n✨ Features\n")
+			fmt.Fprintf(cmd.OutOrStdout(), "\n✨ Features\n")
 			for _, feature := range subscription.Features {
-				fmt.Printf("  • %s\n", feature)
+				fmt.Fprintf(cmd.OutOrStdout(), "  • %s\n", feature)
 			}
 		}
 		
@@ -454,8 +462,8 @@ func runSubscriptionsShow(cmd *cobra.Command, args []string) error {
 		if subscriptionDetailed {
 			// Usage history
 			if len(subscription.UsageHistory) > 0 {
-				fmt.Printf("\n📈 Usage History (Last 7 Days)\n")
-				w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
+				fmt.Fprintf(cmd.OutOrStdout(), "\n📈 Usage History (Last 7 Days)\n")
+				w := tabwriter.NewWriter(cmd.OutOrStdout(), 0, 0, 2, ' ', 0)
 				fmt.Fprintf(w, "DATE\tCALLS\n")
 				for _, day := range subscription.UsageHistory {
 					fmt.Fprintf(w, "%s\t%d\n", day.Date, day.Calls)
@@ -465,8 +473,8 @@ func runSubscriptionsShow(cmd *cobra.Command, args []string) error {
 			
 			// Recent invoices
 			if len(subscription.Invoices) > 0 {
-				fmt.Printf("\n📄 Recent Invoices\n")
-				w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
+				fmt.Fprintf(cmd.OutOrStdout(), "\n📄 Recent Invoices\n")
+				w := tabwriter.NewWriter(cmd.OutOrStdout(), 0, 0, 2, ' ', 0)
 				fmt.Fprintf(w, "DATE\tAMOUNT\tSTATUS\n")
 				for _, invoice := range subscription.Invoices {
 					fmt.Fprintf(w, "%s\t$%.2f\t%s\n", 
@@ -477,11 +485,11 @@ func runSubscriptionsShow(cmd *cobra.Command, args []string) error {
 		}
 		
 		// Actions hint
-		fmt.Printf("\n💡 Actions:\n")
-		fmt.Printf("  • View usage details: apidirect subscriptions usage %s\n", subscription.ID)
-		fmt.Printf("  • Regenerate API key: apidirect subscriptions keys %s --regenerate\n", subscription.ID)
+		fmt.Fprintf(cmd.OutOrStdout(), "\n💡 Actions:\n")
+		fmt.Fprintf(cmd.OutOrStdout(), "  • View usage details: apidirect subscriptions usage %s\n", subscription.ID)
+		fmt.Fprintf(cmd.OutOrStdout(), "  • Regenerate API key: apidirect subscriptions keys %s --regenerate\n", subscription.ID)
 		if subscription.Status == "active" {
-			fmt.Printf("  • Cancel subscription: apidirect subscriptions cancel %s\n", subscription.ID)
+			fmt.Fprintf(cmd.OutOrStdout(), "  • Cancel subscription: apidirect subscriptions cancel %s\n", subscription.ID)
 		}
 		
 		return nil
@@ -517,13 +525,13 @@ func runSubscriptionsCancel(cmd *cobra.Command, args []string) error {
 	resp.Body.Close()
 	
 	// Confirm cancellation
-	fmt.Printf("\n⚠️  Cancel Subscription\n\n")
-	fmt.Printf("API: %s\n", subscription.APIName)
-	fmt.Printf("Plan: %s\n", subscription.PlanName)
-	fmt.Printf("\nThe subscription will remain active until: %s\n", subscription.Billing.NextBillingDate)
+	fmt.Fprintf(cmd.OutOrStdout(), "\n⚠️  Cancel Subscription\n\n")
+	fmt.Fprintf(cmd.OutOrStdout(), "API: %s\n", subscription.APIName)
+	fmt.Fprintf(cmd.OutOrStdout(), "Plan: %s\n", subscription.PlanName)
+	fmt.Fprintf(cmd.OutOrStdout(), "\nThe subscription will remain active until: %s\n", subscription.Billing.NextBillingDate)
 	
 	if !confirmAction("\nAre you sure you want to cancel this subscription?") {
-		fmt.Println("Cancellation aborted")
+		fmt.Fprintln(cmd.OutOrStdout(), "Cancellation aborted")
 		return nil
 	}
 	
@@ -550,12 +558,12 @@ func runSubscriptionsCancel(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	
-	fmt.Println()
+	fmt.Fprintln(cmd.OutOrStdout())
 	color.Green("✅ Subscription cancelled successfully")
-	fmt.Printf("Status: %s\n", result.Status)
-	fmt.Printf("Active until: %s\n", result.ActiveUntil)
+	fmt.Fprintf(cmd.OutOrStdout(), "Status: %s\n", result.Status)
+	fmt.Fprintf(cmd.OutOrStdout(), "Active until: %s\n", result.ActiveUntil)
 	if result.RefundAmount > 0 {
-		fmt.Printf("Refund amount: $%.2f\n", result.RefundAmount)
+		fmt.Fprintf(cmd.OutOrStdout(), "Refund amount: $%.2f\n", result.RefundAmount)
 	}
 	
 	return nil
@@ -642,52 +650,52 @@ func runSubscriptionsUsage(cmd *cobra.Command, args []string) error {
 	// Output based on format
 	switch subscriptionFormat {
 	case "json":
-		encoder := json.NewEncoder(os.Stdout)
+		encoder := json.NewEncoder(cmd.OutOrStdout())
 		encoder.SetIndent("", "  ")
 		return encoder.Encode(usage)
 		
 	default:
 		// Table format
-		fmt.Println()
-		color.New(color.FgCyan, color.Bold).Printf("📊 Usage Report: %s\n", usage.APIName)
-		fmt.Printf("Period: %s to %s\n\n", usage.Period.Start, usage.Period.End)
+		fmt.Fprintln(cmd.OutOrStdout())
+		color.New(color.FgCyan, color.Bold).Fprintf(cmd.OutOrStdout(), "📊 Usage Report: %s\n", usage.APIName)
+		fmt.Fprintf(cmd.OutOrStdout(), "Period: %s to %s\n\n", usage.Period.Start, usage.Period.End)
 		
 		// Summary
-		fmt.Printf("📈 Summary\n")
-		fmt.Printf("Total Calls: %d", usage.Summary.TotalCalls)
+		fmt.Fprintf(cmd.OutOrStdout(), "📈 Summary\n")
+		fmt.Fprintf(cmd.OutOrStdout(), "Total Calls: %d", usage.Summary.TotalCalls)
 		if usage.Summary.CallLimit > 0 {
 			usagePercent := float64(usage.Summary.TotalCalls) / float64(usage.Summary.CallLimit) * 100
-			fmt.Printf(" / %d (%.1f%%)\n", usage.Summary.CallLimit, usagePercent)
-			fmt.Printf("Remaining: %d calls\n", usage.Summary.CallsRemaining)
+			fmt.Fprintf(cmd.OutOrStdout(), " / %d (%.1f%%)\n", usage.Summary.CallLimit, usagePercent)
+			fmt.Fprintf(cmd.OutOrStdout(), "Remaining: %d calls\n", usage.Summary.CallsRemaining)
 		} else {
-			fmt.Printf(" (unlimited)\n")
+			fmt.Fprintf(cmd.OutOrStdout(), " (unlimited)\n")
 		}
 		
 		successRate := float64(usage.Summary.SuccessfulCalls) / float64(usage.Summary.TotalCalls) * 100
-		fmt.Printf("Success Rate: %.1f%% (%d successful, %d failed)\n",
+		fmt.Fprintf(cmd.OutOrStdout(), "Success Rate: %.1f%% (%d successful, %d failed)\n",
 			successRate, usage.Summary.SuccessfulCalls, usage.Summary.FailedCalls)
 		
 		if usage.Summary.DataTransferGB > 0 {
-			fmt.Printf("Data Transfer: %.2f GB\n", usage.Summary.DataTransferGB)
+			fmt.Fprintf(cmd.OutOrStdout(), "Data Transfer: %.2f GB\n", usage.Summary.DataTransferGB)
 		}
-		fmt.Printf("Average Latency: %d ms\n", usage.Summary.AverageLatency)
-		fmt.Printf("Uptime: %.2f%%\n", usage.Summary.Uptime)
+		fmt.Fprintf(cmd.OutOrStdout(), "Average Latency: %d ms\n", usage.Summary.AverageLatency)
+		fmt.Fprintf(cmd.OutOrStdout(), "Uptime: %.2f%%\n", usage.Summary.Uptime)
 		
 		// Rate limits
-		fmt.Printf("\n⚡ Rate Limits\n")
-		fmt.Printf("Allowed: %d/sec, %d/min, %d/hour\n",
+		fmt.Fprintf(cmd.OutOrStdout(), "\n⚡ Rate Limits\n")
+		fmt.Fprintf(cmd.OutOrStdout(), "Allowed: %d/sec, %d/min, %d/hour\n",
 			usage.RateLimits.RequestsPerSecond,
 			usage.RateLimits.RequestsPerMinute,
 			usage.RateLimits.RequestsPerHour)
-		fmt.Printf("Current: %d/sec, %d/min, %d/hour\n",
+		fmt.Fprintf(cmd.OutOrStdout(), "Current: %d/sec, %d/min, %d/hour\n",
 			usage.RateLimits.CurrentUsage.Second,
 			usage.RateLimits.CurrentUsage.Minute,
 			usage.RateLimits.CurrentUsage.Hour)
 		
 		// Endpoint breakdown
 		if len(usage.ByEndpoint) > 0 {
-			fmt.Printf("\n🔗 Top Endpoints\n")
-			w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
+			fmt.Fprintf(cmd.OutOrStdout(), "\n🔗 Top Endpoints\n")
+			w := tabwriter.NewWriter(cmd.OutOrStdout(), 0, 0, 2, ' ', 0)
 			fmt.Fprintf(w, "ENDPOINT\tMETHOD\tCALLS\tERRORS\tAVG LATENCY\n")
 			
 			for i, ep := range usage.ByEndpoint {
@@ -711,8 +719,8 @@ func runSubscriptionsUsage(cmd *cobra.Command, args []string) error {
 		if subscriptionDetailed {
 			// Daily breakdown
 			if len(usage.ByDay) > 0 {
-				fmt.Printf("\n📅 Daily Usage\n")
-				w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
+				fmt.Fprintf(cmd.OutOrStdout(), "\n📅 Daily Usage\n")
+				w := tabwriter.NewWriter(cmd.OutOrStdout(), 0, 0, 2, ' ', 0)
 				fmt.Fprintf(w, "DATE\tCALLS\tERRORS\n")
 				for _, day := range usage.ByDay {
 					fmt.Fprintf(w, "%s\t%d\t%d\n", day.Date, day.Calls, day.Errors)
@@ -722,8 +730,8 @@ func runSubscriptionsUsage(cmd *cobra.Command, args []string) error {
 			
 			// Error breakdown
 			if len(usage.ErrorBreakdown) > 0 {
-				fmt.Printf("\n❌ Error Breakdown\n")
-				w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
+				fmt.Fprintf(cmd.OutOrStdout(), "\n❌ Error Breakdown\n")
+				w := tabwriter.NewWriter(cmd.OutOrStdout(), 0, 0, 2, ' ', 0)
 				fmt.Fprintf(w, "STATUS CODE\tCOUNT\tPERCENTAGE\n")
 				for _, err := range usage.ErrorBreakdown {
 					fmt.Fprintf(w, "%d\t%d\t%.1f%%\n", 
@@ -748,12 +756,12 @@ func runSubscriptionsKeys(cmd *cobra.Command, args []string) error {
 	
 	if regenerate {
 		// Confirm regeneration
-		fmt.Printf("\n⚠️  Regenerate API Key\n\n")
-		fmt.Println("This will invalidate your current API key.")
-		fmt.Println("You'll need to update it in all your applications.")
+		fmt.Fprintf(cmd.OutOrStdout(), "\n⚠️  Regenerate API Key\n\n")
+		fmt.Fprintln(cmd.OutOrStdout(), "This will invalidate your current API key.")
+		fmt.Fprintln(cmd.OutOrStdout(), "You'll need to update it in all your applications.")
 		
 		if !confirmAction("\nContinue with regeneration?") {
-			fmt.Println("Regeneration cancelled")
+			fmt.Fprintln(cmd.OutOrStdout(), "Regeneration cancelled")
 			return nil
 		}
 		
@@ -778,10 +786,10 @@ func runSubscriptionsKeys(cmd *cobra.Command, args []string) error {
 			return err
 		}
 		
-		fmt.Println()
-		color.Green("✅ API key regenerated successfully")
-		fmt.Printf("\nNew API Key: %s\n", color.YellowString(result.Key))
-		fmt.Println("\n⚠️  Save this key securely - it won't be shown again!")
+		fmt.Fprintln(cmd.OutOrStdout())
+		fmt.Fprintln(cmd.OutOrStdout(), color.GreenString("✅ API key regenerated successfully"))
+		fmt.Fprintf(cmd.OutOrStdout(), "\nNew API Key: %s\n", color.YellowString(result.Key))
+		fmt.Fprintln(cmd.OutOrStdout(), "\n⚠️  Save this key securely - it won't be shown again!")
 		
 		return nil
 	}
@@ -824,20 +832,20 @@ func runSubscriptionsKeys(cmd *cobra.Command, args []string) error {
 	// Output based on format
 	switch subscriptionFormat {
 	case "json":
-		encoder := json.NewEncoder(os.Stdout)
+		encoder := json.NewEncoder(cmd.OutOrStdout())
 		encoder.SetIndent("", "  ")
 		return encoder.Encode(keys)
 		
 	default:
 		// Table format
-		fmt.Println()
-		color.New(color.FgCyan, color.Bold).Printf("🔑 API Keys: %s\n\n", keys.APIName)
+		fmt.Fprintln(cmd.OutOrStdout())
+		color.New(color.FgCyan, color.Bold).Fprintf(cmd.OutOrStdout(), "🔑 API Keys: %s\n\n", keys.APIName)
 		
-		fmt.Printf("Endpoint: %s\n", color.BlueString(keys.APIEndpoint))
+		fmt.Fprintf(cmd.OutOrStdout(), "Endpoint: %s\n", color.BlueString(keys.APIEndpoint))
 		if keys.Documentation != "" {
-			fmt.Printf("Documentation: %s\n", color.BlueString(keys.Documentation))
+			fmt.Fprintf(cmd.OutOrStdout(), "Documentation: %s\n", color.BlueString(keys.Documentation))
 		}
-		fmt.Println()
+		fmt.Fprintln(cmd.OutOrStdout())
 		
 		// Keys list
 		for _, key := range keys.Keys {
@@ -846,40 +854,40 @@ func runSubscriptionsKeys(cmd *cobra.Command, args []string) error {
 				statusColor = color.FgRed
 			}
 			
-			fmt.Printf("Key: %s...%s\n", key.Key[:12], key.Key[len(key.Key)-4:])
+			fmt.Fprintf(cmd.OutOrStdout(), "Key: %s...%s\n", key.Key[:12], key.Key[len(key.Key)-4:])
 			if key.Name != "" {
-				fmt.Printf("Name: %s\n", key.Name)
+				fmt.Fprintf(cmd.OutOrStdout(), "Name: %s\n", key.Name)
 			}
-			fmt.Printf("Status: %s\n", color.New(statusColor).Sprint(key.Status))
-			fmt.Printf("Created: %s\n", key.CreatedAt.Format("2006-01-02"))
+			fmt.Fprintf(cmd.OutOrStdout(), "Status: %s\n", color.New(statusColor).Sprint(key.Status))
+			fmt.Fprintf(cmd.OutOrStdout(), "Created: %s\n", key.CreatedAt.Format("2006-01-02"))
 			if !key.LastUsed.IsZero() {
-				fmt.Printf("Last Used: %s (%d calls today)\n", 
+				fmt.Fprintf(cmd.OutOrStdout(), "Last Used: %s (%d calls today)\n", 
 					key.LastUsed.Format("2006-01-02 15:04:05"), key.CallsToday)
 			}
-			fmt.Println()
+			fmt.Fprintln(cmd.OutOrStdout())
 		}
 		
 		// Usage examples
-		fmt.Printf("📚 Quick Start Examples\n\n")
+		fmt.Fprintf(cmd.OutOrStdout(), "📚 Quick Start Examples\n\n")
 		
 		if keys.Examples.Curl != "" {
-			fmt.Printf("cURL:\n")
-			fmt.Printf("%s\n\n", color.New(color.FgHiBlack).Sprint(keys.Examples.Curl))
+			fmt.Fprintf(cmd.OutOrStdout(), "cURL:\n")
+			fmt.Fprintf(cmd.OutOrStdout(), "%s\n\n", color.New(color.FgHiBlack).Sprint(keys.Examples.Curl))
 		}
 		
 		if keys.Examples.Python != "" {
-			fmt.Printf("Python:\n")
-			fmt.Printf("%s\n\n", color.New(color.FgHiBlack).Sprint(keys.Examples.Python))
+			fmt.Fprintf(cmd.OutOrStdout(), "Python:\n")
+			fmt.Fprintf(cmd.OutOrStdout(), "%s\n\n", color.New(color.FgHiBlack).Sprint(keys.Examples.Python))
 		}
 		
 		if keys.Examples.NodeJS != "" {
-			fmt.Printf("Node.js:\n")
-			fmt.Printf("%s\n\n", color.New(color.FgHiBlack).Sprint(keys.Examples.NodeJS))
+			fmt.Fprintf(cmd.OutOrStdout(), "Node.js:\n")
+			fmt.Fprintf(cmd.OutOrStdout(), "%s\n\n", color.New(color.FgHiBlack).Sprint(keys.Examples.NodeJS))
 		}
 		
 		// Actions
-		fmt.Printf("💡 To regenerate your API key:\n")
-		fmt.Printf("   apidirect subscriptions keys %s --regenerate\n", subscriptionID)
+		fmt.Fprintf(cmd.OutOrStdout(), "💡 To regenerate your API key:\n")
+		fmt.Fprintf(cmd.OutOrStdout(), "   apidirect subscriptions keys %s --regenerate\n", subscriptionID)
 		
 		return nil
 	}
@@ -897,6 +905,32 @@ func getCurrencySymbol(currency string) string {
 		"EUR": "€",
 		"GBP": "£",
 		"JPY": "¥",
+		"INR": "₹",
+		"KRW": "₩",
+		"CNY": "¥",
+		"AUD": "$",
+		"CAD": "$",
+		"CHF": "CHF ",
+		"SEK": "SEK ",
+		"NOK": "NOK ",
+		"DKK": "DKK ",
+		"PLN": "PLN ",
+		"CZK": "CZK ",
+		"HUF": "HUF ",
+		"RON": "RON ",
+		"BGN": "BGN ",
+		"HRK": "HRK ",
+		"RUB": "₽",
+		"TRY": "₺",
+		"BRL": "R$",
+		"ZAR": "R",
+		"MXN": "$",
+		"IDR": "Rp",
+		"MYR": "RM",
+		"PHP": "₱",
+		"SGD": "$",
+		"THB": "฿",
+		"VND": "₫",
 	}
 	if symbol, ok := symbols[strings.ToUpper(currency)]; ok {
 		return symbol

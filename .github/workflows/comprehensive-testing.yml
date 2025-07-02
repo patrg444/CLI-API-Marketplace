@@ -1,0 +1,402 @@
+name: Comprehensive Testing Suite
+
+on:
+  push:
+    branches: [ main, develop, 'feature/*' ]
+  pull_request:
+    branches: [ main, develop ]
+  schedule:
+    # Run nightly tests at 2 AM UTC
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+    inputs:
+      test_type:
+        description: 'Test type to run'
+        required: true
+        default: 'all'
+        type: choice
+        options:
+          - all
+          - unit
+          - integration
+          - e2e
+          - security
+          - performance
+          - contract
+          - visual
+
+env:
+  NODE_VERSION: '18.x'
+  GO_VERSION: '1.21'
+  PYTHON_VERSION: '3.11'
+
+jobs:
+  # Job 1: Unit and Integration Tests
+  unit-integration-tests:
+    name: Unit & Integration Tests
+    runs-on: ubuntu-latest
+    if: ${{ github.event.inputs.test_type == 'all' || github.event.inputs.test_type == 'unit' || github.event.inputs.test_type == 'integration' }}
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: |
+          npm ci
+          cd web/marketplace && npm ci
+          cd ../console && npm ci
+      
+      - name: Run unit tests
+        run: |
+          npm test -- --coverage
+          
+      - name: Run API integration tests
+        run: |
+          node web/marketplace/tests/api-integration.test.js
+          
+      - name: Run contract tests
+        run: |
+          cd testing/contract
+          npm install joi axios
+          node api-contracts.test.js
+      
+      - name: Upload coverage reports
+        uses: actions/upload-artifact@v3
+        with:
+          name: coverage-reports
+          path: |
+            coverage/
+            **/coverage/
+
+  # Job 2: E2E Tests
+  e2e-tests:
+    name: E2E Tests
+    runs-on: ubuntu-latest
+    if: ${{ github.event.inputs.test_type == 'all' || github.event.inputs.test_type == 'e2e' }}
+    
+    strategy:
+      matrix:
+        browser: [chromium, firefox, webkit]
+        
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: |
+          cd testing/e2e
+          npm ci
+          npx playwright install --with-deps ${{ matrix.browser }}
+      
+      - name: Start test environment
+        run: |
+          docker-compose -f docker-compose.test.yml up -d
+          ./scripts/wait-for-services.sh
+      
+      - name: Run E2E tests
+        run: |
+          cd testing/e2e
+          npx playwright test --project=${{ matrix.browser }}
+        env:
+          MARKETPLACE_URL: http://localhost:3001
+          
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: e2e-results-${{ matrix.browser }}
+          path: |
+            testing/e2e/playwright-report/
+            testing/e2e/test-results/
+
+  # Job 3: Security Tests
+  security-tests:
+    name: Security Tests
+    runs-on: ubuntu-latest
+    if: ${{ github.event.inputs.test_type == 'all' || github.event.inputs.test_type == 'security' }}
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      
+      - name: Install security test dependencies
+        run: |
+          cd testing/e2e
+          npm ci
+          npx playwright install chromium
+      
+      - name: Run security tests
+        run: |
+          cd testing/e2e
+          npx playwright test tests/security/
+      
+      - name: Run OWASP ZAP scan
+        uses: zaproxy/action-full-scan@v0.7.0
+        with:
+          target: 'http://localhost:3000'
+          rules_file_name: '.zap/rules.tsv'
+          
+      - name: Run dependency security audit
+        run: |
+          npm audit --production
+          cd web/marketplace && npm audit --production
+          cd ../console && npm audit --production
+      
+      - name: Upload security reports
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: security-reports
+          path: |
+            testing/e2e/test-results/
+            zap-report.html
+
+  # Job 4: Performance Tests
+  performance-tests:
+    name: Performance Tests
+    runs-on: ubuntu-latest
+    if: ${{ github.event.inputs.test_type == 'all' || github.event.inputs.test_type == 'performance' }}
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup k6
+        run: |
+          sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys C5AD17C747E3415A3642D57D77C6C491D6AC1D69
+          echo "deb https://dl.k6.io/deb stable main" | sudo tee /etc/apt/sources.list.d/k6.list
+          sudo apt-get update
+          sudo apt-get install k6
+      
+      - name: Start test environment
+        run: |
+          docker-compose -f docker-compose.test.yml up -d
+          ./scripts/wait-for-services.sh
+      
+      - name: Run performance tests
+        run: |
+          k6 run testing/performance/api-performance-test.js \
+            --out json=performance-results.json \
+            --summary-export=performance-summary.json
+      
+      - name: Upload performance results
+        uses: actions/upload-artifact@v3
+        with:
+          name: performance-results
+          path: |
+            performance-*.json
+            performance-*.html
+
+  # Job 5: Visual Regression Tests
+  visual-regression-tests:
+    name: Visual Regression Tests
+    runs-on: ubuntu-latest
+    if: ${{ github.event.inputs.test_type == 'all' || github.event.inputs.test_type == 'visual' }}
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      
+      - name: Install dependencies
+        run: |
+          cd testing/e2e
+          npm ci
+          npx playwright install chromium
+      
+      - name: Download visual baselines
+        uses: actions/download-artifact@v3
+        with:
+          name: visual-baselines
+          path: testing/e2e/tests/visual/__screenshots__/
+        continue-on-error: true
+      
+      - name: Run visual regression tests
+        run: |
+          cd testing/e2e
+          npx playwright test tests/visual/ --project=chromium
+      
+      - name: Upload visual differences
+        if: failure()
+        uses: actions/upload-artifact@v3
+        with:
+          name: visual-differences
+          path: testing/e2e/test-results/
+      
+      - name: Update visual baselines
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: actions/upload-artifact@v3
+        with:
+          name: visual-baselines
+          path: testing/e2e/tests/visual/__screenshots__/
+
+  # Job 6: BYOA Tests
+  byoa-tests:
+    name: BYOA Deployment Tests
+    runs-on: ubuntu-latest
+    if: ${{ github.event.inputs.test_type == 'all' }}
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: ${{ env.GO_VERSION }}
+      
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.6.6
+      
+      - name: Run BYOA tests
+        run: |
+          cd cli/test/e2e
+          go test -v ./... -tags=integration
+        env:
+          MOCK_AWS: true
+          APIDIRECT_TEST_MODE: true
+
+  # Job 7: Test Summary and Reporting
+  test-summary:
+    name: Test Summary
+    needs: [unit-integration-tests, e2e-tests, security-tests, performance-tests, visual-regression-tests, byoa-tests]
+    runs-on: ubuntu-latest
+    if: always()
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Download all artifacts
+        uses: actions/download-artifact@v3
+        with:
+          path: test-artifacts/
+      
+      - name: Generate test report
+        run: |
+          mkdir -p test-reports
+          
+          # Create summary report
+          cat > test-reports/summary.md << EOF
+          # Test Execution Summary
+          
+          **Workflow Run**: ${{ github.run_number }}
+          **Triggered By**: ${{ github.event_name }}
+          **Branch**: ${{ github.ref_name }}
+          
+          ## Test Results
+          
+          | Test Suite | Status |
+          |------------|--------|
+          | Unit & Integration | ${{ needs.unit-integration-tests.result }} |
+          | E2E Tests | ${{ needs.e2e-tests.result }} |
+          | Security Tests | ${{ needs.security-tests.result }} |
+          | Performance Tests | ${{ needs.performance-tests.result }} |
+          | Visual Regression | ${{ needs.visual-regression-tests.result }} |
+          | BYOA Tests | ${{ needs.byoa-tests.result }} |
+          
+          ## Artifacts
+          - Coverage Reports
+          - E2E Test Results
+          - Security Scan Reports
+          - Performance Metrics
+          - Visual Regression Diffs
+          EOF
+      
+      - name: Comment PR with results
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const fs = require('fs');
+            const summary = fs.readFileSync('test-reports/summary.md', 'utf8');
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: summary
+            });
+      
+      - name: Upload final test report
+        uses: actions/upload-artifact@v3
+        with:
+          name: test-summary-report
+          path: test-reports/
+
+  # Job 8: Deploy Test Results (optional)
+  deploy-test-results:
+    name: Deploy Test Results
+    needs: test-summary
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Download test artifacts
+        uses: actions/download-artifact@v3
+        with:
+          path: test-artifacts/
+      
+      - name: Deploy to GitHub Pages
+        run: |
+          # Create test results website
+          mkdir -p public
+          cp -r test-artifacts/* public/
+          
+          # Generate index.html
+          cat > public/index.html << EOF
+          <!DOCTYPE html>
+          <html>
+          <head>
+              <title>Test Results - CLI-API-Marketplace</title>
+              <style>
+                  body { font-family: Arial, sans-serif; margin: 20px; }
+                  .header { background: #2c3e50; color: white; padding: 20px; }
+                  .results { margin: 20px 0; }
+                  .pass { color: green; }
+                  .fail { color: red; }
+              </style>
+          </head>
+          <body>
+              <div class="header">
+                  <h1>Test Results Dashboard</h1>
+                  <p>Latest test run: $(date)</p>
+              </div>
+              <div class="results">
+                  <h2>Test Reports</h2>
+                  <ul>
+                      <li><a href="coverage-reports/index.html">Coverage Report</a></li>
+                      <li><a href="e2e-results-chromium/index.html">E2E Results</a></li>
+                      <li><a href="security-reports/index.html">Security Report</a></li>
+                      <li><a href="performance-results/index.html">Performance Report</a></li>
+                  </ul>
+              </div>
+          </body>
+          </html>
+          EOF
+      
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./public
+          destination_dir: test-results

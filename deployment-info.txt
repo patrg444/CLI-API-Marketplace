@@ -1,0 +1,8 @@
+API Direct AWS Deployment Info
+==============================
+Date: Wed Jul  2 06:13:43 PDT 2025
+Instance ID: i-0bec4514d0c270d18
+Elastic IP: 34.194.31.245
+Region: us-east-1
+Security Group: sg-0d0a732e6a5f9d636
+Key Name: api-direct-key

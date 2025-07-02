@@ -182,15 +182,15 @@ func runSearch(cmd *cobra.Command, args []string) error {
 	// Output based on format
 	switch searchFormat {
 	case "json":
-		encoder := json.NewEncoder(os.Stdout)
+		encoder := json.NewEncoder(cmd.OutOrStdout())
 		encoder.SetIndent("", "  ")
 		return encoder.Encode(results)
 		
 	case "grid":
-		return displaySearchGrid(results.Results, results.Total, query)
+		return displaySearchGrid(cmd, results.Results, results.Total, query)
 		
 	default:
-		return displaySearchTable(results.Results, results.Total, query, results.Facets)
+		return displaySearchTable(cmd, results.Results, results.Total, query, results.Facets)
 	}
 }
 
@@ -226,16 +226,16 @@ func runBrowse(cmd *cobra.Command, args []string) error {
 		}
 		
 		// Display categories
-		fmt.Println()
-		color.New(color.FgCyan, color.Bold).Printf("📚 API Categories\n\n")
+		fmt.Fprintln(cmd.OutOrStdout())
+		color.New(color.FgCyan, color.Bold).Fprintf(cmd.OutOrStdout(), "📚 API Categories\n\n")
 		
 		for _, cat := range categories {
-			fmt.Printf("%s %s\n", cat.Icon, color.New(color.Bold).Sprint(cat.Name))
-			fmt.Printf("   %s\n", cat.Description)
-			fmt.Printf("   %s\n\n", color.New(color.FgHiBlack).Sprintf("%d APIs", cat.APICount))
+			fmt.Fprintf(cmd.OutOrStdout(), "%s %s\n", cat.Icon, color.New(color.Bold).Sprint(cat.Name))
+			fmt.Fprintf(cmd.OutOrStdout(), "   %s\n", cat.Description)
+			fmt.Fprintf(cmd.OutOrStdout(), "   %s\n\n", color.New(color.FgHiBlack).Sprintf("%d APIs", cat.APICount))
 		}
 		
-		fmt.Println("Browse a category: apidirect browse --category <name>")
+		fmt.Fprintln(cmd.OutOrStdout(), "Browse a category: apidirect browse --category <name>")
 		
 		return nil
 	}
@@ -296,20 +296,20 @@ func runTrending(cmd *cobra.Command, args []string) error {
 	// Output based on format
 	switch searchFormat {
 	case "json":
-		encoder := json.NewEncoder(os.Stdout)
+		encoder := json.NewEncoder(cmd.OutOrStdout())
 		encoder.SetIndent("", "  ")
 		return encoder.Encode(trending)
 		
 	default:
 		// Display trending
-		fmt.Println()
-		color.New(color.FgCyan, color.Bold).Printf("🔥 Trending APIs")
+		fmt.Fprintln(cmd.OutOrStdout())
+		color.New(color.FgCyan, color.Bold).Fprintf(cmd.OutOrStdout(), "🔥 Trending APIs")
 		if searchCategory != "" {
-			fmt.Printf(" in %s", searchCategory)
+			fmt.Fprintf(cmd.OutOrStdout(), " in %s", searchCategory)
 		}
-		fmt.Printf("\n\n")
+		fmt.Fprintf(cmd.OutOrStdout(), "\n\n")
 		
-		w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
+		w := tabwriter.NewWriter(cmd.OutOrStdout(), 0, 0, 2, ' ', 0)
 		fmt.Fprintf(w, "RANK\tAPI\tCATEGORY\tRATING\tGROWTH\tPRICE\n")
 		
 		for _, api := range trending.APIs {
@@ -390,20 +390,20 @@ func runFeatured(cmd *cobra.Command, args []string) error {
 	// Output based on format
 	switch searchFormat {
 	case "json":
-		encoder := json.NewEncoder(os.Stdout)
+		encoder := json.NewEncoder(cmd.OutOrStdout())
 		encoder.SetIndent("", "  ")
 		return encoder.Encode(featured)
 		
 	case "table":
-		return displayFeaturedTable(featured.APIs, featured.Title, featured.Description)
+		return displayFeaturedTable(cmd, featured.APIs, featured.Title, featured.Description)
 		
 	default:
-		return displayFeaturedGrid(featured.APIs, featured.Title, featured.Description)
+		return displayFeaturedGrid(cmd, featured.APIs, featured.Title, featured.Description)
 	}
 }
 
 // Display helper functions
-func displaySearchTable(results []struct {
+func displaySearchTable(cmd *cobra.Command, results []struct {
 	ID            string   `json:"id"`
 	Name          string   `json:"name"`
 	Description   string   `json:"description"`
@@ -425,20 +425,20 @@ func displaySearchTable(results []struct {
 	Tags       map[string]int `json:"tags"`
 	PriceRanges map[string]int `json:"price_ranges"`
 }) error {
-	fmt.Println()
+	fmt.Fprintln(cmd.OutOrStdout())
 	if query != "" {
-		color.New(color.FgCyan, color.Bold).Printf("🔍 Search Results for \"%s\"\n", query)
+		color.New(color.FgCyan, color.Bold).Fprintf(cmd.OutOrStdout(), "🔍 Search Results for \"%s\"\n", query)
 	} else {
-		color.New(color.FgCyan, color.Bold).Printf("🔍 Browse APIs\n")
+		color.New(color.FgCyan, color.Bold).Fprintf(cmd.OutOrStdout(), "🔍 Browse APIs\n")
 	}
-	fmt.Printf("Found %d APIs\n\n", total)
+	fmt.Fprintf(cmd.OutOrStdout(), "Found %d APIs\n\n", total)
 	
 	if len(results) == 0 {
-		fmt.Println("No APIs found matching your criteria")
+		fmt.Fprintln(cmd.OutOrStdout(), "No APIs found matching your criteria")
 		return nil
 	}
 	
-	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
+	w := tabwriter.NewWriter(cmd.OutOrStdout(), 0, 0, 2, ' ', 0)
 	fmt.Fprintf(w, "NAME\tCATEGORY\tRATING\tPRICE\tSUBSCRIBERS\n")
 	
 	for _, api := range results {
@@ -476,22 +476,22 @@ func displaySearchTable(results []struct {
 	
 	// Show facets if available
 	if searchCategory == "" && len(facets.Categories) > 0 {
-		fmt.Printf("\n📊 Filter by Category:\n")
+		fmt.Fprintf(cmd.OutOrStdout(), "\n📊 Filter by Category:\n")
 		for cat, count := range facets.Categories {
-			fmt.Printf("  • %s (%d)\n", cat, count)
+			fmt.Fprintf(cmd.OutOrStdout(), "  • %s (%d)\n", cat, count)
 		}
 	}
 	
 	// Navigation hint
-	fmt.Printf("\n💡 View details: apidirect info <api-name>\n")
+	fmt.Fprintf(cmd.OutOrStdout(), "\n💡 View details: apidirect info <api-name>\n")
 	if total > searchLimit {
-		fmt.Printf("   Next page: add --offset %d\n", searchOffset+searchLimit)
+		fmt.Fprintf(cmd.OutOrStdout(), "   Next page: add --offset %d\n", searchOffset+searchLimit)
 	}
 	
 	return nil
 }
 
-func displaySearchGrid(results []struct {
+func displaySearchGrid(cmd *cobra.Command, results []struct {
 	ID            string   `json:"id"`
 	Name          string   `json:"name"`
 	Description   string   `json:"description"`
@@ -509,17 +509,17 @@ func displaySearchGrid(results []struct {
 	Endpoints     int      `json:"endpoint_count"`
 	LastUpdated   string   `json:"last_updated"`
 }, total int, query string) error {
-	fmt.Println()
+	fmt.Fprintln(cmd.OutOrStdout())
 	if query != "" {
-		color.New(color.FgCyan, color.Bold).Printf("🔍 Search Results for \"%s\"\n", query)
+		color.New(color.FgCyan, color.Bold).Fprintf(cmd.OutOrStdout(), "🔍 Search Results for \"%s\"\n", query)
 	} else {
-		color.New(color.FgCyan, color.Bold).Printf("🔍 Browse APIs\n")
+		color.New(color.FgCyan, color.Bold).Fprintf(cmd.OutOrStdout(), "🔍 Browse APIs\n")
 	}
-	fmt.Printf("Found %d APIs\n\n", total)
+	fmt.Fprintf(cmd.OutOrStdout(), "Found %d APIs\n\n", total)
 	
 	for i, api := range results {
 		if i > 0 {
-			fmt.Println(strings.Repeat("─", 60))
+			fmt.Fprintln(cmd.OutOrStdout(), strings.Repeat("─", 60))
 		}
 		
 		// Header with badges
@@ -530,38 +530,38 @@ func displaySearchGrid(results []struct {
 		if api.Verified {
 			header += " ✓"
 		}
-		color.New(color.Bold).Println(header)
+		color.New(color.Bold).Fprintln(cmd.OutOrStdout(), header)
 		
 		// Description
-		fmt.Printf("%s\n", truncate(api.Description, 80))
+		fmt.Fprintf(cmd.OutOrStdout(), "%s\n", truncate(api.Description, 80))
 		
 		// Metadata
-		fmt.Printf("\n📁 %s", api.Category)
+		fmt.Fprintf(cmd.OutOrStdout(), "\n📁 %s", api.Category)
 		if len(api.Tags) > 0 {
-			fmt.Printf(" • 🏷️  %s", strings.Join(api.Tags[:min(3, len(api.Tags))], ", "))
+			fmt.Fprintf(cmd.OutOrStdout(), " • 🏷️  %s", strings.Join(api.Tags[:min(3, len(api.Tags))], ", "))
 		}
-		fmt.Printf("\n")
+		fmt.Fprintf(cmd.OutOrStdout(), "\n")
 		
 		// Stats
 		if api.ReviewCount > 0 {
-			fmt.Printf("⭐ %.1f (%d reviews) • ", api.Rating, api.ReviewCount)
+			fmt.Fprintf(cmd.OutOrStdout(), "⭐ %.1f (%d reviews) • ", api.Rating, api.ReviewCount)
 		}
-		fmt.Printf("👥 %d subscribers • ", api.Subscribers)
-		fmt.Printf("🔗 %d endpoints\n", api.Endpoints)
+		fmt.Fprintf(cmd.OutOrStdout(), "👥 %d subscribers • ", api.Subscribers)
+		fmt.Fprintf(cmd.OutOrStdout(), "🔗 %d endpoints\n", api.Endpoints)
 		
 		// Creator and pricing
-		fmt.Printf("👤 %s • ", api.Creator)
+		fmt.Fprintf(cmd.OutOrStdout(), "👤 %s • ", api.Creator)
 		if api.StartingPrice > 0 {
-			fmt.Printf("💰 From $%.0f/%s\n", api.StartingPrice, getPricingInterval(api.PricingModel))
+			fmt.Fprintf(cmd.OutOrStdout(), "💰 From $%.0f/%s\n", api.StartingPrice, getPricingInterval(api.PricingModel))
 		} else {
-			fmt.Printf("💰 Free\n")
+			fmt.Fprintf(cmd.OutOrStdout(), "💰 Free\n")
 		}
 	}
 	
 	return nil
 }
 
-func displayFeaturedTable(apis []struct {
+func displayFeaturedTable(cmd *cobra.Command, apis []struct {
 	ID            string   `json:"id"`
 	Name          string   `json:"name"`
 	Description   string   `json:"description"`
@@ -575,11 +575,11 @@ func displayFeaturedTable(apis []struct {
 	PricingModel  string   `json:"pricing_model"`
 	StartingPrice float64  `json:"starting_price"`
 }, title, description string) error {
-	fmt.Println()
-	color.New(color.FgCyan, color.Bold).Printf("⭐ %s\n", title)
-	fmt.Printf("%s\n\n", description)
+	fmt.Fprintln(cmd.OutOrStdout())
+	color.New(color.FgCyan, color.Bold).Fprintf(cmd.OutOrStdout(), "⭐ %s\n", title)
+	fmt.Fprintf(cmd.OutOrStdout(), "%s\n\n", description)
 	
-	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
+	w := tabwriter.NewWriter(cmd.OutOrStdout(), 0, 0, 2, ' ', 0)
 	fmt.Fprintf(w, "API\tCATEGORY\tRATING\tFEATURED FOR\n")
 	
 	for _, api := range apis {
@@ -606,7 +606,7 @@ func displayFeaturedTable(apis []struct {
 	return nil
 }
 
-func displayFeaturedGrid(apis []struct {
+func displayFeaturedGrid(cmd *cobra.Command, apis []struct {
 	ID            string   `json:"id"`
 	Name          string   `json:"name"`
 	Description   string   `json:"description"`
@@ -620,46 +620,46 @@ func displayFeaturedGrid(apis []struct {
 	PricingModel  string   `json:"pricing_model"`
 	StartingPrice float64  `json:"starting_price"`
 }, title, description string) error {
-	fmt.Println()
-	color.New(color.FgCyan, color.Bold).Printf("⭐ %s\n", title)
-	fmt.Printf("%s\n\n", description)
+	fmt.Fprintln(cmd.OutOrStdout())
+	color.New(color.FgCyan, color.Bold).Fprintf(cmd.OutOrStdout(), "⭐ %s\n", title)
+	fmt.Fprintf(cmd.OutOrStdout(), "%s\n\n", description)
 	
 	for i, api := range apis {
 		if i > 0 {
-			fmt.Println()
+			fmt.Fprintln(cmd.OutOrStdout())
 		}
 		
 		// Badge and name
 		if api.Badge != "" {
-			color.New(color.FgYellow, color.Bold).Printf("[%s] ", api.Badge)
+			color.New(color.FgYellow, color.Bold).Fprintf(cmd.OutOrStdout(), "[%s] ", api.Badge)
 		}
-		color.New(color.Bold).Println(api.Name)
+		color.New(color.Bold).Fprintln(cmd.OutOrStdout(), api.Name)
 		
 		// Featured text
-		color.New(color.FgGreen).Printf("✨ %s\n", api.FeaturedText)
+		color.New(color.FgGreen).Fprintf(cmd.OutOrStdout(), "✨ %s\n", api.FeaturedText)
 		
 		// Description
-		fmt.Printf("%s\n", api.Description)
+		fmt.Fprintf(cmd.OutOrStdout(), "%s\n", api.Description)
 		
 		// Details
-		fmt.Printf("\n📁 %s", api.Category)
+		fmt.Fprintf(cmd.OutOrStdout(), "\n📁 %s", api.Category)
 		if len(api.Tags) > 0 {
-			fmt.Printf(" • 🏷️  %s", strings.Join(api.Tags, ", "))
+			fmt.Fprintf(cmd.OutOrStdout(), " • 🏷️  %s", strings.Join(api.Tags, ", "))
 		}
-		fmt.Printf("\n")
+		fmt.Fprintf(cmd.OutOrStdout(), "\n")
 		
 		// Rating and price
 		if api.ReviewCount > 0 {
-			fmt.Printf("⭐ %.1f (%d reviews) • ", api.Rating, api.ReviewCount)
+			fmt.Fprintf(cmd.OutOrStdout(), "⭐ %.1f (%d reviews) • ", api.Rating, api.ReviewCount)
 		}
 		if api.StartingPrice > 0 {
-			fmt.Printf("💰 From $%.0f/%s", api.StartingPrice, getPricingInterval(api.PricingModel))
+			fmt.Fprintf(cmd.OutOrStdout(), "💰 From $%.0f/%s", api.StartingPrice, getPricingInterval(api.PricingModel))
 		} else {
-			fmt.Printf("💰 Free")
+			fmt.Fprintf(cmd.OutOrStdout(), "💰 Free")
 		}
-		fmt.Printf(" • 👤 %s\n", api.Creator)
+		fmt.Fprintf(cmd.OutOrStdout(), " • 👤 %s\n", api.Creator)
 		
-		fmt.Println(strings.Repeat("─", 60))
+		fmt.Fprintln(cmd.OutOrStdout(), strings.Repeat("─", 60))
 	}
 	
 	return nil

@@ -1,0 +1,1050 @@
+{% extends "templates/base.html" %}
+
+{% block title %}API Documentation - API-Direct Creator Portal{% endblock %}
+{% block description %}View and manage documentation for your API{% endblock %}
+
+{% block styles %}
+<style>
+.doc-container {
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.75rem;
+    overflow: hidden;
+}
+
+.doc-sidebar {
+    width: 280px;
+    background: #f9fafb;
+    border-right: 1px solid #e5e7eb;
+    max-height: calc(100vh - 8rem);
+    overflow-y: auto;
+}
+
+.doc-content {
+    flex: 1;
+    padding: 2rem;
+    max-height: calc(100vh - 8rem);
+    overflow-y: auto;
+}
+
+.endpoint-item {
+    padding: 0.75rem 1rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    border-left: 3px solid transparent;
+}
+
+.endpoint-item:hover {
+    background: #f3f4f6;
+}
+
+.endpoint-item.active {
+    background: #eef2ff;
+    border-left-color: #4f46e5;
+}
+
+.method-badge {
+    display: inline-block;
+    padding: 0.25rem 0.5rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    border-radius: 0.25rem;
+    text-transform: uppercase;
+}
+
+.method-badge.get { background: #dbeafe; color: #1e40af; }
+.method-badge.post { background: #d1fae5; color: #065f46; }
+.method-badge.put { background: #fed7aa; color: #92400e; }
+.method-badge.patch { background: #fef3c7; color: #92400e; }
+.method-badge.delete { background: #fee2e2; color: #991b1b; }
+
+.code-block {
+    background: #1e293b;
+    color: #e2e8f0;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    overflow-x: auto;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.875rem;
+    line-height: 1.5;
+}
+
+.parameter-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.parameter-table th {
+    background: #f9fafb;
+    padding: 0.75rem;
+    text-align: left;
+    font-weight: 600;
+    font-size: 0.875rem;
+    color: #374151;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.parameter-table td {
+    padding: 0.75rem;
+    border-bottom: 1px solid #f3f4f6;
+    font-size: 0.875rem;
+}
+
+.parameter-name {
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 500;
+    color: #4f46e5;
+}
+
+.parameter-type {
+    display: inline-block;
+    padding: 0.125rem 0.375rem;
+    background: #f3f4f6;
+    border-radius: 0.25rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.75rem;
+    color: #6b7280;
+}
+
+.parameter-required {
+    display: inline-block;
+    padding: 0.125rem 0.375rem;
+    background: #fee2e2;
+    color: #991b1b;
+    border-radius: 0.25rem;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.response-example {
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.5rem;
+    padding: 1rem;
+    margin-top: 1rem;
+}
+
+.try-it-section {
+    background: #f3f4f6;
+    border-radius: 0.5rem;
+    padding: 1.5rem;
+    margin-top: 2rem;
+}
+
+.auth-info {
+    background: #fef3c7;
+    border: 1px solid #fbbf24;
+    border-radius: 0.5rem;
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.doc-nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem;
+    border-bottom: 1px solid #e5e7eb;
+    background: white;
+}
+
+.version-selector {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.5rem 1rem;
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.375rem;
+    font-size: 0.875rem;
+}
+
+.export-menu {
+    position: relative;
+}
+
+.export-dropdown {
+    position: absolute;
+    right: 0;
+    top: 100%;
+    margin-top: 0.5rem;
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.375rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    min-width: 200px;
+    z-index: 10;
+}
+
+.export-option {
+    padding: 0.75rem 1rem;
+    cursor: pointer;
+    transition: background 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.export-option:hover {
+    background: #f9fafb;
+}
+
+.schema-viewer {
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.5rem;
+    padding: 1rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.875rem;
+    overflow-x: auto;
+}
+
+.tag-group {
+    margin-bottom: 1.5rem;
+}
+
+.tag-header {
+    padding: 0.5rem 1rem;
+    background: #f3f4f6;
+    font-weight: 600;
+    font-size: 0.875rem;
+    color: #374151;
+    text-transform: uppercase;
+}
+
+.search-box {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.search-input {
+    width: 100%;
+    padding: 0.5rem 1rem 0.5rem 2.5rem;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.375rem;
+    font-size: 0.875rem;
+}
+
+.search-icon {
+    position: absolute;
+    left: 0.75rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #9ca3af;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-full mx-auto -m-8">
+    <!-- Documentation Header -->
+    <div class="doc-nav">
+        <div class="flex items-center space-x-4">
+            <h1 class="text-xl font-semibold text-gray-900" id="apiName">API Documentation</h1>
+            <select class="version-selector" id="versionSelector">
+                <option value="v1">Version 1.0</option>
+            </select>
+        </div>
+        
+        <div class="flex items-center space-x-3">
+            <button onclick="editDocumentation()" class="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50">
+                <i class="fas fa-edit mr-2"></i>Edit
+            </button>
+            
+            <div class="export-menu">
+                <button onclick="toggleExportMenu()" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700">
+                    <i class="fas fa-download mr-2"></i>Export
+                </button>
+                <div id="exportDropdown" class="export-dropdown hidden">
+                    <div class="export-option" onclick="exportAs('openapi')">
+                        <i class="fas fa-file-code"></i>
+                        <span>OpenAPI 3.0</span>
+                    </div>
+                    <div class="export-option" onclick="exportAs('postman')">
+                        <i class="fas fa-file-export"></i>
+                        <span>Postman Collection</span>
+                    </div>
+                    <div class="export-option" onclick="exportAs('markdown')">
+                        <i class="fas fa-file-alt"></i>
+                        <span>Markdown</span>
+                    </div>
+                    <div class="export-option" onclick="exportAs('pdf')">
+                        <i class="fas fa-file-pdf"></i>
+                        <span>PDF</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="doc-container flex">
+        <!-- Sidebar -->
+        <div class="doc-sidebar">
+            <!-- Search -->
+            <div class="search-box relative">
+                <i class="fas fa-search search-icon"></i>
+                <input type="text" placeholder="Search endpoints..." class="search-input" id="endpointSearch" onkeyup="filterEndpoints()">
+            </div>
+
+            <!-- Authentication Section -->
+            <div class="tag-group">
+                <div class="tag-header">Authentication</div>
+                <div class="endpoint-item" onclick="showAuthSection()">
+                    <i class="fas fa-key text-gray-500 mr-2"></i>
+                    <span class="text-sm">API Keys & Auth</span>
+                </div>
+            </div>
+
+            <!-- Endpoints by Tag -->
+            <div id="endpointList">
+                <!-- Endpoints will be loaded here -->
+                <div class="p-4 text-center text-gray-500">
+                    <i class="fas fa-spinner fa-spin text-2xl"></i>
+                    <p class="mt-2">Loading endpoints...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="doc-content">
+            <!-- Default view shows overview -->
+            <div id="docContent">
+                <div class="mb-8">
+                    <h2 class="text-2xl font-bold text-gray-900 mb-4">API Overview</h2>
+                    <p class="text-gray-600 mb-4" id="apiDescription">
+                        Welcome to the API documentation. Select an endpoint from the sidebar to view details.
+                    </p>
+
+                    <!-- Base URL -->
+                    <div class="mb-6">
+                        <h3 class="text-lg font-semibold text-gray-900 mb-2">Base URL</h3>
+                        <div class="code-block">
+                            <span id="baseUrl">https://api.api-direct.com/v1</span>
+                        </div>
+                    </div>
+
+                    <!-- Quick Start -->
+                    <div class="mb-6">
+                        <h3 class="text-lg font-semibold text-gray-900 mb-2">Quick Start</h3>
+                        <div class="code-block" id="quickStartExample">
+curl -X GET https://api.api-direct.com/v1/example \
+  -H "Authorization: Bearer YOUR_API_KEY"
+                        </div>
+                    </div>
+
+                    <!-- Rate Limiting -->
+                    <div class="mb-6">
+                        <h3 class="text-lg font-semibold text-gray-900 mb-2">Rate Limiting</h3>
+                        <p class="text-gray-600 mb-2">This API uses rate limiting to ensure fair usage:</p>
+                        <ul class="list-disc list-inside text-gray-600 space-y-1">
+                            <li>Free tier: <span class="font-medium">100 requests/hour</span></li>
+                            <li>Basic tier: <span class="font-medium">1,000 requests/hour</span></li>
+                            <li>Pro tier: <span class="font-medium">10,000 requests/hour</span></li>
+                        </ul>
+                    </div>
+
+                    <!-- Response Codes -->
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-900 mb-2">Response Codes</h3>
+                        <table class="parameter-table">
+                            <thead>
+                                <tr>
+                                    <th>Code</th>
+                                    <th>Description</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><span class="parameter-type">200</span></td>
+                                    <td>Success - Request completed successfully</td>
+                                </tr>
+                                <tr>
+                                    <td><span class="parameter-type">201</span></td>
+                                    <td>Created - Resource created successfully</td>
+                                </tr>
+                                <tr>
+                                    <td><span class="parameter-type">400</span></td>
+                                    <td>Bad Request - Invalid parameters</td>
+                                </tr>
+                                <tr>
+                                    <td><span class="parameter-type">401</span></td>
+                                    <td>Unauthorized - Invalid or missing API key</td>
+                                </tr>
+                                <tr>
+                                    <td><span class="parameter-type">403</span></td>
+                                    <td>Forbidden - Access denied</td>
+                                </tr>
+                                <tr>
+                                    <td><span class="parameter-type">404</span></td>
+                                    <td>Not Found - Resource not found</td>
+                                </tr>
+                                <tr>
+                                    <td><span class="parameter-type">429</span></td>
+                                    <td>Too Many Requests - Rate limit exceeded</td>
+                                </tr>
+                                <tr>
+                                    <td><span class="parameter-type">500</span></td>
+                                    <td>Internal Server Error</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Try It Modal -->
+<div id="tryItModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div class="bg-white rounded-lg p-6 max-w-3xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="text-lg font-semibold text-gray-900">Try API Endpoint</h3>
+            <button onclick="closeTryIt()" class="text-gray-400 hover:text-gray-600">
+                <i class="fas fa-times text-xl"></i>
+            </button>
+        </div>
+
+        <div class="space-y-4">
+            <!-- Endpoint URL -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Endpoint</label>
+                <div class="flex items-center space-x-2">
+                    <span class="method-badge" id="tryMethod">GET</span>
+                    <input type="text" id="tryUrl" class="flex-1 px-3 py-2 border border-gray-300 rounded-md" readonly>
+                </div>
+            </div>
+
+            <!-- Headers -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Headers</label>
+                <div id="tryHeaders" class="space-y-2">
+                    <div class="flex items-center space-x-2">
+                        <input type="text" value="Authorization" class="w-1/3 px-3 py-2 border border-gray-300 rounded-md" readonly>
+                        <input type="text" placeholder="Bearer YOUR_API_KEY" class="flex-1 px-3 py-2 border border-gray-300 rounded-md">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Parameters -->
+            <div id="tryParameters" class="hidden">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Parameters</label>
+                <div id="tryParamsList" class="space-y-2">
+                    <!-- Parameters will be added here -->
+                </div>
+            </div>
+
+            <!-- Request Body -->
+            <div id="tryBody" class="hidden">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Request Body</label>
+                <textarea id="tryBodyContent" rows="6" class="w-full px-3 py-2 border border-gray-300 rounded-md font-mono text-sm">{
+  "example": "value"
+}</textarea>
+            </div>
+
+            <!-- Send Button -->
+            <button onclick="sendTestRequest()" class="w-full px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700">
+                <i class="fas fa-paper-plane mr-2"></i>Send Request
+            </button>
+
+            <!-- Response -->
+            <div id="tryResponse" class="hidden">
+                <h4 class="font-medium text-gray-900 mb-2">Response</h4>
+                <div class="bg-gray-900 text-gray-100 p-4 rounded-md font-mono text-sm overflow-x-auto">
+                    <div class="mb-2 text-green-400">
+                        Status: <span id="responseStatus">200 OK</span>
+                    </div>
+                    <pre id="responseBody">{
+  "status": "success"
+}</pre>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Global variables
+let apiId = null;
+let apiSpec = null;
+let currentEndpoint = null;
+
+// Initialize
+document.addEventListener('DOMContentLoaded', () => {
+    // Get API ID from URL
+    const urlParams = new URLSearchParams(window.location.search);
+    apiId = urlParams.get('api_id');
+    
+    if (apiId) {
+        loadAPIDocumentation();
+    } else {
+        showError('No API ID provided');
+    }
+});
+
+// Load API documentation
+async function loadAPIDocumentation() {
+    try {
+        // Load API details
+        const api = await apiClient.getAPIDetails(apiId);
+        document.getElementById('apiName').textContent = `${api.name} Documentation`;
+        document.getElementById('apiDescription').textContent = api.description || 'API documentation';
+        
+        // Load OpenAPI spec or generate from endpoints
+        await loadOpenAPISpec();
+        
+    } catch (error) {
+        console.error('Error loading documentation:', error);
+        showError('Failed to load API documentation');
+    }
+}
+
+// Load OpenAPI specification
+async function loadOpenAPISpec() {
+    try {
+        // In a real implementation, this would fetch the actual OpenAPI spec
+        // For now, we'll use a mock spec
+        apiSpec = {
+            openapi: '3.0.0',
+            info: {
+                title: 'Weather API',
+                version: '1.0.0',
+                description: 'A comprehensive weather data API'
+            },
+            servers: [
+                { url: 'https://api.api-direct.com/v1' }
+            ],
+            paths: {
+                '/weather/current': {
+                    get: {
+                        tags: ['Weather'],
+                        summary: 'Get current weather',
+                        description: 'Returns current weather data for a specific location',
+                        parameters: [
+                            {
+                                name: 'lat',
+                                in: 'query',
+                                required: true,
+                                schema: { type: 'number' },
+                                description: 'Latitude'
+                            },
+                            {
+                                name: 'lon',
+                                in: 'query',
+                                required: true,
+                                schema: { type: 'number' },
+                                description: 'Longitude'
+                            }
+                        ],
+                        responses: {
+                            200: {
+                                description: 'Successful response',
+                                content: {
+                                    'application/json': {
+                                        schema: {
+                                            type: 'object',
+                                            properties: {
+                                                temperature: { type: 'number' },
+                                                humidity: { type: 'number' },
+                                                conditions: { type: 'string' }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                '/weather/forecast': {
+                    get: {
+                        tags: ['Weather'],
+                        summary: 'Get weather forecast',
+                        description: 'Returns 5-day weather forecast',
+                        parameters: [
+                            {
+                                name: 'city',
+                                in: 'query',
+                                required: true,
+                                schema: { type: 'string' },
+                                description: 'City name'
+                            }
+                        ]
+                    }
+                },
+                '/weather/history': {
+                    post: {
+                        tags: ['Weather'],
+                        summary: 'Get historical weather',
+                        description: 'Returns historical weather data',
+                        requestBody: {
+                            required: true,
+                            content: {
+                                'application/json': {
+                                    schema: {
+                                        type: 'object',
+                                        properties: {
+                                            location: { type: 'string' },
+                                            date: { type: 'string', format: 'date' }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                '/alerts': {
+                    get: {
+                        tags: ['Alerts'],
+                        summary: 'Get weather alerts',
+                        description: 'Returns active weather alerts for a region'
+                    },
+                    post: {
+                        tags: ['Alerts'],
+                        summary: 'Subscribe to alerts',
+                        description: 'Subscribe to weather alerts'
+                    }
+                }
+            }
+        };
+        
+        renderEndpointList();
+        
+    } catch (error) {
+        console.error('Error loading OpenAPI spec:', error);
+    }
+}
+
+// Render endpoint list in sidebar
+function renderEndpointList() {
+    const container = document.getElementById('endpointList');
+    const endpoints = apiSpec.paths;
+    
+    // Group endpoints by tag
+    const taggedEndpoints = {};
+    
+    Object.entries(endpoints).forEach(([path, methods]) => {
+        Object.entries(methods).forEach(([method, details]) => {
+            const tags = details.tags || ['General'];
+            tags.forEach(tag => {
+                if (!taggedEndpoints[tag]) {
+                    taggedEndpoints[tag] = [];
+                }
+                taggedEndpoints[tag].push({ path, method, details });
+            });
+        });
+    });
+    
+    // Render grouped endpoints
+    let html = '';
+    Object.entries(taggedEndpoints).forEach(([tag, endpoints]) => {
+        html += `
+            <div class="tag-group">
+                <div class="tag-header">${tag}</div>
+                ${endpoints.map(endpoint => `
+                    <div class="endpoint-item" onclick="showEndpoint('${endpoint.path}', '${endpoint.method}')">
+                        <span class="method-badge ${endpoint.method}">${endpoint.method}</span>
+                        <span class="ml-2 text-sm">${endpoint.path}</span>
+                    </div>
+                `).join('')}
+            </div>
+        `;
+    });
+    
+    container.innerHTML = html;
+}
+
+// Show authentication section
+function showAuthSection() {
+    const content = document.getElementById('docContent');
+    
+    content.innerHTML = `
+        <div class="mb-8">
+            <h2 class="text-2xl font-bold text-gray-900 mb-4">Authentication</h2>
+            
+            <div class="auth-info">
+                <div class="flex items-start">
+                    <i class="fas fa-info-circle text-yellow-600 mt-0.5 mr-3"></i>
+                    <div>
+                        <p class="font-medium text-yellow-900">API Key Required</p>
+                        <p class="text-sm text-yellow-800 mt-1">
+                            All API requests must include a valid API key in the Authorization header.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mb-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-2">Getting Your API Key</h3>
+                <ol class="list-decimal list-inside text-gray-600 space-y-2">
+                    <li>Sign up for an account at <a href="https://api-direct.com" class="text-indigo-600 hover:text-indigo-700">api-direct.com</a></li>
+                    <li>Navigate to the API Keys section in your dashboard</li>
+                    <li>Create a new API key with appropriate permissions</li>
+                    <li>Copy the key and store it securely</li>
+                </ol>
+            </div>
+
+            <div class="mb-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-2">Using Your API Key</h3>
+                <p class="text-gray-600 mb-3">Include your API key in the Authorization header of every request:</p>
+                <div class="code-block">
+Authorization: Bearer YOUR_API_KEY
+                </div>
+            </div>
+
+            <div class="mb-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-2">Example Request</h3>
+                <div class="code-block">
+curl -X GET https://api.api-direct.com/v1/weather/current?lat=40.7128&lon=-74.0060 \\
+  -H "Authorization: Bearer YOUR_API_KEY"
+                </div>
+            </div>
+
+            <div>
+                <h3 class="text-lg font-semibold text-gray-900 mb-2">Security Best Practices</h3>
+                <ul class="list-disc list-inside text-gray-600 space-y-2">
+                    <li>Never expose your API key in client-side code</li>
+                    <li>Use environment variables to store API keys</li>
+                    <li>Rotate your API keys regularly</li>
+                    <li>Use different keys for different environments (dev, staging, production)</li>
+                    <li>Monitor API key usage for suspicious activity</li>
+                </ul>
+            </div>
+        </div>
+    `;
+}
+
+// Show endpoint details
+function showEndpoint(path, method) {
+    currentEndpoint = { path, method };
+    const endpoint = apiSpec.paths[path][method];
+    const content = document.getElementById('docContent');
+    
+    let html = `
+        <div class="mb-8">
+            <div class="flex items-center justify-between mb-4">
+                <div>
+                    <h2 class="text-2xl font-bold text-gray-900 mb-2">${endpoint.summary || 'Endpoint'}</h2>
+                    <div class="flex items-center space-x-3">
+                        <span class="method-badge ${method}">${method.toUpperCase()}</span>
+                        <code class="text-gray-600">${path}</code>
+                    </div>
+                </div>
+                <button onclick="openTryIt('${path}', '${method}')" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700">
+                    <i class="fas fa-play mr-2"></i>Try It
+                </button>
+            </div>
+
+            <p class="text-gray-600 mb-6">${endpoint.description || ''}</p>
+    `;
+
+    // Parameters
+    if (endpoint.parameters && endpoint.parameters.length > 0) {
+        html += `
+            <div class="mb-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-3">Parameters</h3>
+                <table class="parameter-table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Type</th>
+                            <th>In</th>
+                            <th>Required</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${endpoint.parameters.map(param => `
+                            <tr>
+                                <td><span class="parameter-name">${param.name}</span></td>
+                                <td><span class="parameter-type">${param.schema?.type || 'string'}</span></td>
+                                <td>${param.in}</td>
+                                <td>${param.required ? '<span class="parameter-required">required</span>' : 'optional'}</td>
+                                <td>${param.description || ''}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            </div>
+        `;
+    }
+
+    // Request Body
+    if (endpoint.requestBody) {
+        const bodyContent = endpoint.requestBody.content['application/json'];
+        html += `
+            <div class="mb-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-3">Request Body</h3>
+                <p class="text-gray-600 mb-2">Content-Type: <code>application/json</code></p>
+                <div class="schema-viewer">
+                    ${formatSchema(bodyContent.schema)}
+                </div>
+            </div>
+        `;
+    }
+
+    // Responses
+    html += `
+        <div class="mb-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-3">Responses</h3>
+    `;
+
+    Object.entries(endpoint.responses || {}).forEach(([code, response]) => {
+        html += `
+            <div class="response-example">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="font-medium">
+                        <span class="parameter-type">${code}</span>
+                        ${response.description}
+                    </span>
+                </div>
+        `;
+
+        if (response.content?.['application/json']) {
+            html += `
+                <div class="mt-2">
+                    <div class="code-block">
+${JSON.stringify(generateExampleFromSchema(response.content['application/json'].schema), null, 2)}
+                    </div>
+                </div>
+            `;
+        }
+
+        html += '</div>';
+    });
+
+    html += '</div>';
+
+    // Example
+    html += `
+        <div class="mb-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-3">Example Request</h3>
+            <div class="code-block">
+${generateCurlExample(path, method, endpoint)}
+            </div>
+        </div>
+    `;
+
+    html += '</div>';
+    
+    content.innerHTML = html;
+    
+    // Update active state in sidebar
+    document.querySelectorAll('.endpoint-item').forEach(item => {
+        item.classList.remove('active');
+    });
+    event.target.closest('.endpoint-item').classList.add('active');
+}
+
+// Format schema for display
+function formatSchema(schema, indent = 0) {
+    if (!schema) return '';
+    
+    let html = '';
+    const spacing = '  '.repeat(indent);
+    
+    if (schema.type === 'object' && schema.properties) {
+        html += '{\n';
+        Object.entries(schema.properties).forEach(([key, value]) => {
+            html += `${spacing}  "${key}": ${value.type}`;
+            if (value.description) {
+                html += ` // ${value.description}`;
+            }
+            html += '\n';
+        });
+        html += spacing + '}';
+    } else if (schema.type === 'array') {
+        html += `[${schema.items?.type || 'object'}]`;
+    } else {
+        html += schema.type || 'object';
+    }
+    
+    return html;
+}
+
+// Generate example from schema
+function generateExampleFromSchema(schema) {
+    if (!schema) return {};
+    
+    if (schema.type === 'object' && schema.properties) {
+        const example = {};
+        Object.entries(schema.properties).forEach(([key, value]) => {
+            if (value.type === 'string') {
+                example[key] = value.example || 'string';
+            } else if (value.type === 'number') {
+                example[key] = value.example || 0;
+            } else if (value.type === 'boolean') {
+                example[key] = value.example || true;
+            } else if (value.type === 'array') {
+                example[key] = [];
+            } else if (value.type === 'object') {
+                example[key] = generateExampleFromSchema(value);
+            }
+        });
+        return example;
+    } else if (schema.type === 'array') {
+        return [generateExampleFromSchema(schema.items)];
+    }
+    
+    return {};
+}
+
+// Generate curl example
+function generateCurlExample(path, method, endpoint) {
+    let example = `curl -X ${method.toUpperCase()} https://api.api-direct.com/v1${path}`;
+    
+    // Add query parameters
+    if (endpoint.parameters) {
+        const queryParams = endpoint.parameters
+            .filter(p => p.in === 'query')
+            .map(p => `${p.name}=${p.example || 'value'}`)
+            .join('&');
+        
+        if (queryParams) {
+            example += `?${queryParams}`;
+        }
+    }
+    
+    example += ' \\\n  -H "Authorization: Bearer YOUR_API_KEY"';
+    
+    // Add request body
+    if (endpoint.requestBody) {
+        example += ' \\\n  -H "Content-Type: application/json"';
+        const bodyExample = generateExampleFromSchema(endpoint.requestBody.content['application/json'].schema);
+        example += ` \\\n  -d '${JSON.stringify(bodyExample, null, 2)}'`;
+    }
+    
+    return example;
+}
+
+// Filter endpoints
+function filterEndpoints() {
+    const searchTerm = document.getElementById('endpointSearch').value.toLowerCase();
+    const endpoints = document.querySelectorAll('.endpoint-item');
+    
+    endpoints.forEach(endpoint => {
+        const text = endpoint.textContent.toLowerCase();
+        endpoint.style.display = text.includes(searchTerm) ? 'block' : 'none';
+    });
+}
+
+// Try It functionality
+function openTryIt(path, method) {
+    const endpoint = apiSpec.paths[path][method];
+    
+    document.getElementById('tryMethod').textContent = method.toUpperCase();
+    document.getElementById('tryMethod').className = `method-badge ${method}`;
+    document.getElementById('tryUrl').value = `https://api.api-direct.com/v1${path}`;
+    
+    // Show/hide relevant sections
+    const hasParams = endpoint.parameters && endpoint.parameters.length > 0;
+    const hasBody = endpoint.requestBody;
+    
+    document.getElementById('tryParameters').classList.toggle('hidden', !hasParams);
+    document.getElementById('tryBody').classList.toggle('hidden', !hasBody);
+    
+    // Add parameters
+    if (hasParams) {
+        const paramsList = document.getElementById('tryParamsList');
+        paramsList.innerHTML = endpoint.parameters.map(param => `
+            <div class="flex items-center space-x-2">
+                <label class="w-1/3 text-sm">${param.name}${param.required ? ' *' : ''}</label>
+                <input type="text" placeholder="${param.description || ''}" 
+                    class="flex-1 px-3 py-2 border border-gray-300 rounded-md"
+                    data-param="${param.name}" data-in="${param.in}">
+            </div>
+        `).join('');
+    }
+    
+    document.getElementById('tryItModal').classList.remove('hidden');
+}
+
+function closeTryIt() {
+    document.getElementById('tryItModal').classList.add('hidden');
+    document.getElementById('tryResponse').classList.add('hidden');
+}
+
+async function sendTestRequest() {
+    try {
+        // This is a mock implementation
+        // In a real app, this would make an actual API request
+        
+        document.getElementById('tryResponse').classList.remove('hidden');
+        document.getElementById('responseStatus').textContent = '200 OK';
+        document.getElementById('responseBody').textContent = JSON.stringify({
+            status: 'success',
+            data: {
+                temperature: 72,
+                humidity: 65,
+                conditions: 'Partly cloudy'
+            }
+        }, null, 2);
+        
+        showNotification('Request sent successfully', 'success');
+        
+    } catch (error) {
+        console.error('Error sending request:', error);
+        showNotification('Failed to send request', 'error');
+    }
+}
+
+// Export functionality
+function toggleExportMenu() {
+    const dropdown = document.getElementById('exportDropdown');
+    dropdown.classList.toggle('hidden');
+}
+
+async function exportAs(format) {
+    try {
+        toggleExportMenu();
+        
+        // In a real implementation, this would generate the export
+        showNotification(`Exporting as ${format}...`, 'info');
+        
+        setTimeout(() => {
+            showNotification(`Documentation exported as ${format}`, 'success');
+        }, 2000);
+        
+    } catch (error) {
+        console.error('Error exporting:', error);
+        showNotification('Failed to export documentation', 'error');
+    }
+}
+
+// Edit documentation
+function editDocumentation() {
+    window.location.href = `/api-doc-editor?api_id=${apiId}`;
+}
+
+// Helper functions
+function showError(message) {
+    const content = document.getElementById('docContent');
+    content.innerHTML = `
+        <div class="text-center py-12">
+            <i class="fas fa-exclamation-circle text-4xl text-red-500 mb-4"></i>
+            <p class="text-gray-600">${message}</p>
+        </div>
+    `;
+}
+
+function showNotification(message, type = 'info') {
+    const notification = document.createElement('div');
+    const bgColor = type === 'error' ? 'bg-red-500' : type === 'success' ? 'bg-green-500' : 'bg-blue-500';
+    
+    notification.className = `fixed top-4 right-4 ${bgColor} text-white px-6 py-3 rounded-lg shadow-lg z-50`;
+    notification.textContent = message;
+    
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        notification.remove();
+    }, 5000);
+}
+
+// Close dropdown when clicking outside
+document.addEventListener('click', (e) => {
+    const exportMenu = document.querySelector('.export-menu');
+    if (!exportMenu.contains(e.target)) {
+        document.getElementById('exportDropdown').classList.add('hidden');
+    }
+});
+</script>
+{% endblock %}

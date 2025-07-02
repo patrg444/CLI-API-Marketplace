@@ -1,0 +1,112 @@
+{
+  "timestamp": "2025-06-30T03:42:14.342Z",
+  "url": "https://console.apidirect.dev",
+  "tests": {
+    "Page Load": {
+      "status": "PASS",
+      "details": {
+        "Load Time": "518ms",
+        "Status Code": 200,
+        "URL": "https://console.apidirect.dev/",
+        "HTTPS": true
+      }
+    },
+    "Page Metadata": {
+      "status": "PASS",
+      "details": {
+        "Title": "API-Direct Console - AI Agent Ready Dashboard",
+        "Has Description": true,
+        "Has Viewport": true,
+        "Title Length": "45 chars"
+      }
+    },
+    "Navigation Analysis": {
+      "status": "PASS",
+      "details": {
+        "Total Links": 20,
+        "External Links": 1,
+        "Navigation Sections": "3/4 found",
+        "Found Sections": "APIs, Analytics, Settings"
+      }
+    },
+    "Authentication Elements": {
+      "status": "PASS",
+      "details": {
+        "Email Inputs": 1,
+        "Password Inputs": 0,
+        "Submit Buttons": 0,
+        "OAuth Buttons": 0,
+        "Email Input Visible": false
+      }
+    },
+    "Page Structure": {
+      "status": "PASS",
+      "details": {
+        "Headings": 27,
+        "Forms": 0,
+        "Buttons": 12,
+        "Inputs": 6,
+        "Has Header": true,
+        "Has Navigation": true,
+        "Has Main Content": true,
+        "Has Sidebar": true
+      }
+    },
+    "Accessibility": {
+      "status": "PASS",
+      "details": {
+        "Images with Alt": "0/0",
+        "Buttons with Text": "11/12",
+        "Inputs with Labels": "0/6",
+        "Has Lang Attribute": true,
+        "ARIA Elements": 0
+      }
+    },
+    "Responsive Design": {
+      "status": "PASS",
+      "details": {
+        "Mobile Menu (Mobile)": false,
+        "Mobile Menu (Desktop)": false,
+        "No Horizontal Scroll": false
+      }
+    },
+    "JavaScript Functionality": {
+      "status": "PASS",
+      "details": {
+        "Frameworks": "None detected",
+        "API Client": false,
+        "LocalStorage": true,
+        "Storage Keys": 0
+      }
+    },
+    "Console Errors": {
+      "status": "PASS",
+      "details": {
+        "Errors": 0,
+        "Warnings": 1,
+        "First Error": "None",
+        "Clean Console": true
+      }
+    },
+    "Security Headers": {
+      "status": "PASS",
+      "details": {
+        "HSTS": false,
+        "X-Content-Type-Options": false,
+        "X-Frame-Options": false,
+        "CSP": false,
+        "Security Headers": "0/5"
+      }
+    },
+    "Performance Metrics": {
+      "status": "PASS",
+      "details": {
+        "DOM Ready": "91ms",
+        "Page Load": "91ms",
+        "First Paint": "96ms",
+        "Resources": 9,
+        "Performance": "Good"
+      }
+    }
+  }
+}

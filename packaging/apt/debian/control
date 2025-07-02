@@ -1,0 +1,25 @@
+Source: apidirect
+Section: devel
+Priority: optional
+Maintainer: API Direct Team <support@apidirect.io>
+Build-Depends: debhelper (>= 9)
+Standards-Version: 3.9.8
+Homepage: https://github.com/api-direct/cli
+Vcs-Git: https://github.com/api-direct/cli.git
+Vcs-Browser: https://github.com/api-direct/cli
+
+Package: apidirect
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: API Direct CLI - Rapid API deployment tool
+ API Direct CLI is a command-line tool that transforms your code into
+ deployed APIs in minutes. It features:
+ .
+  * Auto-detection of API frameworks and languages
+  * Container-based deployment with auto-generated Dockerfiles
+  * Built-in API marketplace with monetization
+  * Environment variable management
+  * Real-time log streaming and monitoring
+  * Multi-language support (Python, Node.js, Go, Ruby)
+ .
+ This package provides the apidirect command-line tool.

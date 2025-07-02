@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { ChevronDownIcon, PlayIcon, CopyIcon, CodeBracketIcon } from '@heroicons/react/24/outline';
+import { ChevronDownIcon, PlayIcon, CodeBracketIcon } from '@heroicons/react/24/outline';
+import { ClipboardIcon } from '@heroicons/react/24/outline';
 
 interface APIEndpoint {
   path: string;
@@ -73,9 +74,9 @@ const APIPlayground: React.FC<APIPlaygroundProps> = ({
     if (selectedEndpoint) {
       // Initialize request data with defaults
       const newRequestData = {
-        headers: apiKey ? { 'X-API-Key': apiKey } : {},
-        queryParams: {},
-        pathParams: {},
+        headers: apiKey ? { 'X-API-Key': apiKey } : {} as Record<string, string>,
+        queryParams: {} as Record<string, string>,
+        pathParams: {} as Record<string, string>,
         body: selectedEndpoint.requestBody?.example ? 
           JSON.stringify(selectedEndpoint.requestBody.example, null, 2) : ''
       };
@@ -465,7 +466,7 @@ print(response.json())`;
                         onClick={() => copyToClipboard(response.body!)}
                         className="flex items-center space-x-1 text-sm text-gray-600 hover:text-gray-900"
                       >
-                        <CopyIcon className="h-4 w-4" />
+                        <ClipboardIcon className="h-4 w-4" />
                         <span>Copy</span>
                       </button>
                     )}
@@ -535,7 +536,7 @@ print(response.json())`;
                   onClick={() => copyToClipboard(generateCode(selectedLanguage))}
                   className="absolute top-2 right-2 p-2 text-gray-400 hover:text-gray-200"
                 >
-                  <CopyIcon className="h-4 w-4" />
+                  <ClipboardIcon className="h-4 w-4" />
                 </button>
               </div>
             </div>

@@ -1,0 +1,108 @@
+{
+  "templates": {
+    "gpt-wrapper": {
+      "name": "GPT Wrapper API",
+      "description": "Production-ready OpenAI GPT wrapper with caching and rate limiting",
+      "runtime": "python3.9",
+      "requirements": [
+        "fastapi==0.104.1",
+        "openai==1.3.0",
+        "redis==5.0.1",
+        "python-multipart==0.0.6"
+      ],
+      "aws_config": {
+        "cpu": 512,
+        "memory": 1024,
+        "instance_type": "t3.medium"
+      },
+      "pricing_suggestion": {
+        "free_tier": 100,
+        "price_per_1k": 0.50
+      }
+    },
+    "image-classifier": {
+      "name": "Image Classification API",
+      "description": "Computer vision API using Vision Transformer models",
+      "runtime": "python3.9",
+      "requirements": [
+        "fastapi==0.104.1",
+        "transformers==4.35.0",
+        "torch==2.1.0",
+        "torchvision==0.16.0",
+        "pillow==10.1.0",
+        "python-multipart==0.0.6"
+      ],
+      "aws_config": {
+        "cpu": 4096,
+        "memory": 16384,
+        "instance_type": "g4dn.xlarge",
+        "gpu": 1
+      },
+      "pricing_suggestion": {
+        "free_tier": 50,
+        "price_per_image": 0.01
+      }
+    },
+    "sentiment-analyzer": {
+      "name": "Sentiment Analysis API",
+      "description": "Advanced sentiment analysis with emotion detection",
+      "runtime": "python3.9",
+      "requirements": [
+        "fastapi==0.104.1",
+        "transformers==4.35.0",
+        "torch==2.1.0",
+        "numpy==1.24.3"
+      ],
+      "aws_config": {
+        "cpu": 1024,
+        "memory": 2048,
+        "instance_type": "t3.large"
+      },
+      "pricing_suggestion": {
+        "free_tier": 1000,
+        "price_per_1k": 0.25
+      }
+    },
+    "embeddings-api": {
+      "name": "Text Embeddings API",
+      "description": "Generate semantic embeddings for text using sentence transformers",
+      "runtime": "python3.9",
+      "requirements": [
+        "fastapi==0.104.1",
+        "sentence-transformers==2.2.2",
+        "numpy==1.24.3",
+        "faiss-cpu==1.7.4"
+      ],
+      "aws_config": {
+        "cpu": 2048,
+        "memory": 4096,
+        "instance_type": "t3.xlarge"
+      },
+      "pricing_suggestion": {
+        "free_tier": 5000,
+        "price_per_1k": 0.10
+      }
+    },
+    "time-series-predictor": {
+      "name": "Time Series Prediction API",
+      "description": "Forecast time series data using Prophet and LSTM models",
+      "runtime": "python3.9",
+      "requirements": [
+        "fastapi==0.104.1",
+        "prophet==1.1.5",
+        "pandas==2.1.3",
+        "numpy==1.24.3",
+        "scikit-learn==1.3.2"
+      ],
+      "aws_config": {
+        "cpu": 2048,
+        "memory": 4096,
+        "instance_type": "t3.xlarge"
+      },
+      "pricing_suggestion": {
+        "free_tier": 100,
+        "price_per_forecast": 0.05
+      }
+    }
+  }
+}

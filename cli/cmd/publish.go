@@ -3,7 +3,6 @@ package cmd
 import (
 	"encoding/json"
 	"fmt"
-	"os"
 
 	"github.com/api-direct/cli/pkg/auth"
 	"github.com/api-direct/cli/pkg/config"
@@ -21,14 +20,13 @@ var publishCmd = &cobra.Command{
 	Short: "Publish an API to the marketplace",
 	Long:  `Publish a deployed API to the marketplace, making it discoverable by consumers.`,
 	Args:  cobra.ExactArgs(1),
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
 		apiIdentifier := args[0]
 
 		// Get authentication token
 		token, err := auth.GetToken()
 		if err != nil {
-			fmt.Printf("Error: Not authenticated. Please run 'apidirect auth login' first.\n")
-			os.Exit(1)
+			return fmt.Errorf("not authenticated. Please run 'apidirect auth login' first")
 		}
 
 		// Prepare publish request
@@ -53,8 +51,7 @@ var publishCmd = &cobra.Command{
 		body, _ := json.Marshal(publishData)
 		resp, err := auth.MakeAuthenticatedRequest("PUT", url, token, body)
 		if err != nil {
-			fmt.Printf("Error publishing API: %v\n", err)
-			os.Exit(1)
+			return fmt.Errorf("publishing API: %w", err)
 		}
 		defer resp.Body.Close()
 
@@ -71,9 +68,9 @@ var publishCmd = &cobra.Command{
 		} else {
 			var errorResp map[string]string
 			json.NewDecoder(resp.Body).Decode(&errorResp)
-			fmt.Printf("Error: Failed to publish API - %s\n", errorResp["error"])
-			os.Exit(1)
+			return fmt.Errorf("failed to publish API - %s", errorResp["error"])
 		}
+		return nil
 	},
 }
 
@@ -82,14 +79,13 @@ var unpublishCmd = &cobra.Command{
 	Short: "Remove an API from the marketplace",
 	Long:  `Unpublish an API from the marketplace, making it private and no longer discoverable.`,
 	Args:  cobra.ExactArgs(1),
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
 		apiIdentifier := args[0]
 
 		// Get authentication token
 		token, err := auth.GetToken()
 		if err != nil {
-			fmt.Printf("Error: Not authenticated. Please run 'apidirect auth login' first.\n")
-			os.Exit(1)
+			return fmt.Errorf("not authenticated. Please run 'apidirect auth login' first")
 		}
 
 		// Make API request to unpublish
@@ -103,8 +99,7 @@ var unpublishCmd = &cobra.Command{
 
 		resp, err := auth.MakeAuthenticatedRequest("PUT", url, token, body)
 		if err != nil {
-			fmt.Printf("Error unpublishing API: %v\n", err)
-			os.Exit(1)
+			return fmt.Errorf("unpublishing API: %w", err)
 		}
 		defer resp.Body.Close()
 
@@ -113,9 +108,9 @@ var unpublishCmd = &cobra.Command{
 		} else {
 			var errorResp map[string]string
 			json.NewDecoder(resp.Body).Decode(&errorResp)
-			fmt.Printf("Error: Failed to unpublish API - %s\n", errorResp["error"])
-			os.Exit(1)
+			return fmt.Errorf("failed to unpublish API - %s", errorResp["error"])
 		}
+		return nil
 	},
 }
 

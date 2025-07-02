@@ -1,11 +1,15 @@
 package cmd
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
 	"os"
 	"strings"
+	
+	"github.com/api-direct/cli/pkg/config"
 )
 
 // Test variables for mocking
@@ -21,18 +25,54 @@ type HTTPClient interface {
 
 // Helper function to make authenticated requests (placeholder for tests)
 func makeAuthenticatedRequest(method, url string, body []byte) (*http.Response, error) {
-	req, err := http.NewRequest(method, url, nil)
+	var bodyReader io.Reader
+	if body != nil {
+		bodyReader = bytes.NewReader(body)
+	}
+	
+	req, err := http.NewRequest(method, url, bodyReader)
 	if err != nil {
 		return nil, err
 	}
 	
-	// In tests, we'll use the mocked httpClient
-	return httpClient.Do(req)
+	// Add authentication header if available
+	cfg, err := config.Load()
+	if err == nil && cfg.Auth.AccessToken != "" {
+		req.Header.Set("Authorization", "Bearer "+cfg.Auth.AccessToken)
+	}
+	
+	// Add content type for POST requests
+	if method == "POST" && body != nil {
+		req.Header.Set("Content-Type", "application/json")
+	}
+	
+	// In tests, we'll use the mocked httpClient if available
+	if httpClient != nil {
+		return httpClient.Do(req)
+	}
+	
+	// Otherwise use default client
+	return http.DefaultClient.Do(req)
 }
 
 // Helper function to handle error responses
 func handleErrorResponse(resp *http.Response) error {
-	// Simplified version for tests
+	// Try to parse JSON error response
+	var errResp struct {
+		Error string `json:"error"`
+		Message string `json:"message"`
+	}
+	
+	if err := json.NewDecoder(resp.Body).Decode(&errResp); err == nil {
+		if errResp.Error != "" {
+			return fmt.Errorf("%s", errResp.Error)
+		}
+		if errResp.Message != "" {
+			return fmt.Errorf("%s", errResp.Message)
+		}
+	}
+	
+	// Fallback to status code
 	return fmt.Errorf("API error: status %d", resp.StatusCode)
 }
 

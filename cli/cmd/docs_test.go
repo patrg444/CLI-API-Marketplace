@@ -9,6 +9,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v3"
 )
 
@@ -33,6 +34,11 @@ func TestDocsGenerateCommand(t *testing.T) {
 	oldDir, _ := os.Getwd()
 	os.Chdir(tempDir)
 	defer os.Chdir(oldDir)
+	
+	// Set HOME to temp directory for config
+	oldHome := os.Getenv("HOME")
+	os.Setenv("HOME", tempDir)
+	defer os.Setenv("HOME", oldHome)
 	
 	tests := []struct {
 		name       string
@@ -130,6 +136,12 @@ func TestDocsPublishCommand(t *testing.T) {
 		json.NewEncoder(w).Encode(response)
 	}))
 	defer server.Close()
+	
+	// Set HOME to temp directory for config
+	tempDir := t.TempDir()
+	oldHome := os.Getenv("HOME")
+	os.Setenv("HOME", tempDir)
+	defer os.Setenv("HOME", oldHome)
 	
 	// Override API endpoint
 	os.Setenv("APIDIRECT_API_ENDPOINT", server.URL)

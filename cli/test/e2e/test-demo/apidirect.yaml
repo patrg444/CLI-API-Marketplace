@@ -1,0 +1,21 @@
+name: test-demo
+runtime: python3.11
+start_command: uvicorn main:app --host 0.0.0.0 --port 8080
+port: 8080
+files:
+  main: main.py
+  requirements: requirements.txt
+endpoints:
+  - method: GET
+    path: /
+    description: Root endpoint
+  - method: GET
+    path: /health
+    description: Health check
+  - method: GET
+    path: /api/users
+    description: Get users
+env:
+  required: []
+  optional: []
+health_check: /health

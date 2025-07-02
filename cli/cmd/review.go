@@ -1,10 +1,10 @@
 package cmd
 
 import (
+	"bufio"
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"os"
 	"strconv"
 	"strings"
 	"text/tabwriter"
@@ -156,23 +156,34 @@ func runReviewSubmit(cmd *cobra.Command, args []string) error {
 	
 	// Interactive mode if no message provided
 	if message == "" {
-		fmt.Printf("\n⭐ Submit Review for %s\n", color.CyanString(apiName))
-		fmt.Printf("Rating: %s\n", strings.Repeat("★", reviewRating)+strings.Repeat("☆", 5-reviewRating))
+		fmt.Fprintf(cmd.OutOrStdout(), "\n⭐ Submit Review for %s\n", color.CyanString(apiName))
+		fmt.Fprintf(cmd.OutOrStdout(), "Rating: %s\n", strings.Repeat("★", reviewRating)+strings.Repeat("☆", 5-reviewRating))
+		
+		// Create a single reader for all input
+		reader := bufio.NewReader(cmd.InOrStdin())
 		
 		if title == "" {
-			fmt.Print("\nTitle (optional): ")
-			fmt.Scanln(&title)
+			fmt.Fprint(cmd.OutOrStdout(), "\nTitle (optional): ")
+			title, _ = reader.ReadString('\n')
+			title = strings.TrimSpace(title)
 		}
 		
-		fmt.Println("\nWrite your review (press Enter twice to finish):")
+		fmt.Fprintln(cmd.OutOrStdout(), "\nWrite your review (press Enter twice to finish):")
 		var lines []string
+		emptyLineCount := 0
 		for {
-			var line string
-			fmt.Scanln(&line)
-			if line == "" && len(lines) > 0 {
-				break
+			line, err := reader.ReadString('\n')
+			if err != nil {
+				break // EOF or error
 			}
-			if line != "" {
+			line = strings.TrimSpace(line)
+			if line == "" {
+				emptyLineCount++
+				if emptyLineCount >= 2 || len(lines) > 0 {
+					break
+				}
+			} else {
+				emptyLineCount = 0
 				lines = append(lines, line)
 			}
 		}
@@ -224,10 +235,10 @@ func runReviewSubmit(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	
-	fmt.Println()
-	color.Green("✅ Review submitted successfully!")
-	fmt.Printf("Review ID: %s\n", result.ReviewID)
-	fmt.Printf("Status: %s\n", result.Status)
+	fmt.Fprintln(cmd.OutOrStdout())
+	fmt.Fprintln(cmd.OutOrStdout(), color.GreenString("✅ Review submitted successfully!"))
+	fmt.Fprintf(cmd.OutOrStdout(), "Review ID: %s\n", result.ReviewID)
+	fmt.Fprintf(cmd.OutOrStdout(), "Status: %s\n", result.Status)
 	
 	return nil
 }
@@ -292,43 +303,43 @@ func runReviewList(cmd *cobra.Command, args []string) error {
 	// Output based on format
 	switch reviewFormat {
 	case "json":
-		encoder := json.NewEncoder(os.Stdout)
+		encoder := json.NewEncoder(cmd.OutOrStdout())
 		encoder.SetIndent("", "  ")
 		return encoder.Encode(reviewsData)
 		
 	default:
 		// Table format
-		fmt.Println()
-		color.New(color.FgCyan, color.Bold).Printf("⭐ Reviews for %s\n", reviewsData.API.Name)
+		fmt.Fprintln(cmd.OutOrStdout())
+		color.New(color.FgCyan, color.Bold).Fprintf(cmd.OutOrStdout(), "⭐ Reviews for %s\n", reviewsData.API.Name)
 		
 		// API summary
-		fmt.Printf("\n📊 Summary\n")
-		fmt.Printf("Average Rating: %s %.1f (%d reviews)\n", 
+		fmt.Fprintf(cmd.OutOrStdout(), "\n📊 Summary\n")
+		fmt.Fprintf(cmd.OutOrStdout(), "Average Rating: %s %.1f (%d reviews)\n", 
 			getStarRating(reviewsData.API.AverageRating),
 			reviewsData.API.AverageRating,
 			reviewsData.API.TotalReviews)
 		
 		// Rating distribution
-		fmt.Printf("\nRating Distribution:\n")
+		fmt.Fprintf(cmd.OutOrStdout(), "\nRating Distribution:\n")
 		for i := 5; i >= 1; i-- {
 			count := reviewsData.API.RatingCounts[strconv.Itoa(i)]
 			percentage := float64(count) / float64(reviewsData.API.TotalReviews) * 100
 			bar := strings.Repeat("█", int(percentage/5))
-			fmt.Printf("%d★ %s %d (%.0f%%)\n", i, bar, count, percentage)
+			fmt.Fprintf(cmd.OutOrStdout(), "%d★ %s %d (%.0f%%)\n", i, bar, count, percentage)
 		}
 		
 		// Reviews
 		if len(reviewsData.Reviews) > 0 {
-			fmt.Printf("\n📝 Reviews\n")
+			fmt.Fprintf(cmd.OutOrStdout(), "\n📝 Reviews\n")
 			for _, review := range reviewsData.Reviews {
-				fmt.Println(strings.Repeat("-", 60))
+				fmt.Fprintln(cmd.OutOrStdout(), strings.Repeat("-", 60))
 				
 				// Header
-				fmt.Printf("%s ", getStarRating(float64(review.Rating)))
+				fmt.Fprintf(cmd.OutOrStdout(), "%s ", getStarRating(float64(review.Rating)))
 				if review.Title != "" {
-					fmt.Printf("%s\n", color.New(color.Bold).Sprint(review.Title))
+					fmt.Fprintf(cmd.OutOrStdout(), "%s\n", color.New(color.Bold).Sprint(review.Title))
 				} else {
-					fmt.Println()
+					fmt.Fprintln(cmd.OutOrStdout())
 				}
 				
 				// Author and date
@@ -336,33 +347,33 @@ func runReviewList(cmd *cobra.Command, args []string) error {
 				if review.Verified {
 					verifiedBadge = color.GreenString(" ✓ Verified")
 				}
-				fmt.Printf("by %s%s • %s\n", 
+				fmt.Fprintf(cmd.OutOrStdout(), "by %s%s • %s\n", 
 					review.AuthorName, 
 					verifiedBadge,
 					review.CreatedAt.Format("Jan 2, 2006"))
 				
 				// Review text
-				fmt.Printf("\n%s\n", review.Message)
+				fmt.Fprintf(cmd.OutOrStdout(), "\n%s\n", review.Message)
 				
 				// Creator response
 				if review.Response != nil {
-					fmt.Printf("\n  %s Creator Response:\n", color.BlueString("↳"))
-					fmt.Printf("  %s\n", review.Response.Message)
-					fmt.Printf("  %s\n", color.New(color.FgHiBlack).Sprintf(
+					fmt.Fprintf(cmd.OutOrStdout(), "\n  %s Creator Response:\n", color.BlueString("↳"))
+					fmt.Fprintf(cmd.OutOrStdout(), "  %s\n", review.Response.Message)
+					fmt.Fprintf(cmd.OutOrStdout(), "  %s\n", color.New(color.FgHiBlack).Sprintf(
 						"— %s", review.Response.CreatedAt.Format("Jan 2, 2006")))
 				}
 				
 				// Helpful counts
 				if review.Helpful > 0 || review.NotHelpful > 0 {
-					fmt.Printf("\n%s %d helpful • %d not helpful\n",
+					fmt.Fprintf(cmd.OutOrStdout(), "\n%s %d helpful • %d not helpful\n",
 						color.New(color.FgHiBlack).Sprint("👍"),
 						review.Helpful,
 						review.NotHelpful)
 				}
 			}
-			fmt.Println(strings.Repeat("-", 60))
+			fmt.Fprintln(cmd.OutOrStdout(), strings.Repeat("-", 60))
 		} else {
-			fmt.Println("\nNo reviews yet")
+			fmt.Fprintln(cmd.OutOrStdout(), "\nNo reviews yet")
 		}
 		
 		return nil
@@ -411,21 +422,21 @@ func runReviewMy(cmd *cobra.Command, args []string) error {
 	// Output based on format
 	switch reviewFormat {
 	case "json":
-		encoder := json.NewEncoder(os.Stdout)
+		encoder := json.NewEncoder(cmd.OutOrStdout())
 		encoder.SetIndent("", "  ")
 		return encoder.Encode(myReviews)
 		
 	default:
 		// Table format
-		fmt.Println()
-		color.New(color.FgCyan, color.Bold).Printf("📝 My Reviews (%d)\n\n", len(myReviews))
+		fmt.Fprintln(cmd.OutOrStdout())
+		color.New(color.FgCyan, color.Bold).Fprintf(cmd.OutOrStdout(), "📝 My Reviews (%d)\n\n", len(myReviews))
 		
 		if len(myReviews) == 0 {
-			fmt.Println("You haven't submitted any reviews yet")
+			fmt.Fprintln(cmd.OutOrStdout(), "You haven't submitted any reviews yet")
 			return nil
 		}
 		
-		w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
+		w := tabwriter.NewWriter(cmd.OutOrStdout(), 0, 0, 2, ' ', 0)
 		fmt.Fprintf(w, "API\tRATING\tTITLE\tDATE\tSTATUS\tHELPFUL\n")
 		
 		for _, review := range myReviews {
@@ -455,12 +466,12 @@ func runReviewMy(cmd *cobra.Command, args []string) error {
 		for _, review := range myReviews {
 			if review.Response != nil {
 				if !hasResponses {
-					fmt.Printf("\n💬 Creator Responses:\n")
+					fmt.Fprintf(cmd.OutOrStdout(), "\n💬 Creator Responses:\n")
 					hasResponses = true
 				}
-				fmt.Printf("\n%s (%s):\n", review.APIName, getStarRating(float64(review.Rating)))
-				fmt.Printf("Your review: %s\n", truncate(review.Message, 60))
-				fmt.Printf("Response: %s\n", review.Response.Message)
+				fmt.Fprintf(cmd.OutOrStdout(), "\n%s (%s):\n", review.APIName, getStarRating(float64(review.Rating)))
+				fmt.Fprintf(cmd.OutOrStdout(), "Your review: %s\n", truncate(review.Message, 60))
+				fmt.Fprintf(cmd.OutOrStdout(), "Response: %s\n", review.Response.Message)
 			}
 		}
 		
@@ -505,8 +516,8 @@ func runReviewResponse(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	
-	fmt.Println()
-	color.Green("✅ Response posted successfully!")
+	fmt.Fprintln(cmd.OutOrStdout())
+	fmt.Fprintln(cmd.OutOrStdout(), color.GreenString("✅ Response posted successfully!"))
 	
 	return nil
 }
@@ -548,11 +559,11 @@ func runReviewReport(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	
-	fmt.Println()
-	color.Green("✅ Review reported successfully")
-	fmt.Printf("Report ID: %s\n", result.ReportID)
-	fmt.Printf("Status: %s\n", result.Status)
-	fmt.Println("\nOur team will review this report within 24-48 hours.")
+	fmt.Fprintln(cmd.OutOrStdout())
+	fmt.Fprintln(cmd.OutOrStdout(), color.GreenString("✅ Review reported successfully"))
+	fmt.Fprintf(cmd.OutOrStdout(), "Report ID: %s\n", result.ReportID)
+	fmt.Fprintf(cmd.OutOrStdout(), "Status: %s\n", result.Status)
+	fmt.Fprintln(cmd.OutOrStdout(), "\nOur team will review this report within 24-48 hours.")
 	
 	return nil
 }
@@ -602,20 +613,20 @@ func runReviewStats(cmd *cobra.Command, args []string) error {
 		
 		switch reviewFormat {
 		case "json":
-			encoder := json.NewEncoder(os.Stdout)
+			encoder := json.NewEncoder(cmd.OutOrStdout())
 			encoder.SetIndent("", "  ")
 			return encoder.Encode(stats)
 			
 		default:
-			fmt.Println()
-			color.New(color.FgCyan, color.Bold).Printf("📊 Review Statistics for Your APIs\n\n")
+			fmt.Fprintln(cmd.OutOrStdout())
+			color.New(color.FgCyan, color.Bold).Fprintf(cmd.OutOrStdout(), "📊 Review Statistics for Your APIs\n\n")
 			
 			if len(stats) == 0 {
-				fmt.Println("No APIs with reviews found")
+				fmt.Fprintln(cmd.OutOrStdout(), "No APIs with reviews found")
 				return nil
 			}
 			
-			w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
+			w := tabwriter.NewWriter(cmd.OutOrStdout(), 0, 0, 2, ' ', 0)
 			fmt.Fprintf(w, "API\tAVG RATING\tREVIEWS\tTREND\tRESPONSE RATE\n")
 			
 			for _, api := range stats {
@@ -684,51 +695,51 @@ func runReviewStats(cmd *cobra.Command, args []string) error {
 		
 		switch reviewFormat {
 		case "json":
-			encoder := json.NewEncoder(os.Stdout)
+			encoder := json.NewEncoder(cmd.OutOrStdout())
 			encoder.SetIndent("", "  ")
 			return encoder.Encode(stats)
 			
 		default:
-			fmt.Println()
-			color.New(color.FgCyan, color.Bold).Printf("📊 Review Statistics: %s\n\n", stats.APIName)
+			fmt.Fprintln(cmd.OutOrStdout())
+			color.New(color.FgCyan, color.Bold).Fprintf(cmd.OutOrStdout(), "📊 Review Statistics: %s\n\n", stats.APIName)
 			
 			// Overall stats
-			fmt.Printf("⭐ Overall Rating: %.1f %s (%d reviews)\n",
+			fmt.Fprintf(cmd.OutOrStdout(), "⭐ Overall Rating: %.1f %s (%d reviews)\n",
 				stats.AverageRating,
 				getStarRating(stats.AverageRating),
 				stats.TotalReviews)
 			
 			// Rating distribution
-			fmt.Printf("\n📊 Rating Distribution:\n")
+			fmt.Fprintf(cmd.OutOrStdout(), "\n📊 Rating Distribution:\n")
 			for i := 5; i >= 1; i-- {
 				count := stats.RatingCounts[strconv.Itoa(i)]
 				percentage := float64(count) / float64(stats.TotalReviews) * 100
 				bar := strings.Repeat("█", int(percentage/5))
-				fmt.Printf("%d★ %s %d (%.0f%%)\n", i, bar, count, percentage)
+				fmt.Fprintf(cmd.OutOrStdout(), "%d★ %s %d (%.0f%%)\n", i, bar, count, percentage)
 			}
 			
 			// Trends
-			fmt.Printf("\n📈 Trends:\n")
-			fmt.Printf("Last 30 days: %.1f★ (%d reviews)\n", 
+			fmt.Fprintf(cmd.OutOrStdout(), "\n📈 Trends:\n")
+			fmt.Fprintf(cmd.OutOrStdout(), "Last 30 days: %.1f★ (%d reviews)\n", 
 				stats.Trends.Last30Days.AverageRating,
 				stats.Trends.Last30Days.ReviewCount)
-			fmt.Printf("Last 90 days: %.1f★ (%d reviews)\n",
+			fmt.Fprintf(cmd.OutOrStdout(), "Last 90 days: %.1f★ (%d reviews)\n",
 				stats.Trends.Last90Days.AverageRating,
 				stats.Trends.Last90Days.ReviewCount)
 			
 			// Response metrics
-			fmt.Printf("\n💬 Response Metrics:\n")
-			fmt.Printf("Response rate: %.0f%% (%d/%d)\n",
+			fmt.Fprintf(cmd.OutOrStdout(), "\n💬 Response Metrics:\n")
+			fmt.Fprintf(cmd.OutOrStdout(), "Response rate: %.0f%% (%d/%d)\n",
 				stats.ResponseMetrics.ResponseRate*100,
 				stats.ResponseMetrics.TotalResponses,
 				stats.TotalReviews)
 			if stats.ResponseMetrics.AvgResponseTime != "" {
-				fmt.Printf("Avg response time: %s\n", stats.ResponseMetrics.AvgResponseTime)
+				fmt.Fprintf(cmd.OutOrStdout(), "Avg response time: %s\n", stats.ResponseMetrics.AvgResponseTime)
 			}
 			
 			// Top keywords
 			if len(stats.Keywords) > 0 {
-				fmt.Printf("\n🏷️  Top Keywords:\n")
+				fmt.Fprintf(cmd.OutOrStdout(), "\n🏷️  Top Keywords:\n")
 				for i, kw := range stats.Keywords {
 					if i >= 5 {
 						break
@@ -739,16 +750,16 @@ func runReviewStats(cmd *cobra.Command, args []string) error {
 					} else if kw.Sentiment == "negative" {
 						sentimentColor = color.FgRed
 					}
-					fmt.Printf("  • %s (%d)\n", 
+					fmt.Fprintf(cmd.OutOrStdout(), "  • %s (%d)\n", 
 						color.New(sentimentColor).Sprint(kw.Word), kw.Count)
 				}
 			}
 			
 			// Recent reviews
 			if len(stats.RecentReviews) > 0 {
-				fmt.Printf("\n🕐 Recent Reviews:\n")
+				fmt.Fprintf(cmd.OutOrStdout(), "\n🕐 Recent Reviews:\n")
 				for _, review := range stats.RecentReviews {
-					fmt.Printf("  %s %s - %s\n",
+					fmt.Fprintf(cmd.OutOrStdout(), "  %s %s - %s\n",
 						getStarRating(float64(review.Rating)),
 						review.Title,
 						review.CreatedAt.Format("Jan 2"))
@@ -763,24 +774,28 @@ func runReviewStats(cmd *cobra.Command, args []string) error {
 // Helper functions
 func getStarRating(rating float64) string {
 	full := int(rating)
-	half := rating - float64(full) >= 0.5
-	empty := 5 - full
-	if half {
-		empty--
+	half := 0
+	if rating-float64(full) >= 0.5 {
+		half = 1
 	}
+	empty := 5 - full - half
 	
 	stars := strings.Repeat("★", full)
-	if half {
+	if half > 0 {
 		stars += "½"
 	}
 	stars += strings.Repeat("☆", empty)
 	
-	return color.YellowString(stars)
+	return stars
 }
 
 func truncate(s string, max int) string {
 	if len(s) <= max {
 		return s
 	}
+	if max <= 3 {
+		return "..."
+	}
+	// Take (max-3) characters and add "..."
 	return s[:max-3] + "..."
 }

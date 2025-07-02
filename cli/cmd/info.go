@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"os"
 	"strings"
 	"time"
 
@@ -174,13 +173,13 @@ func runInfo(cmd *cobra.Command, args []string) error {
 	// Output based on format
 	switch infoFormat {
 	case "json":
-		encoder := json.NewEncoder(os.Stdout)
+		encoder := json.NewEncoder(cmd.OutOrStdout())
 		encoder.SetIndent("", "  ")
 		return encoder.Encode(apiInfo)
 		
 	default:
 		// Table format with rich display
-		fmt.Println()
+		fmt.Fprintln(cmd.OutOrStdout())
 		
 		// Header with name and status
 		statusColor := color.FgGreen
@@ -188,53 +187,53 @@ func runInfo(cmd *cobra.Command, args []string) error {
 			statusColor = color.FgYellow
 		}
 		
-		color.New(color.FgCyan, color.Bold).Printf("%s", apiInfo.DisplayName)
-		fmt.Printf(" ")
-		color.New(statusColor).Printf("[%s]", strings.ToUpper(apiInfo.Status))
+		color.New(color.FgCyan, color.Bold).Fprintf(cmd.OutOrStdout(), "%s", apiInfo.DisplayName)
+		fmt.Fprintf(cmd.OutOrStdout(), " ")
+		color.New(statusColor).Fprintf(cmd.OutOrStdout(), "[%s]", strings.ToUpper(apiInfo.Status))
 		if apiInfo.Creator.Verified {
-			color.New(color.FgGreen).Printf(" ✓ Verified")
+			color.New(color.FgGreen).Fprintf(cmd.OutOrStdout(), " ✓ Verified")
 		}
-		fmt.Printf("\n")
+		fmt.Fprintf(cmd.OutOrStdout(), "\n")
 		
 		// Basic info
-		fmt.Printf("%s\n", apiInfo.Description)
-		fmt.Printf("\n")
+		fmt.Fprintf(cmd.OutOrStdout(), "%s\n", apiInfo.Description)
+		fmt.Fprintf(cmd.OutOrStdout(), "\n")
 		
 		// Category and tags
-		fmt.Printf("📁 Category: %s\n", apiInfo.Category)
+		fmt.Fprintf(cmd.OutOrStdout(), "📁 Category: %s\n", apiInfo.Category)
 		if len(apiInfo.Tags) > 0 {
-			fmt.Printf("🏷️  Tags: %s\n", strings.Join(apiInfo.Tags, ", "))
+			fmt.Fprintf(cmd.OutOrStdout(), "🏷️  Tags: %s\n", strings.Join(apiInfo.Tags, ", "))
 		}
-		fmt.Printf("🔖 Version: %s\n", apiInfo.Version)
+		fmt.Fprintf(cmd.OutOrStdout(), "🔖 Version: %s\n", apiInfo.Version)
 		
 		// Creator info
-		fmt.Printf("\n👤 Creator\n")
-		fmt.Printf("   Name: %s (@%s)", apiInfo.Creator.Name, apiInfo.Creator.Username)
+		fmt.Fprintf(cmd.OutOrStdout(), "\n👤 Creator\n")
+		fmt.Fprintf(cmd.OutOrStdout(), "   Name: %s (@%s)", apiInfo.Creator.Name, apiInfo.Creator.Username)
 		if apiInfo.Creator.Verified {
-			fmt.Printf(" ✓")
+			fmt.Fprintf(cmd.OutOrStdout(), " ✓")
 		}
-		fmt.Printf("\n")
-		fmt.Printf("   Member since: %s\n", apiInfo.Creator.JoinedDate)
-		fmt.Printf("   Total APIs: %d\n", apiInfo.Creator.TotalAPIs)
+		fmt.Fprintf(cmd.OutOrStdout(), "\n")
+		fmt.Fprintf(cmd.OutOrStdout(), "   Member since: %s\n", apiInfo.Creator.JoinedDate)
+		fmt.Fprintf(cmd.OutOrStdout(), "   Total APIs: %d\n", apiInfo.Creator.TotalAPIs)
 		if apiInfo.Creator.AverageRating > 0 {
-			fmt.Printf("   Average rating: %.1f★\n", apiInfo.Creator.AverageRating)
+			fmt.Fprintf(cmd.OutOrStdout(), "   Average rating: %.1f★\n", apiInfo.Creator.AverageRating)
 		}
 		
 		// Metrics
-		fmt.Printf("\n📊 Metrics\n")
-		fmt.Printf("   Subscribers: %s\n", formatNumber(int64(apiInfo.Metrics.Subscribers)))
+		fmt.Fprintf(cmd.OutOrStdout(), "\n📊 Metrics\n")
+		fmt.Fprintf(cmd.OutOrStdout(), "   Subscribers: %s\n", formatNumber(int64(apiInfo.Metrics.Subscribers)))
 		if apiInfo.Metrics.MonthlyCallsAvg > 0 {
-			fmt.Printf("   Monthly calls (avg): %s\n", formatNumber(apiInfo.Metrics.MonthlyCallsAvg))
+			fmt.Fprintf(cmd.OutOrStdout(), "   Monthly calls (avg): %s\n", formatNumber(apiInfo.Metrics.MonthlyCallsAvg))
 		}
 		if apiInfo.Metrics.TotalReviews > 0 {
-			fmt.Printf("   Rating: %.1f★ (%d reviews)\n", 
+			fmt.Fprintf(cmd.OutOrStdout(), "   Rating: %.1f★ (%d reviews)\n", 
 				apiInfo.Metrics.AverageRating, apiInfo.Metrics.TotalReviews)
 		}
-		fmt.Printf("   Avg response time: %dms\n", apiInfo.Metrics.ResponseTimeAvg)
-		fmt.Printf("   Uptime: %.2f%%\n", apiInfo.Metrics.Uptime)
+		fmt.Fprintf(cmd.OutOrStdout(), "   Avg response time: %dms\n", apiInfo.Metrics.ResponseTimeAvg)
+		fmt.Fprintf(cmd.OutOrStdout(), "   Uptime: %.2f%%\n", apiInfo.Metrics.Uptime)
 		
 		// Pricing
-		fmt.Printf("\n💰 Pricing (%s)\n", apiInfo.Pricing.Model)
+		fmt.Fprintf(cmd.OutOrStdout(), "\n💰 Pricing (%s)\n", apiInfo.Pricing.Model)
 		if len(apiInfo.Pricing.Plans) > 0 {
 			for _, plan := range apiInfo.Pricing.Plans {
 				prefix := "   "
@@ -243,64 +242,64 @@ func runInfo(cmd *cobra.Command, args []string) error {
 				}
 				
 				if plan.Price == 0 {
-					fmt.Printf("%s%s - Free\n", prefix, plan.Name)
+					fmt.Fprintf(cmd.OutOrStdout(), "%s%s - Free\n", prefix, plan.Name)
 				} else {
-					fmt.Printf("%s%s - %s%.2f/%s\n", 
+					fmt.Fprintf(cmd.OutOrStdout(), "%s%s - %s%.2f/%s\n", 
 						prefix, plan.Name, 
 						getCurrencySymbol(plan.Currency), plan.Price, plan.Interval)
 				}
 				
 				if plan.Description != "" {
-					fmt.Printf("      %s\n", plan.Description)
+					fmt.Fprintf(cmd.OutOrStdout(), "      %s\n", plan.Description)
 				}
 				
 				// Show key features
 				for i, feature := range plan.Features {
 					if i < 3 { // Show first 3 features
-						fmt.Printf("      • %s\n", feature)
+						fmt.Fprintf(cmd.OutOrStdout(), "      • %s\n", feature)
 					}
 				}
 				
 				// Show limits
 				if plan.Limits.RequestsPerMonth != nil {
-					fmt.Printf("      • %s API calls/month\n", 
+					fmt.Fprintf(cmd.OutOrStdout(), "      • %s API calls/month\n", 
 						formatNumber(int64(*plan.Limits.RequestsPerMonth)))
 				}
 			}
 		}
 		
 		if apiInfo.Pricing.CustomPricing {
-			fmt.Printf("   📞 Custom pricing available - %s\n", apiInfo.Pricing.ContactSales)
+			fmt.Fprintf(cmd.OutOrStdout(), "   📞 Custom pricing available - %s\n", apiInfo.Pricing.ContactSales)
 		}
 		
 		// Technical details
-		fmt.Printf("\n🔧 Technical Details\n")
-		fmt.Printf("   Base URL: %s\n", color.BlueString(apiInfo.Technical.BaseURL))
-		fmt.Printf("   Authentication: %s\n", strings.Join(apiInfo.Technical.Authentication, ", "))
-		fmt.Printf("   Formats: %s\n", strings.Join(apiInfo.Technical.Formats, ", "))
+		fmt.Fprintf(cmd.OutOrStdout(), "\n🔧 Technical Details\n")
+		fmt.Fprintf(cmd.OutOrStdout(), "   Base URL: %s\n", color.BlueString(apiInfo.Technical.BaseURL))
+		fmt.Fprintf(cmd.OutOrStdout(), "   Authentication: %s\n", strings.Join(apiInfo.Technical.Authentication, ", "))
+		fmt.Fprintf(cmd.OutOrStdout(), "   Formats: %s\n", strings.Join(apiInfo.Technical.Formats, ", "))
 		if len(apiInfo.Technical.SDKs) > 0 {
-			fmt.Printf("   SDKs: %s\n", strings.Join(apiInfo.Technical.SDKs, ", "))
+			fmt.Fprintf(cmd.OutOrStdout(), "   SDKs: %s\n", strings.Join(apiInfo.Technical.SDKs, ", "))
 		}
 		
 		// Documentation links
-		fmt.Printf("\n📚 Resources\n")
+		fmt.Fprintf(cmd.OutOrStdout(), "\n📚 Resources\n")
 		if apiInfo.Technical.DocumentationURL != "" {
-			fmt.Printf("   Documentation: %s\n", color.BlueString(apiInfo.Technical.DocumentationURL))
+			fmt.Fprintf(cmd.OutOrStdout(), "   Documentation: %s\n", color.BlueString(apiInfo.Technical.DocumentationURL))
 		}
 		if apiInfo.Technical.OpenAPISpec != "" {
-			fmt.Printf("   OpenAPI Spec: %s\n", color.BlueString(apiInfo.Technical.OpenAPISpec))
+			fmt.Fprintf(cmd.OutOrStdout(), "   OpenAPI Spec: %s\n", color.BlueString(apiInfo.Technical.OpenAPISpec))
 		}
 		if apiInfo.Technical.PostmanURL != "" {
-			fmt.Printf("   Postman Collection: %s\n", color.BlueString(apiInfo.Technical.PostmanURL))
+			fmt.Fprintf(cmd.OutOrStdout(), "   Postman Collection: %s\n", color.BlueString(apiInfo.Technical.PostmanURL))
 		}
-		fmt.Printf("   Support: %s\n", apiInfo.Technical.SupportEmail)
+		fmt.Fprintf(cmd.OutOrStdout(), "   Support: %s\n", apiInfo.Technical.SupportEmail)
 		if apiInfo.Technical.SLA != "" {
-			fmt.Printf("   SLA: %s\n", apiInfo.Technical.SLA)
+			fmt.Fprintf(cmd.OutOrStdout(), "   SLA: %s\n", apiInfo.Technical.SLA)
 		}
 		
 		// Endpoints (if detailed)
 		if infoDetailed && len(apiInfo.Endpoints) > 0 {
-			fmt.Printf("\n🔗 Endpoints (%d)\n", len(apiInfo.Endpoints))
+			fmt.Fprintf(cmd.OutOrStdout(), "\n🔗 Endpoints (%d)\n", len(apiInfo.Endpoints))
 			
 			// Group by category
 			endpointsByCategory := make(map[string][]struct {
@@ -325,17 +324,17 @@ func runInfo(cmd *cobra.Command, args []string) error {
 			}
 			
 			for category, endpoints := range endpointsByCategory {
-				fmt.Printf("\n   %s:\n", category)
+				fmt.Fprintf(cmd.OutOrStdout(), "\n   %s:\n", category)
 				for _, ep := range endpoints {
 					auth := ""
 					if ep.AuthRequired {
 						auth = " 🔒"
 					}
-					fmt.Printf("   %s %s%s\n", 
+					fmt.Fprintf(cmd.OutOrStdout(), "   %s %s%s\n", 
 						colorMethod(ep.Method), ep.Path, auth)
-					fmt.Printf("      %s\n", ep.Description)
+					fmt.Fprintf(cmd.OutOrStdout(), "      %s\n", ep.Description)
 					if ep.RateLimit != "" {
-						fmt.Printf("      Rate limit: %s\n", ep.RateLimit)
+						fmt.Fprintf(cmd.OutOrStdout(), "      Rate limit: %s\n", ep.RateLimit)
 					}
 				}
 			}
@@ -343,7 +342,7 @@ func runInfo(cmd *cobra.Command, args []string) error {
 		
 		// Recent reviews
 		if len(apiInfo.RecentReviews) > 0 {
-			fmt.Printf("\n⭐ Recent Reviews\n")
+			fmt.Fprintf(cmd.OutOrStdout(), "\n⭐ Recent Reviews\n")
 			for i, review := range apiInfo.RecentReviews {
 				if i >= 3 { // Show only first 3
 					break
@@ -352,20 +351,20 @@ func runInfo(cmd *cobra.Command, args []string) error {
 				if review.Verified {
 					verified = " ✓"
 				}
-				fmt.Printf("   %s %s\n", getStarRating(float64(review.Rating)), review.Title)
-				fmt.Printf("   \"%s\"\n", truncate(review.Message, 80))
-				fmt.Printf("   — %s%s • %s\n", 
+				fmt.Fprintf(cmd.OutOrStdout(), "   %s %s\n", getStarRatingSimple(float64(review.Rating)), review.Title)
+				fmt.Fprintf(cmd.OutOrStdout(), "   \"%s\"\n", truncate(review.Message, 80))
+				fmt.Fprintf(cmd.OutOrStdout(), "   — %s%s • %s\n", 
 					review.AuthorName, verified, 
 					review.CreatedAt.Format("Jan 2, 2006"))
 				if i < len(apiInfo.RecentReviews)-1 && i < 2 {
-					fmt.Println()
+					fmt.Fprintln(cmd.OutOrStdout(), )
 				}
 			}
 		}
 		
 		// Recent changelog
 		if len(apiInfo.Changelog) > 0 {
-			fmt.Printf("\n📝 Recent Changes\n")
+			fmt.Fprintf(cmd.OutOrStdout(), "\n📝 Recent Changes\n")
 			for i, change := range apiInfo.Changelog {
 				if i >= 3 { // Show only recent 3
 					break
@@ -374,37 +373,48 @@ func runInfo(cmd *cobra.Command, args []string) error {
 				if change.Breaking {
 					breaking = " ⚠️  BREAKING"
 				}
-				fmt.Printf("   v%s (%s)%s\n", 
+				fmt.Fprintf(cmd.OutOrStdout(), "   v%s (%s)%s\n", 
 					change.Version, 
 					change.Date.Format("Jan 2, 2006"),
 					breaking)
-				fmt.Printf("   %s\n", change.Description)
+				fmt.Fprintf(cmd.OutOrStdout(), "   %s\n", change.Description)
 				if i < len(apiInfo.Changelog)-1 && i < 2 {
-					fmt.Println()
+					fmt.Fprintln(cmd.OutOrStdout(), )
 				}
 			}
 		}
 		
 		// Similar APIs
 		if len(apiInfo.SimilarAPIs) > 0 {
-			fmt.Printf("\n🔍 Similar APIs\n")
+			fmt.Fprintf(cmd.OutOrStdout(), "\n🔍 Similar APIs\n")
 			for _, similar := range apiInfo.SimilarAPIs {
-				fmt.Printf("   • %s - %s", similar.Name, truncate(similar.Description, 50))
+				fmt.Fprintf(cmd.OutOrStdout(), "   • %s - %s", similar.Name, truncate(similar.Description, 50))
 				if similar.Rating > 0 {
-					fmt.Printf(" (%.1f★)", similar.Rating)
+					fmt.Fprintf(cmd.OutOrStdout(), " (%.1f★)", similar.Rating)
 				}
-				fmt.Printf("\n")
+				fmt.Fprintf(cmd.OutOrStdout(), "\n")
 			}
 		}
 		
 		// Actions
-		fmt.Printf("\n💡 Actions:\n")
-		fmt.Printf("   Subscribe: apidirect subscribe %s\n", apiInfo.Name)
-		fmt.Printf("   View reviews: apidirect review list %s\n", apiInfo.Name)
-		fmt.Printf("   Try it out: %s\n", apiInfo.Technical.DocumentationURL)
+		fmt.Fprintf(cmd.OutOrStdout(), "\n💡 Actions:\n")
+		fmt.Fprintf(cmd.OutOrStdout(), "   Subscribe: apidirect subscribe %s\n", apiInfo.Name)
+		fmt.Fprintf(cmd.OutOrStdout(), "   View reviews: apidirect review list %s\n", apiInfo.Name)
+		fmt.Fprintf(cmd.OutOrStdout(), "   Try it out: %s\n", apiInfo.Technical.DocumentationURL)
 		
 		return nil
 	}
+}
+
+// Helper function to get star rating (without half stars for info display)
+func getStarRatingSimple(rating float64) string {
+	full := int(rating)
+	empty := 5 - full
+	
+	stars := strings.Repeat("★", full)
+	stars += strings.Repeat("☆", empty)
+	
+	return stars
 }
 
 // Helper function to color HTTP methods

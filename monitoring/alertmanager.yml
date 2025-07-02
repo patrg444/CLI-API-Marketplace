@@ -1,0 +1,165 @@
+# Alertmanager Configuration for API Direct Marketplace
+# This configures how alerts are routed and sent
+
+global:
+  # SMTP configuration for email alerts
+  smtp_smarthost: 'smtp.gmail.com:587'
+  smtp_from: 'alerts@yourdomain.com'
+  smtp_auth_username: 'alerts@yourdomain.com'
+  smtp_auth_password: 'your-smtp-password'
+  smtp_require_tls: true
+
+  # Slack webhook (optional)
+  slack_api_url: 'https://hooks.slack.com/services/YOUR/SLACK/WEBHOOK'
+
+  # Default settings
+  resolve_timeout: 5m
+
+# Templates for alert formatting
+templates:
+  - '/etc/alertmanager/templates/*.tmpl'
+
+# Route tree for alerts
+route:
+  # Default receiver
+  receiver: 'default-receiver'
+  
+  # Group alerts by these labels
+  group_by: ['alertname', 'cluster', 'service']
+  
+  # Wait before sending grouped alerts
+  group_wait: 10s
+  
+  # Wait before sending new alerts for a group
+  group_interval: 10s
+  
+  # Wait before resending alerts
+  repeat_interval: 12h
+
+  # Child routes for specific handling
+  routes:
+    # Critical alerts go to pagerduty and email immediately
+    - match:
+        severity: critical
+      receiver: critical-receiver
+      group_wait: 0s
+      repeat_interval: 1h
+      continue: true
+
+    # Security alerts go to security team
+    - match:
+        alertname: HighAuthFailureRate|PotentialDDoS|SSLCertificateExpiryCritical
+      receiver: security-receiver
+      group_wait: 0s
+      
+    # Database alerts go to DBA team
+    - match_re:
+        alertname: ^(Database|Postgres|pg_).*
+      receiver: database-receiver
+      group_interval: 5m
+
+    # Business metrics go to product team
+    - match:
+        alertname: HighPaymentFailureRate|NoNewSignups|UnusualAPIUsageSpike
+      receiver: business-receiver
+      repeat_interval: 6h
+
+    # Backup alerts
+    - match:
+        alertname: BackupFailed|BackupSizeAnomaly
+      receiver: backup-receiver
+      repeat_interval: 4h
+
+# Inhibition rules (prevent alert storms)
+inhibit_rules:
+  # If a critical alert fires, inhibit warning alerts for the same service
+  - source_match:
+      severity: 'critical'
+    target_match:
+      severity: 'warning'
+    equal: ['alertname', 'instance']
+
+  # If service is down, inhibit performance alerts
+  - source_match:
+      alertname: 'ServiceDown'
+    target_match:
+      alertname: 'SlowAPIResponse'
+    equal: ['service']
+
+  # If database is down, inhibit slow query alerts
+  - source_match:
+      alertname: 'PostgresDown'
+    target_match:
+      alertname: 'SlowDatabaseQueries'
+
+# Receivers define where alerts are sent
+receivers:
+  # Default receiver - email only
+  - name: 'default-receiver'
+    email_configs:
+      - to: 'alerts@yourdomain.com'
+        headers:
+          Subject: '[{{ .Status | toUpper }}] {{ .GroupLabels.alertname }}'
+        html: |
+          <h2>{{ .GroupLabels.alertname }}</h2>
+          <p><b>Status:</b> {{ .Status }}</p>
+          {{ range .Alerts }}
+          <hr>
+          <p><b>Summary:</b> {{ .Annotations.summary }}</p>
+          <p><b>Description:</b> {{ .Annotations.description }}</p>
+          <p><b>Labels:</b></p>
+          <ul>
+          {{ range $key, $value := .Labels }}
+            <li><b>{{ $key }}:</b> {{ $value }}</li>
+          {{ end }}
+          </ul>
+          {{ end }}
+
+  # Critical alerts - multiple channels
+  - name: 'critical-receiver'
+    email_configs:
+      - to: 'oncall@yourdomain.com,alerts@yourdomain.com'
+        send_resolved: true
+    slack_configs:
+      - channel: '#alerts-critical'
+        title: '🚨 CRITICAL: {{ .GroupLabels.alertname }}'
+        text: '{{ range .Alerts }}{{ .Annotations.summary }}\n{{ .Annotations.description }}{{ end }}'
+        send_resolved: true
+    pagerduty_configs:
+      - service_key: 'YOUR-PAGERDUTY-SERVICE-KEY'
+        description: '{{ .GroupLabels.alertname }}: {{ range .Alerts }}{{ .Annotations.summary }}{{ end }}'
+
+  # Security alerts
+  - name: 'security-receiver'
+    email_configs:
+      - to: 'security@yourdomain.com'
+        headers:
+          Subject: '[SECURITY] {{ .GroupLabels.alertname }}'
+    slack_configs:
+      - channel: '#security-alerts'
+        title: '🔒 Security Alert: {{ .GroupLabels.alertname }}'
+        color: 'danger'
+
+  # Database alerts
+  - name: 'database-receiver'
+    email_configs:
+      - to: 'dba@yourdomain.com'
+    slack_configs:
+      - channel: '#database-alerts'
+        title: '🗄️ Database Alert: {{ .GroupLabels.alertname }}'
+
+  # Business metrics
+  - name: 'business-receiver'
+    email_configs:
+      - to: 'product@yourdomain.com,business@yourdomain.com'
+    slack_configs:
+      - channel: '#business-metrics'
+        title: '📊 Business Alert: {{ .GroupLabels.alertname }}'
+
+  # Backup alerts
+  - name: 'backup-receiver'
+    email_configs:
+      - to: 'ops@yourdomain.com'
+    slack_configs:
+      - channel: '#ops-alerts'
+        title: '💾 Backup Alert: {{ .GroupLabels.alertname }}'

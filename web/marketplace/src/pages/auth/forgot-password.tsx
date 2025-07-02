@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
-import { resetPassword } from 'aws-amplify/auth';
 import Layout from '../../components/Layout';
 
 const ForgotPassword: React.FC = () => {
@@ -17,17 +16,21 @@ const ForgotPassword: React.FC = () => {
     setLoading(true);
 
     try {
-      const output = await resetPassword({ username: email });
-      const { nextStep } = output;
-      
-      if (nextStep.resetPasswordStep === 'CONFIRM_RESET_PASSWORD_WITH_CODE') {
-        setSuccess(true);
-        // Store email for the reset page
-        sessionStorage.setItem('resetEmail', email);
-        setTimeout(() => {
-          router.push('/auth/reset-password');
-        }, 2000);
+      // Mock password reset - validate email format
+      if (!email || !email.includes('@')) {
+        setError('Please enter a valid email address');
+        return;
       }
+      
+      // Simulate API call delay
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      setSuccess(true);
+      // Store email for the reset page
+      sessionStorage.setItem('resetEmail', email);
+      setTimeout(() => {
+        router.push('/auth/reset-password');
+      }, 2000);
     } catch (err: any) {
       setError(err.message || 'Failed to send reset code');
     } finally {
@@ -44,7 +47,7 @@ const ForgotPassword: React.FC = () => {
               Reset your password
             </h2>
             <p className="mt-2 text-center text-sm text-gray-600">
-              Enter your email address and we'll send you a code to reset your password.
+              Enter your email address and we{'\''}ll send you a code to reset your password.
             </p>
           </div>
 

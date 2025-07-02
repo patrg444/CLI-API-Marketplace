@@ -416,7 +416,7 @@ func runInDocker(m *manifest.Manifest) error {
 	runCmd.Stdin = os.Stdin
 
 	fmt.Printf("\n🌐 API running at: http://localhost:%d\n", runPort)
-	fmt.Println("📝 Press Ctrl+C to stop\n")
+	fmt.Println("📝 Press Ctrl+C to stop")
 
 	return runCmd.Run()
 }

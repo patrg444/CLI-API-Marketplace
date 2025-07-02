@@ -1,0 +1,74 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: apidirect
+      POSTGRES_PASSWORD: localpassword
+      POSTGRES_DB: apidirect
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./backend/database/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U apidirect"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis for caching and sessions
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Backend API (FastAPI)
+  backend:
+    build: 
+      context: ./backend
+      dockerfile: Dockerfile.local
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: postgresql://apidirect:localpassword@postgres:5432/apidirect
+      REDIS_URL: redis://redis:6379
+      JWT_SECRET: local-development-secret-change-in-production
+      ENVIRONMENT: development
+      CORS_ORIGINS: "http://localhost:3000,http://localhost:3001,http://localhost:8080,https://console.apidirect.dev,https://marketplace.apidirect.dev"
+      # Mock auth for local development
+      USE_MOCK_AUTH: "true"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./backend:/app
+    command: uvicorn api.main:app --host 0.0.0.0 --port 8000 --reload
+
+  # Frontend development servers (optional, can run locally instead)
+  # console:
+  #   image: node:18-alpine
+  #   working_dir: /app
+  #   ports:
+  #     - "3000:3000"
+  #   volumes:
+  #     - ./web/console:/app
+  #   command: sh -c "npm install && npm run dev"
+  #   environment:
+  #     NEXT_PUBLIC_API_URL: http://localhost:8000
+
+volumes:
+  postgres_data:
+  redis_data:

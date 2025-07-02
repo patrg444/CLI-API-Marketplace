@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -24,7 +26,7 @@ func TestSearchCommand(t *testing.T) {
 			name: "search with query",
 			args: []string{"weather"},
 			mockResponses: map[string]mockResponse{
-				"GET /api/v1/marketplace/search": {
+				"GET /api/v1/marketplace/search?limit=20&offset=0&q=weather&sort=relevance": {
 					statusCode: 200,
 					body: map[string]interface{}{
 						"query":  "weather",
@@ -95,7 +97,7 @@ func TestSearchCommand(t *testing.T) {
 				"price":    "0-10",
 			},
 			mockResponses: map[string]mockResponse{
-				"GET /api/v1/marketplace/search": {
+				"GET /api/v1/marketplace/search?category=Finance&limit=20&offset=0&price_range=0-10&sort=popular&tags=payments%2Cstripe": {
 					statusCode: 200,
 					body: map[string]interface{}{
 						"total":   5,
@@ -112,7 +114,7 @@ func TestSearchCommand(t *testing.T) {
 			name: "no results found",
 			args: []string{"nonexistent"},
 			mockResponses: map[string]mockResponse{
-				"GET /api/v1/marketplace/search": {
+				"GET /api/v1/marketplace/search?limit=20&offset=0&q=nonexistent&sort=relevance": {
 					statusCode: 200,
 					body: map[string]interface{}{
 						"query":   "nonexistent",
@@ -133,7 +135,7 @@ func TestSearchCommand(t *testing.T) {
 				"format": "grid",
 			},
 			mockResponses: map[string]mockResponse{
-				"GET /api/v1/marketplace/search": {
+				"GET /api/v1/marketplace/search?limit=20&offset=0&q=payment&sort=relevance": {
 					statusCode: 200,
 					body: map[string]interface{}{
 						"total": 1,
@@ -182,6 +184,23 @@ func TestSearchCommand(t *testing.T) {
 			cmd := &cobra.Command{}
 			cmd.SetOut(&buf)
 			cmd.SetErr(&buf)
+
+			// Setup test environment
+			cleanup := setupTestAuth(t)
+			defer cleanup()
+
+			// Create config with mock server URL
+			tempDir := os.Getenv("HOME") // setupTestAuth sets this
+			configDir := filepath.Join(tempDir, ".apidirect")
+			os.MkdirAll(configDir, 0755)
+			
+			config := map[string]interface{}{
+				"api": map[string]interface{}{
+					"base_url": "http://test-server",
+				},
+			}
+			configData, _ := json.Marshal(config)
+			os.WriteFile(filepath.Join(configDir, "config.json"), configData, 0644)
 
 			// Reset and set flags
 			searchCategory = ""

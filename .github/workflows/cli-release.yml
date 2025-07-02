@@ -1,0 +1,262 @@
+name: CLI Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to release (e.g., v1.0.0)'
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.21'
+          
+      - name: Run tests
+        working-directory: ./cli
+        run: |
+          go mod download
+          go test -v -race -coverprofile=coverage.out ./...
+          
+      - name: Upload coverage
+        uses: codecov/codecov-action@v3
+        with:
+          file: ./cli/coverage.out
+          
+  build:
+    name: Build and Release
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.21'
+          
+      - name: Install dependencies
+        run: |
+          go install github.com/goreleaser/goreleaser@latest
+          
+      - name: Create release config
+        working-directory: ./cli
+        run: |
+          cat > .goreleaser.yml << 'EOF'
+          before:
+            hooks:
+              - go mod tidy
+              
+          builds:
+            - id: apidirect
+              main: ./main.go
+              binary: apidirect
+              env:
+                - CGO_ENABLED=0
+              goos:
+                - linux
+                - darwin
+                - windows
+              goarch:
+                - amd64
+                - arm64
+                - "386"
+              ignore:
+                - goos: darwin
+                  goarch: "386"
+                - goos: windows
+                  goarch: arm64
+              ldflags:
+                - -s -w
+                - -X github.com/api-direct/cli/cmd.Version={{.Version}}
+                - -X github.com/api-direct/cli/cmd.BuildDate={{.Date}}
+                - -X github.com/api-direct/cli/cmd.GitCommit={{.ShortCommit}}
+                
+          archives:
+            - name_template: >-
+                {{ .ProjectName }}_
+                {{- .Version }}_
+                {{- .Os }}_
+                {{- if eq .Arch "amd64" }}x86_64
+                {{- else if eq .Arch "386" }}i386
+                {{- else }}{{ .Arch }}{{ end }}
+              format_overrides:
+                - goos: windows
+                  format: zip
+              files:
+                - README.md
+                - LICENSE
+                
+          checksum:
+            name_template: 'checksums.txt'
+            
+          snapshot:
+            name_template: "{{ incpatch .Version }}-next"
+            
+          changelog:
+            sort: asc
+            filters:
+              exclude:
+                - '^docs:'
+                - '^test:'
+                - '^chore:'
+                
+          release:
+            github:
+              owner: api-direct
+              name: cli
+            draft: false
+            prerelease: auto
+            name_template: "{{.ProjectName}} v{{.Version}}"
+            header: |
+              ## API Direct CLI v{{.Version}}
+              
+              Install with:
+              ```bash
+              curl -sSL https://raw.githubusercontent.com/api-direct/cli/main/install.sh | bash
+              ```
+              
+              Or download directly from the assets below.
+          EOF
+          
+      - name: Run GoReleaser
+        working-directory: ./cli
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            goreleaser release --clean --tag=${{ github.event.inputs.version }}
+          else
+            goreleaser release --clean
+          fi
+          
+  create-install-script:
+    name: Update Install Script
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          
+      - name: Update install script
+        run: |
+          cat > install.sh << 'EOF'
+          #!/bin/bash
+          # Install script for API Direct CLI
+          
+          set -e
+          
+          # Configuration
+          GITHUB_REPO="api-direct/cli"
+          BINARY_NAME="apidirect"
+          INSTALL_DIR="${INSTALL_DIR:-/usr/local/bin}"
+          
+          # Colors
+          RED='\033[0;31m'
+          GREEN='\033[0;32m'
+          BLUE='\033[0;34m'
+          YELLOW='\033[1;33m'
+          NC='\033[0m'
+          
+          # Detect OS and architecture
+          OS=$(uname -s | tr '[:upper:]' '[:lower:]')
+          ARCH=$(uname -m)
+          
+          case $ARCH in
+              x86_64) ARCH="x86_64" ;;
+              aarch64|arm64) ARCH="arm64" ;;
+              i386|i686) ARCH="i386" ;;
+              *) echo -e "${RED}Unsupported architecture: $ARCH${NC}"; exit 1 ;;
+          esac
+          
+          echo -e "${BLUE}📦 Installing API Direct CLI${NC}"
+          echo "Platform: ${OS}/${ARCH}"
+          
+          # Get latest version
+          echo -e "${YELLOW}Fetching latest version...${NC}"
+          VERSION=$(curl -s https://api.github.com/repos/${GITHUB_REPO}/releases/latest | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
+          
+          if [ -z "$VERSION" ]; then
+              echo -e "${RED}Failed to fetch latest version${NC}"
+              exit 1
+          fi
+          
+          echo "Latest version: ${VERSION}"
+          
+          # Download URL
+          FILENAME="apidirect_${VERSION#v}_${OS}_${ARCH}"
+          if [ "$OS" = "windows" ]; then
+              FILENAME="${FILENAME}.zip"
+          else
+              FILENAME="${FILENAME}.tar.gz"
+          fi
+          
+          DOWNLOAD_URL="https://github.com/${GITHUB_REPO}/releases/download/${VERSION}/${FILENAME}"
+          
+          # Download
+          TEMP_DIR=$(mktemp -d)
+          trap "rm -rf ${TEMP_DIR}" EXIT
+          
+          echo -e "${YELLOW}⬇️  Downloading...${NC}"
+          if ! curl -L -o "${TEMP_DIR}/${FILENAME}" "${DOWNLOAD_URL}"; then
+              echo -e "${RED}Download failed${NC}"
+              exit 1
+          fi
+          
+          # Extract
+          echo -e "${YELLOW}📂 Extracting...${NC}"
+          cd "${TEMP_DIR}"
+          if [ "$OS" = "windows" ]; then
+              unzip -q "${FILENAME}"
+          else
+              tar -xzf "${FILENAME}"
+          fi
+          
+          # Install
+          echo -e "${YELLOW}🔧 Installing to ${INSTALL_DIR}...${NC}"
+          if [ -w "${INSTALL_DIR}" ]; then
+              mv "${BINARY_NAME}" "${INSTALL_DIR}/"
+              chmod +x "${INSTALL_DIR}/${BINARY_NAME}"
+          else
+              sudo mv "${BINARY_NAME}" "${INSTALL_DIR}/"
+              sudo chmod +x "${INSTALL_DIR}/${BINARY_NAME}"
+          fi
+          
+          # Verify
+          if command -v apidirect &> /dev/null; then
+              echo -e "${GREEN}✅ Installation complete!${NC}"
+              echo "Version: $(apidirect version)"
+          else
+              echo -e "${RED}❌ Installation failed${NC}"
+              exit 1
+          fi
+          
+          echo ""
+          echo -e "${GREEN}🎉 API Direct CLI installed successfully!${NC}"
+          echo "Run 'apidirect --help' to get started"
+          EOF
+          
+          chmod +x install.sh
+          
+      - name: Commit and push
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add install.sh
+          git diff --quiet && git diff --staged --quiet || (git commit -m "Update install script for latest release" && git push)

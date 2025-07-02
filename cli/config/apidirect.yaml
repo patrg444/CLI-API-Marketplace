@@ -1,0 +1,59 @@
+# API-Direct CLI Configuration
+# This file configures the CLI to work with the API-Direct platform
+
+api:
+  # API endpoint - can be overridden with APIDIRECT_API_ENDPOINT
+  endpoint: "https://api.apidirect.dev"
+  
+  # AWS Region for Cognito
+  region: "us-east-1"
+  
+  # Cognito User Pool ID - set via environment variable for security
+  # export APIDIRECT_COGNITO_POOL="your-user-pool-id"
+  cognito_pool: ""
+  
+  # Cognito Client ID - set via environment variable for security  
+  # export APIDIRECT_COGNITO_CLIENT="your-client-id"
+  cognito_client: ""
+  
+  # Cognito Auth Domain
+  # export APIDIRECT_AUTH_DOMAIN="https://your-domain.auth.us-east-1.amazoncognito.com"
+  auth_domain: ""
+
+# Local development settings
+development:
+  # Local API endpoint for development
+  api_endpoint: "http://localhost:8000"
+  
+  # Skip SSL verification for local development
+  skip_ssl_verify: true
+
+# Deployment defaults
+deployment:
+  # Default region for deployments
+  default_region: "us-east-1"
+  
+  # Default runtime
+  default_runtime: "python3.11"
+  
+  # Deployment bucket prefix
+  bucket_prefix: "apidirect-deployments"
+
+# CLI behavior
+cli:
+  # Check for updates automatically
+  auto_update_check: true
+  
+  # Output format (json, yaml, table)
+  output_format: "table"
+  
+  # Enable debug logging
+  debug: false
+
+# Marketplace settings
+marketplace:
+  # Default visibility for published APIs
+  default_visibility: "public"
+  
+  # Enable analytics collection
+  analytics_enabled: true

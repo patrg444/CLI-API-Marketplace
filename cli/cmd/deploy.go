@@ -53,6 +53,12 @@ func init() {
 }
 
 func runDeploy(cmd *cobra.Command, args []string) error {
+	// Check if new manifest format exists
+	if _, err := os.Stat("apidirect.manifest.json"); err == nil {
+		// Use the new deployment flow
+		return runDeployV2(cmd, args)
+	}
+	
 	// Check for demo mode first
 	if os.Getenv("APIDIRECT_DEMO_MODE") == "true" {
 		return runDemoDeployment(cmd, args)
@@ -159,7 +165,7 @@ func deployBYOA(apiName string, projectConfig *config.ProjectConfig) error {
 func loadProjectConfig() (*config.ProjectConfig, error) {
 	data, err := ioutil.ReadFile("apidirect.yaml")
 	if err != nil {
-		return nil, fmt.Errorf("apidirect.yaml not found. Run 'apidirect init' to create a project")
+		return nil, fmt.Errorf("Apidirect.yaml not found. Run 'apidirect init' to create a project")
 	}
 
 	var projectConfig config.ProjectConfig
@@ -188,7 +194,7 @@ func validateProject(projectConfig *config.ProjectConfig) error {
 
 	// Validate endpoints
 	if len(projectConfig.Endpoints) == 0 {
-		return fmt.Errorf("no endpoints defined in apidirect.yaml")
+		return fmt.Errorf("No endpoints defined in apidirect.yaml")
 	}
 
 	return nil
@@ -432,7 +438,7 @@ func waitForDeployment(apiName string) error {
 		case "running":
 			return nil
 		case "failed":
-			return fmt.Errorf("deployment failed")
+			return fmt.Errorf("Deployment failed")
 		default:
 			fmt.Print(".")
 			time.Sleep(5 * time.Second)

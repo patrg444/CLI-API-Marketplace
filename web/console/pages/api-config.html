@@ -1,0 +1,353 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}API Configuration - API-Direct Console{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto">
+    <!-- Header -->
+    <div class="mb-8">
+        <div class="flex items-center justify-between">
+            <div>
+                <h1 class="text-2xl font-bold text-gray-900 dark:text-white">API Configuration</h1>
+                <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                    <span id="apiName">Loading...</span>
+                </p>
+            </div>
+            <a href="/apis" class="text-sm text-blue-600 hover:text-blue-500">← Back to APIs</a>
+        </div>
+    </div>
+
+    <!-- Configuration Tabs -->
+    <div class="border-b border-gray-200 dark:border-gray-700">
+        <nav class="-mb-px flex space-x-8">
+            <button onclick="switchTab('general')" class="tab-btn active" data-tab="general">
+                General
+            </button>
+            <button onclick="switchTab('environment')" class="tab-btn" data-tab="environment">
+                Environment
+            </button>
+            <button onclick="switchTab('runtime')" class="tab-btn" data-tab="runtime">
+                Runtime
+            </button>
+            <button onclick="switchTab('networking')" class="tab-btn" data-tab="networking">
+                Networking
+            </button>
+            <button onclick="switchTab('monitoring')" class="tab-btn" data-tab="monitoring">
+                Monitoring
+            </button>
+        </nav>
+    </div>
+
+    <!-- Configuration Form -->
+    <form id="configForm" class="mt-6">
+        <!-- General Tab -->
+        <div id="general-tab" class="tab-content">
+            <div class="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
+                <h2 class="text-lg font-medium text-gray-900 dark:text-white mb-4">General Settings</h2>
+                
+                <div class="space-y-4">
+                    <div>
+                        <label for="apiNameInput" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                            API Name
+                        </label>
+                        <input type="text" id="apiNameInput" name="name" 
+                               class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                    </div>
+                    
+                    <div>
+                        <label for="description" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                            Description
+                        </label>
+                        <textarea id="description" name="description" rows="3"
+                                  class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"></textarea>
+                    </div>
+                    
+                    <div>
+                        <label for="version" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                            Version
+                        </label>
+                        <input type="text" id="version" name="version" readonly
+                               class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm bg-gray-50 dark:bg-gray-900 dark:border-gray-600 dark:text-gray-400">
+                        <p class="mt-1 text-xs text-gray-500">Use the versioning system to create new versions</p>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                            Status
+                        </label>
+                        <div class="mt-2 space-y-2">
+                            <label class="inline-flex items-center">
+                                <input type="radio" name="status" value="active" class="text-blue-600 focus:ring-blue-500">
+                                <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">Active</span>
+                            </label>
+                            <label class="inline-flex items-center ml-6">
+                                <input type="radio" name="status" value="paused" class="text-yellow-600 focus:ring-yellow-500">
+                                <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">Paused</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Environment Tab -->
+        <div id="environment-tab" class="tab-content hidden">
+            <div class="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
+                <h2 class="text-lg font-medium text-gray-900 dark:text-white mb-4">Environment Variables</h2>
+                
+                <div id="envVarsContainer" class="space-y-3">
+                    <!-- Environment variables will be loaded here -->
+                </div>
+                
+                <button type="button" onclick="addEnvVar()" class="mt-4 inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                    </svg>
+                    Add Variable
+                </button>
+                
+                <div class="mt-6 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-md p-4">
+                    <div class="flex">
+                        <svg class="h-5 w-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                        </svg>
+                        <div class="ml-3 text-sm text-yellow-700 dark:text-yellow-300">
+                            <p>Changes to environment variables will trigger a restart of your API.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Runtime Tab -->
+        <div id="runtime-tab" class="tab-content hidden">
+            <div class="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
+                <h2 class="text-lg font-medium text-gray-900 dark:text-white mb-4">Runtime Settings</h2>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label for="runtime" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                            Runtime
+                        </label>
+                        <select id="runtime" name="runtime" disabled
+                                class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm bg-gray-50 dark:bg-gray-900 dark:border-gray-600 dark:text-gray-400">
+                            <option value="python:3.9">Python 3.9</option>
+                            <option value="python:3.10">Python 3.10</option>
+                            <option value="python:3.11">Python 3.11</option>
+                            <option value="node:16">Node.js 16</option>
+                            <option value="node:18">Node.js 18</option>
+                        </select>
+                        <p class="mt-1 text-xs text-gray-500">Runtime cannot be changed after deployment</p>
+                    </div>
+                    
+                    <div>
+                        <label for="memory" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                            Memory Limit
+                        </label>
+                        <select id="memory" name="memory"
+                                class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                            <option value="256">256 MB</option>
+                            <option value="512">512 MB</option>
+                            <option value="1024">1 GB</option>
+                            <option value="2048">2 GB</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label for="timeout" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                            Request Timeout
+                        </label>
+                        <select id="timeout" name="timeout"
+                                class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                            <option value="10">10 seconds</option>
+                            <option value="30">30 seconds</option>
+                            <option value="60">60 seconds</option>
+                            <option value="120">120 seconds</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label for="maxConcurrency" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                            Max Concurrency
+                        </label>
+                        <input type="number" id="maxConcurrency" name="maxConcurrency" min="1" max="1000"
+                               class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                    </div>
+                </div>
+                
+                <div class="mt-6">
+                    <h3 class="text-sm font-medium text-gray-900 dark:text-white mb-2">Scaling</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label for="minInstances" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                Min Instances
+                            </label>
+                            <input type="number" id="minInstances" name="minInstances" min="0" max="10"
+                                   class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                        </div>
+                        <div>
+                            <label for="maxInstances" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                Max Instances
+                            </label>
+                            <input type="number" id="maxInstances" name="maxInstances" min="1" max="100"
+                                   class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Networking Tab -->
+        <div id="networking-tab" class="tab-content hidden">
+            <div class="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
+                <h2 class="text-lg font-medium text-gray-900 dark:text-white mb-4">Networking</h2>
+                
+                <div class="space-y-6">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            Endpoint URL
+                        </label>
+                        <div class="flex items-center space-x-2">
+                            <input type="text" id="endpoint" readonly
+                                   class="flex-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm bg-gray-50 dark:bg-gray-900 dark:border-gray-600 dark:text-gray-400 font-mono text-sm">
+                            <button type="button" onclick="copyEndpoint()" class="px-3 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600">
+                                Copy
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            CORS Settings
+                        </label>
+                        <div class="space-y-3">
+                            <div>
+                                <label for="corsOrigins" class="block text-sm text-gray-600 dark:text-gray-400">
+                                    Allowed Origins (one per line)
+                                </label>
+                                <textarea id="corsOrigins" name="corsOrigins" rows="3"
+                                          class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white font-mono text-sm"
+                                          placeholder="https://example.com&#10;https://app.example.com"></textarea>
+                            </div>
+                            <label class="inline-flex items-center">
+                                <input type="checkbox" name="corsCredentials" class="rounded text-blue-600 focus:ring-blue-500">
+                                <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">Allow credentials</span>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            Rate Limiting
+                        </label>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label for="rateLimit" class="block text-sm text-gray-600 dark:text-gray-400">
+                                    Requests per minute
+                                </label>
+                                <input type="number" id="rateLimit" name="rateLimit" min="0"
+                                       class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                            </div>
+                            <div>
+                                <label for="rateLimitBurst" class="block text-sm text-gray-600 dark:text-gray-400">
+                                    Burst limit
+                                </label>
+                                <input type="number" id="rateLimitBurst" name="rateLimitBurst" min="0"
+                                       class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Monitoring Tab -->
+        <div id="monitoring-tab" class="tab-content hidden">
+            <div class="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
+                <h2 class="text-lg font-medium text-gray-900 dark:text-white mb-4">Monitoring & Alerts</h2>
+                
+                <div class="space-y-6">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            Log Level
+                        </label>
+                        <select id="logLevel" name="logLevel"
+                                class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                            <option value="error">Error only</option>
+                            <option value="warning">Warning and above</option>
+                            <option value="info">Info and above</option>
+                            <option value="debug">Debug (all logs)</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            Health Check
+                        </label>
+                        <div class="space-y-3">
+                            <label class="inline-flex items-center">
+                                <input type="checkbox" name="healthCheckEnabled" class="rounded text-blue-600 focus:ring-blue-500">
+                                <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">Enable health checks</span>
+                            </label>
+                            <div>
+                                <label for="healthCheckPath" class="block text-sm text-gray-600 dark:text-gray-400">
+                                    Health check path
+                                </label>
+                                <input type="text" id="healthCheckPath" name="healthCheckPath" value="/health"
+                                       class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            Alert Thresholds
+                        </label>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label for="errorRateThreshold" class="block text-sm text-gray-600 dark:text-gray-400">
+                                    Error rate threshold (%)
+                                </label>
+                                <input type="number" id="errorRateThreshold" name="errorRateThreshold" min="0" max="100" step="0.1"
+                                       class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                            </div>
+                            <div>
+                                <label for="latencyThreshold" class="block text-sm text-gray-600 dark:text-gray-400">
+                                    Latency threshold (ms)
+                                </label>
+                                <input type="number" id="latencyThreshold" name="latencyThreshold" min="0"
+                                       class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="mt-6 flex justify-end space-x-3">
+            <button type="button" onclick="resetForm()" class="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600">
+                Reset
+            </button>
+            <button type="submit" class="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                Save Changes
+            </button>
+        </div>
+    </form>
+</div>
+
+<style>
+.tab-btn {
+    @apply py-2 px-1 border-b-2 border-transparent font-medium text-sm cursor-pointer;
+    @apply text-gray-500 hover:text-gray-700 hover:border-gray-300;
+    @apply dark:text-gray-400 dark:hover:text-gray-300 dark:hover:border-gray-300;
+}
+
+.tab-btn.active {
+    @apply text-blue-600 border-blue-500;
+    @apply dark:text-blue-400 dark:border-blue-400;
+}
+</style>
+
+<script src="/js/api-config.js"></script>
+{% endblock %}

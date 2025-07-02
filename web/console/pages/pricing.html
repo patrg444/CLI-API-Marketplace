@@ -1,0 +1,821 @@
+{% extends "templates/base.html" %}
+
+{% block title %}Pricing Management - API-Direct Creator Portal{% endblock %}
+{% block description %}Manage pricing and billing models for your APIs{% endblock %}
+
+{% block styles %}
+<style>
+.pricing-card {
+    border: 2px solid #e5e7eb;
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+    transition: all 0.2s;
+    cursor: pointer;
+}
+
+.pricing-card:hover {
+    border-color: #d1d5db;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+
+.pricing-card.active {
+    border-color: #4f46e5;
+    background: #eef2ff;
+}
+
+.tier-card {
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.5rem;
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+}
+
+.tier-card.drag-over {
+    background: #f3f4f6;
+    border-color: #4f46e5;
+}
+
+.usage-bar {
+    height: 8px;
+    background: #e5e7eb;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.usage-fill {
+    height: 100%;
+    background: #4f46e5;
+    transition: width 0.3s ease;
+}
+
+.metric-card {
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.5rem;
+    padding: 1.25rem;
+}
+
+.price-input {
+    font-size: 1.5rem;
+    font-weight: 600;
+    width: 100px;
+}
+
+.tier-handle {
+    cursor: move;
+    color: #9ca3af;
+}
+
+.tier-handle:hover {
+    color: #6b7280;
+}
+
+.comparison-table {
+    font-size: 0.875rem;
+}
+
+.comparison-table th {
+    font-weight: 600;
+    text-align: left;
+    padding: 0.75rem;
+    background: #f9fafb;
+}
+
+.comparison-table td {
+    padding: 0.75rem;
+    border-bottom: 1px solid #f3f4f6;
+}
+
+.feature-toggle {
+    width: 44px;
+    height: 24px;
+    background: #e5e7eb;
+    border-radius: 12px;
+    position: relative;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.feature-toggle.active {
+    background: #4f46e5;
+}
+
+.feature-toggle-knob {
+    width: 20px;
+    height: 20px;
+    background: white;
+    border-radius: 50%;
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    transition: transform 0.2s;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+
+.feature-toggle.active .feature-toggle-knob {
+    transform: translateX(20px);
+}
+
+.revenue-estimate {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto">
+    <!-- Header -->
+    <div class="mb-8">
+        <h1 class="text-3xl font-bold text-gray-900 mb-2">Pricing Management</h1>
+        <p class="text-gray-600">Configure pricing models and tiers for your APIs</p>
+    </div>
+
+    <!-- API Selector -->
+    <div class="bg-white rounded-lg p-4 mb-6 border border-gray-200">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-4">
+                <label class="text-sm font-medium text-gray-700">Select API:</label>
+                <select id="apiSelector" class="px-4 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
+                    <option value="">Choose an API...</option>
+                </select>
+            </div>
+            <button onclick="saveChanges()" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700">
+                <i class="fas fa-save mr-2"></i>Save Changes
+            </button>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div id="pricingContent" class="hidden">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Left Column: Pricing Model & Configuration -->
+            <div class="lg:col-span-2 space-y-6">
+                <!-- Pricing Model Selection -->
+                <div class="bg-white rounded-lg p-6 border border-gray-200">
+                    <h2 class="text-lg font-semibold text-gray-900 mb-4">Pricing Model</h2>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="pricing-card" data-model="free" onclick="selectPricingModel('free')">
+                            <div class="text-center">
+                                <i class="fas fa-gift text-3xl text-gray-400 mb-3"></i>
+                                <h3 class="font-semibold text-gray-900">Free</h3>
+                                <p class="text-sm text-gray-600 mt-1">No charges</p>
+                            </div>
+                        </div>
+                        
+                        <div class="pricing-card" data-model="pay-per-use" onclick="selectPricingModel('pay-per-use')">
+                            <div class="text-center">
+                                <i class="fas fa-coins text-3xl text-yellow-500 mb-3"></i>
+                                <h3 class="font-semibold text-gray-900">Pay Per Use</h3>
+                                <p class="text-sm text-gray-600 mt-1">Per request</p>
+                            </div>
+                        </div>
+                        
+                        <div class="pricing-card" data-model="subscription" onclick="selectPricingModel('subscription')">
+                            <div class="text-center">
+                                <i class="fas fa-calendar-alt text-3xl text-indigo-500 mb-3"></i>
+                                <h3 class="font-semibold text-gray-900">Subscription</h3>
+                                <p class="text-sm text-gray-600 mt-1">Monthly plans</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pay Per Use Configuration -->
+                <div id="payPerUseConfig" class="hidden bg-white rounded-lg p-6 border border-gray-200">
+                    <h2 class="text-lg font-semibold text-gray-900 mb-4">Pay Per Use Settings</h2>
+                    
+                    <div class="space-y-4">
+                        <!-- Base Price -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                Price per Request
+                            </label>
+                            <div class="flex items-center">
+                                <span class="text-2xl text-gray-500 mr-2">$</span>
+                                <input type="number" id="pricePerRequest" 
+                                    class="price-input px-3 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
+                                    step="0.0001" min="0.0001" max="1" value="0.001">
+                                <span class="text-gray-500 ml-3">per API call</span>
+                            </div>
+                            <p class="text-sm text-gray-500 mt-1">Minimum: $0.0001, Maximum: $1.00</p>
+                        </div>
+
+                        <!-- Free Tier -->
+                        <div>
+                            <label class="flex items-center">
+                                <input type="checkbox" id="enableFreeTier" class="mr-3" checked onchange="toggleFreeTier()">
+                                <span class="text-sm font-medium text-gray-700">Enable Free Tier</span>
+                            </label>
+                            <div id="freeTierConfig" class="mt-3 pl-6">
+                                <div class="flex items-center">
+                                    <input type="number" id="freeRequests" 
+                                        class="px-3 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
+                                        min="0" max="10000" value="100">
+                                    <span class="text-sm text-gray-600 ml-3">free requests per month per user</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Volume Discounts -->
+                        <div>
+                            <label class="flex items-center justify-between mb-3">
+                                <span class="text-sm font-medium text-gray-700">Volume Discounts</span>
+                                <button type="button" onclick="addVolumeDiscount()" 
+                                    class="text-sm text-indigo-600 hover:text-indigo-700">
+                                    <i class="fas fa-plus mr-1"></i>Add Tier
+                                </button>
+                            </label>
+                            <div id="volumeDiscounts" class="space-y-2">
+                                <!-- Volume discount tiers will be added here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Subscription Configuration -->
+                <div id="subscriptionConfig" class="hidden bg-white rounded-lg p-6 border border-gray-200">
+                    <h2 class="text-lg font-semibold text-gray-900 mb-4">Subscription Plans</h2>
+                    
+                    <div class="space-y-4">
+                        <!-- Add Plan Button -->
+                        <div class="flex justify-end">
+                            <button type="button" onclick="addSubscriptionPlan()" 
+                                class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700">
+                                <i class="fas fa-plus mr-2"></i>Add Plan
+                            </button>
+                        </div>
+
+                        <!-- Subscription Plans -->
+                        <div id="subscriptionPlans" class="space-y-4">
+                            <!-- Default plans -->
+                            <div class="tier-card" data-plan-id="basic">
+                                <div class="flex items-start justify-between">
+                                    <div class="flex-1">
+                                        <input type="text" value="Basic" 
+                                            class="text-lg font-semibold text-gray-900 bg-transparent border-0 p-0 focus:ring-0"
+                                            onchange="updatePlanName('basic', this.value)">
+                                        <div class="mt-3 grid grid-cols-2 gap-4">
+                                            <div>
+                                                <label class="block text-sm text-gray-600 mb-1">Monthly Price</label>
+                                                <div class="flex items-center">
+                                                    <span class="text-gray-500 mr-1">$</span>
+                                                    <input type="number" value="9.99" 
+                                                        class="w-24 px-2 py-1 border border-gray-300 rounded"
+                                                        step="0.01" min="1">
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <label class="block text-sm text-gray-600 mb-1">Requests/Month</label>
+                                                <input type="number" value="10000" 
+                                                    class="w-32 px-2 py-1 border border-gray-300 rounded"
+                                                    min="100">
+                                            </div>
+                                        </div>
+                                        <div class="mt-3">
+                                            <label class="text-sm text-gray-600">Features</label>
+                                            <div class="mt-1 space-y-1">
+                                                <label class="flex items-center text-sm">
+                                                    <input type="checkbox" class="mr-2" checked> Basic Support
+                                                </label>
+                                                <label class="flex items-center text-sm">
+                                                    <input type="checkbox" class="mr-2" checked> 99.9% SLA
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <button onclick="removePlan('basic')" class="text-gray-400 hover:text-red-500">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Trial Period -->
+                        <div class="border-t pt-4">
+                            <label class="flex items-center">
+                                <input type="checkbox" id="enableTrial" class="mr-3" checked onchange="toggleTrial()">
+                                <span class="text-sm font-medium text-gray-700">Enable Free Trial</span>
+                            </label>
+                            <div id="trialConfig" class="mt-3 pl-6">
+                                <div class="flex items-center">
+                                    <input type="number" id="trialDays" 
+                                        class="px-3 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
+                                        min="1" max="30" value="7">
+                                    <span class="text-sm text-gray-600 ml-3">days free trial</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Billing Features -->
+                <div class="bg-white rounded-lg p-6 border border-gray-200">
+                    <h2 class="text-lg font-semibold text-gray-900 mb-4">Billing Features</h2>
+                    
+                    <div class="space-y-3">
+                        <label class="flex items-center justify-between">
+                            <div>
+                                <span class="text-sm font-medium text-gray-700">Overage Protection</span>
+                                <p class="text-xs text-gray-500">Automatically pause API when limits are reached</p>
+                            </div>
+                            <div class="feature-toggle active" onclick="toggleFeature(this)">
+                                <div class="feature-toggle-knob"></div>
+                            </div>
+                        </label>
+
+                        <label class="flex items-center justify-between">
+                            <div>
+                                <span class="text-sm font-medium text-gray-700">Auto-renewal</span>
+                                <p class="text-xs text-gray-500">Automatically renew subscriptions</p>
+                            </div>
+                            <div class="feature-toggle active" onclick="toggleFeature(this)">
+                                <div class="feature-toggle-knob"></div>
+                            </div>
+                        </label>
+
+                        <label class="flex items-center justify-between">
+                            <div>
+                                <span class="text-sm font-medium text-gray-700">Proration</span>
+                                <p class="text-xs text-gray-500">Prorate charges when upgrading/downgrading</p>
+                            </div>
+                            <div class="feature-toggle active" onclick="toggleFeature(this)">
+                                <div class="feature-toggle-knob"></div>
+                            </div>
+                        </label>
+
+                        <label class="flex items-center justify-between">
+                            <div>
+                                <span class="text-sm font-medium text-gray-700">Usage Alerts</span>
+                                <p class="text-xs text-gray-500">Send alerts at 80% and 100% usage</p>
+                            </div>
+                            <div class="feature-toggle" onclick="toggleFeature(this)">
+                                <div class="feature-toggle-knob"></div>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: Preview & Analytics -->
+            <div class="space-y-6">
+                <!-- Revenue Estimate -->
+                <div class="revenue-estimate">
+                    <h3 class="text-lg font-semibold mb-4">Estimated Monthly Revenue</h3>
+                    <div class="text-3xl font-bold mb-2">$<span id="revenueEstimate">0</span></div>
+                    <p class="text-sm opacity-90">Based on current usage patterns</p>
+                    <div class="mt-4 space-y-2 text-sm">
+                        <div class="flex justify-between">
+                            <span>Platform Fee (20%)</span>
+                            <span>-$<span id="platformFee">0</span></span>
+                        </div>
+                        <div class="flex justify-between font-semibold border-t pt-2">
+                            <span>Your Earnings</span>
+                            <span>$<span id="netEarnings">0</span></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Current Usage -->
+                <div class="bg-white rounded-lg p-6 border border-gray-200">
+                    <h3 class="font-semibold text-gray-900 mb-4">Current Month Usage</h3>
+                    <div class="space-y-4">
+                        <div class="metric-card">
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="text-sm text-gray-600">API Calls</span>
+                                <span class="font-semibold">12,450</span>
+                            </div>
+                            <div class="usage-bar">
+                                <div class="usage-fill" style="width: 62%"></div>
+                            </div>
+                            <p class="text-xs text-gray-500 mt-1">62% of monthly limit</p>
+                        </div>
+
+                        <div class="metric-card">
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="text-sm text-gray-600">Active Users</span>
+                                <span class="font-semibold">847</span>
+                            </div>
+                        </div>
+
+                        <div class="metric-card">
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="text-sm text-gray-600">Revenue Generated</span>
+                                <span class="font-semibold text-green-600">$124.50</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Competitor Pricing -->
+                <div class="bg-white rounded-lg p-6 border border-gray-200">
+                    <h3 class="font-semibold text-gray-900 mb-4">Market Comparison</h3>
+                    <p class="text-sm text-gray-600 mb-4">Similar APIs in your category</p>
+                    <div class="space-y-3">
+                        <div class="flex justify-between items-center text-sm">
+                            <span class="text-gray-700">Weather API Pro</span>
+                            <span class="font-medium">$0.002/call</span>
+                        </div>
+                        <div class="flex justify-between items-center text-sm">
+                            <span class="text-gray-700">Climate Data API</span>
+                            <span class="font-medium">$19.99/month</span>
+                        </div>
+                        <div class="flex justify-between items-center text-sm">
+                            <span class="text-gray-700">GeoWeather API</span>
+                            <span class="font-medium">$0.0015/call</span>
+                        </div>
+                    </div>
+                    <div class="mt-4 p-3 bg-blue-50 rounded-lg">
+                        <p class="text-xs text-blue-700">
+                            <i class="fas fa-info-circle mr-1"></i>
+                            Your pricing is competitive with market rates
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pricing History -->
+        <div class="bg-white rounded-lg p-6 border border-gray-200 mt-6">
+            <h2 class="text-lg font-semibold text-gray-900 mb-4">Pricing History</h2>
+            <div class="overflow-x-auto">
+                <table class="w-full comparison-table">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Model</th>
+                            <th>Price</th>
+                            <th>Change</th>
+                            <th>Impact</th>
+                        </tr>
+                    </thead>
+                    <tbody id="pricingHistory">
+                        <tr>
+                            <td>2024-03-15</td>
+                            <td>Pay Per Use</td>
+                            <td>$0.002 → $0.001</td>
+                            <td><span class="text-green-600">-50%</span></td>
+                            <td><span class="text-green-600">+145% volume</span></td>
+                        </tr>
+                        <tr>
+                            <td>2024-02-01</td>
+                            <td>Pay Per Use</td>
+                            <td>$0.003 → $0.002</td>
+                            <td><span class="text-green-600">-33%</span></td>
+                            <td><span class="text-green-600">+87% volume</span></td>
+                        </tr>
+                        <tr>
+                            <td>2024-01-01</td>
+                            <td>Free → Pay Per Use</td>
+                            <td>$0.003</td>
+                            <td><span class="text-gray-600">Initial</span></td>
+                            <td><span class="text-red-600">-23% users</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Empty State -->
+    <div id="emptyState" class="text-center py-12">
+        <i class="fas fa-dollar-sign text-6xl text-gray-300 mb-4"></i>
+        <p class="text-gray-600 mb-4">Select an API to manage its pricing</p>
+    </div>
+</div>
+
+<script>
+// Global variables
+let selectedAPI = null;
+let pricingModel = 'free';
+let volumeDiscounts = [];
+let subscriptionPlans = [
+    { id: 'basic', name: 'Basic', price: 9.99, requests: 10000, features: ['Basic Support', '99.9% SLA'] }
+];
+
+// Initialize
+document.addEventListener('DOMContentLoaded', () => {
+    loadUserAPIs();
+    updateRevenueEstimate();
+});
+
+// Load user's APIs
+async function loadUserAPIs() {
+    try {
+        const apis = await apiClient.getMyAPIs();
+        const selector = document.getElementById('apiSelector');
+        
+        apis.forEach(api => {
+            const option = document.createElement('option');
+            option.value = api.id;
+            option.textContent = api.name;
+            selector.appendChild(option);
+        });
+        
+        selector.addEventListener('change', (e) => {
+            if (e.target.value) {
+                loadAPIPricing(e.target.value);
+            }
+        });
+        
+    } catch (error) {
+        console.error('Error loading APIs:', error);
+        showNotification('Failed to load APIs', 'error');
+    }
+}
+
+// Load API pricing configuration
+async function loadAPIPricing(apiId) {
+    selectedAPI = apiId;
+    
+    try {
+        // In a real implementation, this would fetch from backend
+        // For now, show the pricing content
+        document.getElementById('pricingContent').classList.remove('hidden');
+        document.getElementById('emptyState').classList.add('hidden');
+        
+        // Simulate loading existing pricing
+        selectPricingModel('pay-per-use');
+        
+    } catch (error) {
+        console.error('Error loading pricing:', error);
+        showNotification('Failed to load pricing configuration', 'error');
+    }
+}
+
+// Select pricing model
+function selectPricingModel(model) {
+    pricingModel = model;
+    
+    // Update UI
+    document.querySelectorAll('.pricing-card').forEach(card => {
+        card.classList.toggle('active', card.dataset.model === model);
+    });
+    
+    // Show/hide configuration sections
+    document.getElementById('payPerUseConfig').classList.toggle('hidden', model !== 'pay-per-use');
+    document.getElementById('subscriptionConfig').classList.toggle('hidden', model !== 'subscription');
+    
+    updateRevenueEstimate();
+}
+
+// Toggle features
+function toggleFeature(element) {
+    element.classList.toggle('active');
+}
+
+// Free tier toggle
+function toggleFreeTier() {
+    const enabled = document.getElementById('enableFreeTier').checked;
+    document.getElementById('freeTierConfig').style.display = enabled ? 'block' : 'none';
+}
+
+// Trial toggle
+function toggleTrial() {
+    const enabled = document.getElementById('enableTrial').checked;
+    document.getElementById('trialConfig').style.display = enabled ? 'block' : 'none';
+}
+
+// Volume discounts
+function addVolumeDiscount() {
+    const id = Date.now();
+    const container = document.getElementById('volumeDiscounts');
+    
+    const discountHtml = `
+        <div class="flex items-center space-x-3 p-3 bg-gray-50 rounded" data-discount-id="${id}">
+            <span class="tier-handle">
+                <i class="fas fa-grip-vertical"></i>
+            </span>
+            <span class="text-sm text-gray-600">After</span>
+            <input type="number" class="w-24 px-2 py-1 border border-gray-300 rounded" 
+                placeholder="1000" min="1">
+            <span class="text-sm text-gray-600">requests</span>
+            <input type="number" class="w-20 px-2 py-1 border border-gray-300 rounded" 
+                placeholder="10" min="1" max="99">
+            <span class="text-sm text-gray-600">% off</span>
+            <button onclick="removeVolumeDiscount(${id})" class="text-red-500 hover:text-red-700">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+    `;
+    
+    container.insertAdjacentHTML('beforeend', discountHtml);
+}
+
+function removeVolumeDiscount(id) {
+    document.querySelector(`[data-discount-id="${id}"]`).remove();
+}
+
+// Subscription plans
+function addSubscriptionPlan() {
+    const id = Date.now();
+    const container = document.getElementById('subscriptionPlans');
+    
+    const planHtml = `
+        <div class="tier-card" data-plan-id="${id}">
+            <div class="flex items-start justify-between">
+                <div class="flex-1">
+                    <input type="text" value="New Plan" 
+                        class="text-lg font-semibold text-gray-900 bg-transparent border-0 p-0 focus:ring-0"
+                        onchange="updatePlanName('${id}', this.value)">
+                    <div class="mt-3 grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm text-gray-600 mb-1">Monthly Price</label>
+                            <div class="flex items-center">
+                                <span class="text-gray-500 mr-1">$</span>
+                                <input type="number" value="19.99" 
+                                    class="w-24 px-2 py-1 border border-gray-300 rounded"
+                                    step="0.01" min="1">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm text-gray-600 mb-1">Requests/Month</label>
+                            <input type="number" value="50000" 
+                                class="w-32 px-2 py-1 border border-gray-300 rounded"
+                                min="100">
+                        </div>
+                    </div>
+                    <div class="mt-3">
+                        <label class="text-sm text-gray-600">Features</label>
+                        <div class="mt-1 space-y-1">
+                            <label class="flex items-center text-sm">
+                                <input type="checkbox" class="mr-2" checked> Priority Support
+                            </label>
+                            <label class="flex items-center text-sm">
+                                <input type="checkbox" class="mr-2" checked> 99.95% SLA
+                            </label>
+                            <label class="flex items-center text-sm">
+                                <input type="checkbox" class="mr-2"> Custom Domain
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <button onclick="removePlan('${id}')" class="text-gray-400 hover:text-red-500">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+        </div>
+    `;
+    
+    container.insertAdjacentHTML('beforeend', planHtml);
+}
+
+function removePlan(id) {
+    if (document.querySelectorAll('[data-plan-id]').length > 1) {
+        document.querySelector(`[data-plan-id="${id}"]`).remove();
+    } else {
+        showNotification('You must have at least one plan', 'error');
+    }
+}
+
+function updatePlanName(id, name) {
+    const plan = subscriptionPlans.find(p => p.id === id);
+    if (plan) {
+        plan.name = name;
+    }
+}
+
+// Revenue estimation
+function updateRevenueEstimate() {
+    let monthlyRevenue = 0;
+    
+    if (pricingModel === 'pay-per-use') {
+        const pricePerRequest = parseFloat(document.getElementById('pricePerRequest')?.value || 0.001);
+        const estimatedRequests = 124500; // Based on current usage
+        monthlyRevenue = pricePerRequest * estimatedRequests;
+    } else if (pricingModel === 'subscription') {
+        const avgPrice = 19.99; // Average subscription price
+        const estimatedSubscribers = 847; // Based on active users
+        monthlyRevenue = avgPrice * estimatedSubscribers;
+    }
+    
+    const platformFee = monthlyRevenue * 0.2;
+    const netEarnings = monthlyRevenue - platformFee;
+    
+    document.getElementById('revenueEstimate').textContent = monthlyRevenue.toFixed(2);
+    document.getElementById('platformFee').textContent = platformFee.toFixed(2);
+    document.getElementById('netEarnings').textContent = netEarnings.toFixed(2);
+}
+
+// Save changes
+async function saveChanges() {
+    if (!selectedAPI) {
+        showNotification('Please select an API first', 'error');
+        return;
+    }
+    
+    const config = {
+        api_id: selectedAPI,
+        pricing_model: pricingModel,
+        configuration: {}
+    };
+    
+    if (pricingModel === 'pay-per-use') {
+        config.configuration = {
+            price_per_request: parseFloat(document.getElementById('pricePerRequest').value),
+            free_tier_enabled: document.getElementById('enableFreeTier').checked,
+            free_requests: parseInt(document.getElementById('freeRequests').value) || 0,
+            volume_discounts: collectVolumeDiscounts()
+        };
+    } else if (pricingModel === 'subscription') {
+        config.configuration = {
+            plans: collectSubscriptionPlans(),
+            trial_enabled: document.getElementById('enableTrial').checked,
+            trial_days: parseInt(document.getElementById('trialDays').value) || 0
+        };
+    }
+    
+    try {
+        // In a real implementation, this would save to backend
+        console.log('Saving pricing configuration:', config);
+        showNotification('Pricing configuration saved successfully', 'success');
+        
+        // Add to pricing history
+        addPricingHistoryEntry();
+        
+    } catch (error) {
+        console.error('Error saving pricing:', error);
+        showNotification('Failed to save pricing configuration', 'error');
+    }
+}
+
+// Collect volume discounts
+function collectVolumeDiscounts() {
+    const discounts = [];
+    document.querySelectorAll('[data-discount-id]').forEach(el => {
+        const inputs = el.querySelectorAll('input');
+        if (inputs[0].value && inputs[1].value) {
+            discounts.push({
+                after_requests: parseInt(inputs[0].value),
+                discount_percent: parseInt(inputs[1].value)
+            });
+        }
+    });
+    return discounts.sort((a, b) => a.after_requests - b.after_requests);
+}
+
+// Collect subscription plans
+function collectSubscriptionPlans() {
+    const plans = [];
+    document.querySelectorAll('[data-plan-id]').forEach(el => {
+        const nameInput = el.querySelector('input[type="text"]');
+        const priceInput = el.querySelectorAll('input[type="number"]')[0];
+        const requestsInput = el.querySelectorAll('input[type="number"]')[1];
+        const features = Array.from(el.querySelectorAll('input[type="checkbox"]:checked'))
+            .map(cb => cb.parentElement.textContent.trim());
+        
+        plans.push({
+            name: nameInput.value,
+            price: parseFloat(priceInput.value),
+            requests_per_month: parseInt(requestsInput.value),
+            features: features
+        });
+    });
+    return plans;
+}
+
+// Add pricing history entry
+function addPricingHistoryEntry() {
+    const tbody = document.getElementById('pricingHistory');
+    const today = new Date().toISOString().split('T')[0];
+    
+    const row = `
+        <tr>
+            <td>${today}</td>
+            <td>${pricingModel === 'pay-per-use' ? 'Pay Per Use' : 'Subscription'}</td>
+            <td>Updated</td>
+            <td><span class="text-gray-600">Modified</span></td>
+            <td><span class="text-gray-600">Pending</span></td>
+        </tr>
+    `;
+    
+    tbody.insertAdjacentHTML('afterbegin', row);
+}
+
+// Notification helper
+function showNotification(message, type = 'info') {
+    const notification = document.createElement('div');
+    const bgColor = type === 'error' ? 'bg-red-500' : type === 'success' ? 'bg-green-500' : 'bg-blue-500';
+    
+    notification.className = `fixed top-4 right-4 ${bgColor} text-white px-6 py-3 rounded-lg shadow-lg z-50`;
+    notification.textContent = message;
+    
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        notification.remove();
+    }, 5000);
+}
+
+// Price input formatting
+document.addEventListener('input', (e) => {
+    if (e.target.classList.contains('price-input')) {
+        updateRevenueEstimate();
+    }
+});
+</script>
+{% endblock %}

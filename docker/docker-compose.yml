@@ -1,0 +1,54 @@
+version: '3.8'
+
+services:
+  apidirect:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    image: apidirect/cli:latest
+    container_name: apidirect-cli
+    environment:
+      - APIDIRECT_API_ENDPOINT=${APIDIRECT_API_ENDPOINT:-https://api.apidirect.io}
+      - APIDIRECT_AUTH_TOKEN=${APIDIRECT_AUTH_TOKEN}
+    volumes:
+      # Mount Docker socket for container operations
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      # Mount workspace
+      - ./workspace:/workspace
+      # Mount config directory
+      - ~/.apidirect:/home/apidirect/.apidirect
+    working_dir: /workspace
+    command: ["--help"]
+    
+  # Development environment with hot reload
+  apidirect-dev:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.dev
+    image: apidirect/cli:dev
+    container_name: apidirect-cli-dev
+    environment:
+      - APIDIRECT_API_ENDPOINT=${APIDIRECT_API_ENDPOINT:-http://localhost:8080}
+      - APIDIRECT_AUTH_TOKEN=${APIDIRECT_AUTH_TOKEN}
+      - GO_ENV=development
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ../cli:/app
+      - ./workspace:/workspace
+      - ~/.apidirect:/home/apidirect/.apidirect
+    working_dir: /app
+    command: ["air"]
+    
+  # Example usage with real project
+  apidirect-import:
+    image: apidirect/cli:latest
+    container_name: apidirect-import
+    environment:
+      - APIDIRECT_API_ENDPOINT=${APIDIRECT_API_ENDPOINT:-https://api.apidirect.io}
+      - APIDIRECT_AUTH_TOKEN=${APIDIRECT_AUTH_TOKEN}
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./my-api:/workspace/my-api
+      - ~/.apidirect:/home/apidirect/.apidirect
+    working_dir: /workspace
+    command: ["import", "/workspace/my-api"]

@@ -1,0 +1,652 @@
+{% extends "templates/base.html" %}
+
+{% block title %}API Versions - API-Direct{% endblock %}
+{% block description %}Manage API versions, create new versions, and handle rollbacks{% endblock %}
+
+{% block styles %}
+<style>
+.version-timeline {
+    position: relative;
+    padding-left: 2rem;
+}
+
+.version-timeline::before {
+    content: '';
+    position: absolute;
+    left: 0.75rem;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: #e5e7eb;
+}
+
+.version-item {
+    position: relative;
+    margin-bottom: 2rem;
+    padding-left: 2rem;
+}
+
+.version-item::before {
+    content: '';
+    position: absolute;
+    left: -1.25rem;
+    top: 0.5rem;
+    width: 0.75rem;
+    height: 0.75rem;
+    background: #6b7280;
+    border-radius: 50%;
+    border: 2px solid white;
+}
+
+.version-item.active::before {
+    background: #10b981;
+    width: 1rem;
+    height: 1rem;
+    left: -1.375rem;
+    top: 0.375rem;
+}
+
+.version-card {
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+    transition: all 0.2s;
+}
+
+.version-card:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.version-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.25rem 0.75rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    border-radius: 9999px;
+}
+
+.version-badge.stable { background: #d1fae5; color: #065f46; }
+.version-badge.beta { background: #fef3c7; color: #92400e; }
+.version-badge.deprecated { background: #fee2e2; color: #991b1b; }
+.version-badge.draft { background: #ede9fe; color: #5b21b6; }
+
+.changes-list {
+    margin-top: 1rem;
+    padding-left: 1.5rem;
+    list-style-type: disc;
+    color: #4b5563;
+    font-size: 0.875rem;
+}
+
+.diff-viewer {
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.5rem;
+    padding: 1rem;
+    font-family: 'Monaco', 'Consolas', monospace;
+    font-size: 0.875rem;
+    overflow-x: auto;
+}
+
+.diff-added {
+    background: #d1fae5;
+    color: #065f46;
+    padding: 0.125rem 0.25rem;
+    border-radius: 0.125rem;
+}
+
+.diff-removed {
+    background: #fee2e2;
+    color: #991b1b;
+    padding: 0.125rem 0.25rem;
+    border-radius: 0.125rem;
+}
+
+.create-version-panel {
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.75rem;
+    padding: 2rem;
+    margin-bottom: 2rem;
+}
+
+.comparison-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+    margin-top: 2rem;
+}
+
+.comparison-column {
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.5rem;
+    padding: 1.5rem;
+}
+
+.comparison-header {
+    font-weight: 600;
+    color: #111827;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.endpoint-diff {
+    margin-bottom: 1rem;
+    padding: 0.75rem;
+    background: white;
+    border-radius: 0.375rem;
+    font-size: 0.875rem;
+}
+
+.endpoint-diff.added {
+    border-left: 3px solid #10b981;
+}
+
+.endpoint-diff.removed {
+    border-left: 3px solid #ef4444;
+}
+
+.endpoint-diff.modified {
+    border-left: 3px solid #f59e0b;
+}
+
+.rollback-warning {
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    border-radius: 0.5rem;
+    padding: 1rem;
+    margin-top: 1rem;
+}
+
+.rollback-warning-icon {
+    color: #dc2626;
+    margin-right: 0.5rem;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto">
+    <!-- Header -->
+    <div class="mb-8">
+        <div class="flex justify-between items-center">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-900">API Versions</h1>
+                <p class="mt-2 text-gray-600">Manage versions for <span class="font-semibold">Image Processing API</span></p>
+            </div>
+            <button onclick="showCreateVersion()" class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors">
+                <i class="fas fa-plus mr-2"></i>Create New Version
+            </button>
+        </div>
+    </div>
+
+    <!-- Current Version Summary -->
+    <div class="bg-white border border-gray-200 rounded-lg p-6 mb-8">
+        <div class="flex justify-between items-start">
+            <div>
+                <h2 class="text-lg font-semibold text-gray-900 mb-2">Current Production Version</h2>
+                <div class="flex items-center gap-4">
+                    <span class="text-2xl font-bold text-gray-900">v2.1.0</span>
+                    <span class="version-badge stable">Stable</span>
+                    <span class="text-sm text-gray-500">Released 3 days ago</span>
+                </div>
+                <div class="mt-4 grid grid-cols-4 gap-4">
+                    <div>
+                        <p class="text-sm text-gray-500">Active Users</p>
+                        <p class="text-xl font-semibold text-gray-900">1,247</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-500">API Calls (24h)</p>
+                        <p class="text-xl font-semibold text-gray-900">52.3K</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-500">Error Rate</p>
+                        <p class="text-xl font-semibold text-green-600">0.02%</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-500">Avg Response Time</p>
+                        <p class="text-xl font-semibold text-gray-900">234ms</p>
+                    </div>
+                </div>
+            </div>
+            <div class="flex gap-2">
+                <button class="px-3 py-1.5 text-sm border border-gray-300 rounded-lg hover:bg-gray-50">
+                    <i class="fas fa-chart-line mr-1"></i>View Analytics
+                </button>
+                <button class="px-3 py-1.5 text-sm border border-gray-300 rounded-lg hover:bg-gray-50">
+                    <i class="fas fa-code-branch mr-1"></i>Compare Versions
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create New Version Panel (Hidden by default) -->
+    <div id="createVersionPanel" class="create-version-panel" style="display: none;">
+        <h3 class="text-xl font-semibold text-gray-900 mb-4">Create New Version</h3>
+        
+        <div class="grid grid-cols-2 gap-6">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Version Number</label>
+                <input type="text" id="newVersionNumber" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" placeholder="e.g., 2.2.0">
+                <p class="text-xs text-gray-500 mt-1">Follow semantic versioning (MAJOR.MINOR.PATCH)</p>
+            </div>
+            
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Version Type</label>
+                <select id="versionType" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                    <option value="stable">Stable Release</option>
+                    <option value="beta">Beta Release</option>
+                    <option value="draft" selected>Draft</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="mt-4">
+            <label class="block text-sm font-medium text-gray-700 mb-2">Release Notes</label>
+            <textarea id="releaseNotes" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" rows="4" placeholder="Describe the changes in this version..."></textarea>
+        </div>
+
+        <div class="mt-4">
+            <label class="block text-sm font-medium text-gray-700 mb-2">Breaking Changes</label>
+            <div id="breakingChanges">
+                <div class="flex gap-2 mb-2">
+                    <input type="text" class="flex-1 px-3 py-2 border border-gray-300 rounded-lg" placeholder="Describe breaking change...">
+                    <button onclick="removeBreakingChange(this)" class="px-3 py-2 text-red-600 hover:text-red-700">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </div>
+            <button onclick="addBreakingChange()" class="text-sm text-indigo-600 hover:text-indigo-700">
+                <i class="fas fa-plus mr-1"></i>Add Breaking Change
+            </button>
+        </div>
+
+        <div class="mt-6 flex gap-3">
+            <button onclick="createVersion()" class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">
+                <i class="fas fa-check mr-2"></i>Create Version
+            </button>
+            <button onclick="hideCreateVersion()" class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
+                Cancel
+            </button>
+        </div>
+    </div>
+
+    <!-- Version Timeline -->
+    <div class="version-timeline">
+        <!-- Version 2.1.0 (Current) -->
+        <div class="version-item active">
+            <div class="version-card">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <div class="flex items-center gap-3">
+                            <h3 class="text-xl font-semibold text-gray-900">v2.1.0</h3>
+                            <span class="version-badge stable">Stable</span>
+                            <span class="text-sm bg-green-100 text-green-800 px-2 py-1 rounded">Current</span>
+                        </div>
+                        <p class="text-sm text-gray-500 mt-1">Released on Nov 15, 2024 at 2:30 PM</p>
+                        
+                        <div class="mt-3">
+                            <p class="text-sm font-medium text-gray-700">Release Notes:</p>
+                            <ul class="changes-list">
+                                <li>Added batch processing endpoints for multiple images</li>
+                                <li>Improved watermark positioning algorithm</li>
+                                <li>Enhanced error handling and response messages</li>
+                                <li>Performance optimizations for large images</li>
+                            </ul>
+                        </div>
+
+                        <div class="mt-4 flex gap-6 text-sm text-gray-600">
+                            <span><i class="fas fa-code-branch mr-1"></i>15 endpoints</span>
+                            <span><i class="fas fa-users mr-1"></i>1,247 active users</span>
+                            <span><i class="fas fa-download mr-1"></i>3,521 deployments</span>
+                        </div>
+                    </div>
+                    
+                    <div class="flex flex-col gap-2">
+                        <button class="px-3 py-1.5 text-sm border border-gray-300 rounded-lg hover:bg-gray-50">
+                            <i class="fas fa-eye mr-1"></i>View Details
+                        </button>
+                        <button class="px-3 py-1.5 text-sm border border-gray-300 rounded-lg hover:bg-gray-50">
+                            <i class="fas fa-code mr-1"></i>View Changes
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Version 2.0.0 -->
+        <div class="version-item">
+            <div class="version-card">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <div class="flex items-center gap-3">
+                            <h3 class="text-xl font-semibold text-gray-900">v2.0.0</h3>
+                            <span class="version-badge stable">Stable</span>
+                        </div>
+                        <p class="text-sm text-gray-500 mt-1">Released on Oct 28, 2024 at 10:15 AM</p>
+                        
+                        <div class="mt-3">
+                            <p class="text-sm font-medium text-gray-700">Major Release:</p>
+                            <ul class="changes-list">
+                                <li>Complete API redesign with RESTful principles</li>
+                                <li>New authentication system with JWT tokens</li>
+                                <li>Added webhook support for async operations</li>
+                                <li>Deprecated v1 endpoints (sunset date: Jan 1, 2025)</li>
+                            </ul>
+                        </div>
+
+                        <div class="mt-3 bg-amber-50 border border-amber-200 rounded-lg p-3">
+                            <p class="text-sm text-amber-800">
+                                <i class="fas fa-exclamation-triangle mr-1"></i>
+                                <strong>Breaking Changes:</strong> Authentication method changed, response format updated
+                            </p>
+                        </div>
+
+                        <div class="mt-4 flex gap-6 text-sm text-gray-600">
+                            <span><i class="fas fa-code-branch mr-1"></i>12 endpoints</span>
+                            <span><i class="fas fa-users mr-1"></i>892 users migrated</span>
+                        </div>
+                    </div>
+                    
+                    <div class="flex flex-col gap-2">
+                        <button class="px-3 py-1.5 text-sm border border-gray-300 rounded-lg hover:bg-gray-50">
+                            <i class="fas fa-eye mr-1"></i>View Details
+                        </button>
+                        <button onclick="showRollbackConfirm('2.0.0')" class="px-3 py-1.5 text-sm border border-orange-300 text-orange-700 rounded-lg hover:bg-orange-50">
+                            <i class="fas fa-undo mr-1"></i>Rollback
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Version 1.5.2 -->
+        <div class="version-item">
+            <div class="version-card">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <div class="flex items-center gap-3">
+                            <h3 class="text-xl font-semibold text-gray-900">v1.5.2</h3>
+                            <span class="version-badge deprecated">Deprecated</span>
+                        </div>
+                        <p class="text-sm text-gray-500 mt-1">Released on Sep 12, 2024 at 3:45 PM</p>
+                        
+                        <div class="mt-3">
+                            <p class="text-sm font-medium text-gray-700">Patch Release:</p>
+                            <ul class="changes-list">
+                                <li>Fixed memory leak in image processing</li>
+                                <li>Security patches for dependency vulnerabilities</li>
+                                <li>Minor bug fixes</li>
+                            </ul>
+                        </div>
+
+                        <div class="mt-3 bg-red-50 border border-red-200 rounded-lg p-3">
+                            <p class="text-sm text-red-800">
+                                <i class="fas fa-info-circle mr-1"></i>
+                                This version is deprecated and will be sunset on Jan 1, 2025
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <div class="flex flex-col gap-2">
+                        <button class="px-3 py-1.5 text-sm border border-gray-300 rounded-lg hover:bg-gray-50">
+                            <i class="fas fa-eye mr-1"></i>View Details
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Beta Version -->
+        <div class="version-item">
+            <div class="version-card">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <div class="flex items-center gap-3">
+                            <h3 class="text-xl font-semibold text-gray-900">v2.2.0-beta.1</h3>
+                            <span class="version-badge beta">Beta</span>
+                        </div>
+                        <p class="text-sm text-gray-500 mt-1">Created on Nov 18, 2024 at 11:00 AM</p>
+                        
+                        <div class="mt-3">
+                            <p class="text-sm font-medium text-gray-700">Preview Features:</p>
+                            <ul class="changes-list">
+                                <li>AI-powered image enhancement (experimental)</li>
+                                <li>New compression algorithms</li>
+                                <li>GraphQL endpoint support</li>
+                                <li>Real-time image transformation preview</li>
+                            </ul>
+                        </div>
+
+                        <div class="mt-3 bg-blue-50 border border-blue-200 rounded-lg p-3">
+                            <p class="text-sm text-blue-800">
+                                <i class="fas fa-flask mr-1"></i>
+                                Beta version - Not recommended for production use
+                            </p>
+                        </div>
+
+                        <div class="mt-4 flex gap-6 text-sm text-gray-600">
+                            <span><i class="fas fa-code-branch mr-1"></i>18 endpoints</span>
+                            <span><i class="fas fa-users mr-1"></i>47 beta testers</span>
+                        </div>
+                    </div>
+                    
+                    <div class="flex flex-col gap-2">
+                        <button class="px-3 py-1.5 text-sm bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">
+                            <i class="fas fa-rocket mr-1"></i>Promote to Stable
+                        </button>
+                        <button class="px-3 py-1.5 text-sm border border-gray-300 rounded-lg hover:bg-gray-50">
+                            <i class="fas fa-edit mr-1"></i>Edit Version
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Version Comparison Modal -->
+    <div id="comparisonModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" style="display: none;">
+        <div class="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[80vh] overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h3 class="text-xl font-semibold text-gray-900">Version Comparison</h3>
+            </div>
+            
+            <div class="px-6 py-4 overflow-y-auto max-h-[60vh]">
+                <div class="comparison-grid">
+                    <div class="comparison-column">
+                        <div class="comparison-header">
+                            <div class="flex items-center justify-between">
+                                <span>v2.0.0</span>
+                                <span class="text-sm text-gray-500">Oct 28, 2024</span>
+                            </div>
+                        </div>
+                        <div class="space-y-2">
+                            <div class="endpoint-diff removed">
+                                <span class="font-mono text-sm">DELETE /api/v1/images/:id</span>
+                                <p class="text-xs text-gray-500 mt-1">Legacy endpoint removed</p>
+                            </div>
+                            <div class="endpoint-diff">
+                                <span class="font-mono text-sm">POST /api/v2/images/enhance</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="comparison-column">
+                        <div class="comparison-header">
+                            <div class="flex items-center justify-between">
+                                <span>v2.1.0</span>
+                                <span class="text-sm text-gray-500">Nov 15, 2024</span>
+                            </div>
+                        </div>
+                        <div class="space-y-2">
+                            <div class="endpoint-diff added">
+                                <span class="font-mono text-sm">POST /api/v2/images/batch</span>
+                                <p class="text-xs text-gray-500 mt-1">New batch processing endpoint</p>
+                            </div>
+                            <div class="endpoint-diff modified">
+                                <span class="font-mono text-sm">POST /api/v2/images/enhance</span>
+                                <p class="text-xs text-gray-500 mt-1">Added quality parameter</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="px-6 py-4 border-t border-gray-200 flex justify-end">
+                <button onclick="hideComparison()" class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Rollback Confirmation Modal -->
+    <div id="rollbackModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" style="display: none;">
+        <div class="bg-white rounded-lg shadow-xl max-w-md w-full">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h3 class="text-xl font-semibold text-gray-900">Confirm Rollback</h3>
+            </div>
+            
+            <div class="px-6 py-4">
+                <div class="rollback-warning">
+                    <p class="text-sm text-red-800">
+                        <i class="fas fa-exclamation-triangle rollback-warning-icon"></i>
+                        <strong>Warning:</strong> Rolling back to version <span id="rollbackVersion"></span> will:
+                    </p>
+                    <ul class="mt-2 ml-6 list-disc text-sm text-red-700">
+                        <li>Revert all API endpoints to the previous version</li>
+                        <li>May break integrations using newer features</li>
+                        <li>Affect all current API users immediately</li>
+                    </ul>
+                </div>
+                
+                <div class="mt-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Reason for rollback:</label>
+                    <textarea class="w-full px-3 py-2 border border-gray-300 rounded-lg" rows="3" placeholder="Describe why you're rolling back..."></textarea>
+                </div>
+            </div>
+            
+            <div class="px-6 py-4 border-t border-gray-200 flex justify-end gap-3">
+                <button onclick="hideRollbackConfirm()" class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
+                    Cancel
+                </button>
+                <button onclick="performRollback()" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">
+                    <i class="fas fa-undo mr-2"></i>Rollback to <span id="rollbackVersionBtn"></span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Version management functions
+function showCreateVersion() {
+    document.getElementById('createVersionPanel').style.display = 'block';
+    document.getElementById('newVersionNumber').focus();
+}
+
+function hideCreateVersion() {
+    document.getElementById('createVersionPanel').style.display = 'none';
+    document.getElementById('createVersionForm').reset();
+}
+
+function addBreakingChange() {
+    const container = document.getElementById('breakingChanges');
+    const changeDiv = document.createElement('div');
+    changeDiv.className = 'flex gap-2 mb-2';
+    changeDiv.innerHTML = `
+        <input type="text" class="flex-1 px-3 py-2 border border-gray-300 rounded-lg" placeholder="Describe breaking change...">
+        <button onclick="removeBreakingChange(this)" class="px-3 py-2 text-red-600 hover:text-red-700">
+            <i class="fas fa-trash"></i>
+        </button>
+    `;
+    container.appendChild(changeDiv);
+}
+
+function removeBreakingChange(button) {
+    button.parentElement.remove();
+}
+
+async function createVersion() {
+    const versionNumber = document.getElementById('newVersionNumber').value;
+    const versionType = document.getElementById('versionType').value;
+    const releaseNotes = document.getElementById('releaseNotes').value;
+    
+    // Collect breaking changes
+    const breakingChanges = [];
+    document.querySelectorAll('#breakingChanges input').forEach(input => {
+        if (input.value) breakingChanges.push(input.value);
+    });
+
+    try {
+        // Show loading state
+        showNotification('Creating new version...', 'info');
+        
+        // Simulate API call
+        await new Promise(resolve => setTimeout(resolve, 1500));
+        
+        showNotification(`Version ${versionNumber} created successfully!`, 'success');
+        hideCreateVersion();
+        
+        // Refresh the page or update the version list
+        setTimeout(() => window.location.reload(), 1000);
+        
+    } catch (error) {
+        showNotification('Failed to create version', 'error');
+    }
+}
+
+function showRollbackConfirm(version) {
+    document.getElementById('rollbackVersion').textContent = version;
+    document.getElementById('rollbackVersionBtn').textContent = version;
+    document.getElementById('rollbackModal').style.display = 'flex';
+}
+
+function hideRollbackConfirm() {
+    document.getElementById('rollbackModal').style.display = 'none';
+}
+
+async function performRollback() {
+    const version = document.getElementById('rollbackVersion').textContent;
+    
+    try {
+        showNotification('Rolling back...', 'info');
+        
+        // Simulate API call
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        
+        showNotification(`Successfully rolled back to version ${version}`, 'success');
+        hideRollbackConfirm();
+        
+        // Refresh the page
+        setTimeout(() => window.location.reload(), 1000);
+        
+    } catch (error) {
+        showNotification('Rollback failed', 'error');
+    }
+}
+
+function showComparison() {
+    document.getElementById('comparisonModal').style.display = 'flex';
+}
+
+function hideComparison() {
+    document.getElementById('comparisonModal').style.display = 'none';
+}
+
+// Notification helper
+function showNotification(message, type = 'info') {
+    // Implementation depends on your notification system
+    console.log(`[${type}] ${message}`);
+}
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', () => {
+    // Add any initialization code here
+});
+</script>
+{% endblock %}

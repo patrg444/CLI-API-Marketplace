@@ -443,7 +443,7 @@ func generatePostmanCollection(apiName string, manifest map[string]interface{}, 
 	}
 	
 	// Convert endpoints to Postman items
-	items := collection["item"].([]map[string]interface{})
+	items := []map[string]interface{}{}
 	for _, endpoint := range endpoints {
 		item := map[string]interface{}{
 			"name": fmt.Sprintf("%s %s", endpoint["method"], endpoint["path"]),
@@ -464,8 +464,9 @@ func generatePostmanCollection(apiName string, manifest map[string]interface{}, 
 			},
 		}
 		
-		collection["item"] = append(items, item)
+		items = append(items, item)
 	}
+	collection["item"] = items
 	
 	// Write Postman collection
 	outputPath := filepath.Join(docsOutput, apiName+"_postman_collection.json")

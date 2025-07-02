@@ -1,0 +1,434 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}API Logs - API-Direct Console{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto">
+    <!-- Header -->
+    <div class="mb-6 flex items-center justify-between">
+        <div>
+            <h1 class="text-2xl font-bold text-gray-900 dark:text-white">API Logs</h1>
+            <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                <span id="apiName">Loading...</span> - <span id="apiEndpoint" class="font-mono text-xs"></span>
+            </p>
+        </div>
+        
+        <div class="flex items-center space-x-4">
+            <!-- Log Level Filter -->
+            <select id="logLevel" class="px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white text-sm">
+                <option value="all">All Levels</option>
+                <option value="error">Error</option>
+                <option value="warning">Warning</option>
+                <option value="info">Info</option>
+                <option value="debug">Debug</option>
+            </select>
+            
+            <!-- Time Range -->
+            <select id="timeRange" class="px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white text-sm">
+                <option value="1h">Last Hour</option>
+                <option value="6h">Last 6 Hours</option>
+                <option value="24h" selected>Last 24 Hours</option>
+                <option value="7d">Last 7 Days</option>
+            </select>
+            
+            <!-- Actions -->
+            <button onclick="refreshLogs()" class="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                </svg>
+            </button>
+            
+            <button onclick="downloadLogs()" class="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                </svg>
+            </button>
+            
+            <button id="pauseBtn" onclick="togglePause()" class="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+            </button>
+        </div>
+    </div>
+
+    <!-- Search Bar -->
+    <div class="mb-4">
+        <div class="relative">
+            <input type="text" id="searchInput" placeholder="Search logs..."
+                   class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                </svg>
+            </div>
+        </div>
+    </div>
+
+    <!-- Logs Container -->
+    <div class="bg-gray-900 rounded-lg shadow-lg overflow-hidden">
+        <!-- Status Bar -->
+        <div class="bg-gray-800 px-4 py-2 flex items-center justify-between text-xs text-gray-400">
+            <div class="flex items-center space-x-4">
+                <span>Lines: <span id="logCount">0</span></span>
+                <span>Errors: <span id="errorCount" class="text-red-400">0</span></span>
+                <span>Warnings: <span id="warningCount" class="text-yellow-400">0</span></span>
+            </div>
+            <div class="flex items-center space-x-2">
+                <span id="connectionStatus" class="flex items-center">
+                    <span class="w-2 h-2 bg-green-500 rounded-full mr-2"></span>
+                    Connected
+                </span>
+            </div>
+        </div>
+        
+        <!-- Log Lines -->
+        <div id="logContainer" class="font-mono text-sm overflow-x-auto" style="height: 600px; overflow-y: auto;">
+            <div class="p-4 text-gray-500 text-center">
+                <svg class="w-8 h-8 mx-auto mb-2 animate-spin" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Loading logs...
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.log-line {
+    padding: 0.25rem 1rem;
+    border-bottom: 1px solid rgba(55, 65, 81, 0.5);
+    display: flex;
+    align-items: flex-start;
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+}
+
+.log-line:hover {
+    background-color: rgba(31, 41, 55, 0.5);
+}
+
+.log-timestamp {
+    color: #6B7280;
+    margin-right: 1rem;
+    flex-shrink: 0;
+}
+
+.log-level {
+    font-weight: 600;
+    margin-right: 1rem;
+    flex-shrink: 0;
+    width: 60px;
+}
+
+.log-level.error { color: #EF4444; }
+.log-level.warning { color: #F59E0B; }
+.log-level.info { color: #3B82F6; }
+.log-level.debug { color: #6B7280; }
+
+.log-message {
+    flex: 1;
+    word-break: break-word;
+    color: #E5E7EB;
+}
+
+.log-line.error .log-message { color: #FCA5A5; }
+.log-line.warning .log-message { color: #FCD34D; }
+
+.log-json {
+    margin-top: 0.25rem;
+    padding: 0.5rem;
+    background-color: rgba(17, 24, 39, 0.5);
+    border-radius: 0.25rem;
+    overflow-x: auto;
+}
+
+.highlight {
+    background-color: rgba(251, 191, 36, 0.2);
+    padding: 0 2px;
+}
+</style>
+
+<script>
+// Get API ID from URL
+const urlParams = new URLSearchParams(window.location.search);
+const apiId = urlParams.get('api_id');
+
+let logs = [];
+let isPaused = false;
+let ws = null;
+let logStats = { total: 0, error: 0, warning: 0 };
+
+// Initialize
+document.addEventListener('DOMContentLoaded', async () => {
+    if (!apiId) {
+        window.location.href = '/apis';
+        return;
+    }
+    
+    // Load API info
+    await loadAPIInfo();
+    
+    // Load initial logs
+    await loadLogs();
+    
+    // Connect WebSocket for real-time logs
+    connectWebSocket();
+    
+    // Set up search
+    document.getElementById('searchInput').addEventListener('input', filterLogs);
+    document.getElementById('logLevel').addEventListener('change', filterLogs);
+});
+
+// Load API info
+async function loadAPIInfo() {
+    try {
+        const apis = await apiClient.getMyAPIs();
+        const api = apis.find(a => a.id === apiId);
+        
+        if (api) {
+            document.getElementById('apiName').textContent = api.name;
+            document.getElementById('apiEndpoint').textContent = api.endpoint || 'N/A';
+        }
+    } catch (error) {
+        console.error('Error loading API info:', error);
+    }
+}
+
+// Load logs
+async function loadLogs() {
+    try {
+        const timeRange = document.getElementById('timeRange').value;
+        const lines = timeRange === '7d' ? 1000 : timeRange === '24h' ? 500 : 200;
+        
+        const response = await apiClient.getAPILogs(apiId, lines);
+        logs = response.logs || [];
+        
+        updateLogStats();
+        renderLogs();
+        
+        // Auto-scroll to bottom
+        const container = document.getElementById('logContainer');
+        container.scrollTop = container.scrollHeight;
+        
+    } catch (error) {
+        console.error('Error loading logs:', error);
+        document.getElementById('logContainer').innerHTML = `
+            <div class="p-4 text-red-400 text-center">
+                <p>Failed to load logs</p>
+                <p class="text-sm mt-1">${error.message}</p>
+            </div>
+        `;
+    }
+}
+
+// Connect WebSocket for real-time logs
+function connectWebSocket() {
+    ws = apiClient.connectWebSocket();
+    
+    ws.onmessage = (event) => {
+        const data = JSON.parse(event.data);
+        
+        if (data.type === 'log' && data.api_id === apiId && !isPaused) {
+            addLogLine(data.log);
+        }
+    };
+    
+    ws.onclose = () => {
+        updateConnectionStatus(false);
+        // Reconnect after 5 seconds
+        setTimeout(connectWebSocket, 5000);
+    };
+    
+    ws.onopen = () => {
+        updateConnectionStatus(true);
+        // Subscribe to logs for this API
+        ws.send(JSON.stringify({
+            type: 'subscribe',
+            channel: `api_logs:${apiId}`
+        }));
+    };
+}
+
+// Add new log line
+function addLogLine(logData) {
+    logs.push(logData);
+    
+    // Keep only last 1000 logs
+    if (logs.length > 1000) {
+        logs = logs.slice(-1000);
+    }
+    
+    updateLogStats();
+    
+    // Add to UI if not filtered
+    const level = document.getElementById('logLevel').value;
+    const search = document.getElementById('searchInput').value.toLowerCase();
+    
+    if (shouldShowLog(logData, level, search)) {
+        const container = document.getElementById('logContainer');
+        const logElement = createLogElement(logData);
+        container.appendChild(logElement);
+        
+        // Auto-scroll if at bottom
+        if (container.scrollHeight - container.scrollTop - container.clientHeight < 100) {
+            container.scrollTop = container.scrollHeight;
+        }
+    }
+}
+
+// Render all logs
+function renderLogs() {
+    const container = document.getElementById('logContainer');
+    const level = document.getElementById('logLevel').value;
+    const search = document.getElementById('searchInput').value.toLowerCase();
+    
+    const filteredLogs = logs.filter(log => shouldShowLog(log, level, search));
+    
+    if (filteredLogs.length === 0) {
+        container.innerHTML = `
+            <div class="p-4 text-gray-500 text-center">
+                No logs found
+            </div>
+        `;
+        return;
+    }
+    
+    container.innerHTML = '';
+    filteredLogs.forEach(log => {
+        container.appendChild(createLogElement(log));
+    });
+}
+
+// Create log element
+function createLogElement(log) {
+    const div = document.createElement('div');
+    div.className = `log-line ${log.level}`;
+    
+    const timestamp = new Date(log.timestamp).toLocaleTimeString();
+    const message = highlightSearch(escapeHtml(log.message));
+    
+    let html = `
+        <span class="log-timestamp">${timestamp}</span>
+        <span class="log-level ${log.level}">${log.level.toUpperCase()}</span>
+        <span class="log-message">${message}</span>
+    `;
+    
+    // Add JSON data if present
+    if (log.data) {
+        html += `<pre class="log-json">${JSON.stringify(log.data, null, 2)}</pre>`;
+    }
+    
+    div.innerHTML = html;
+    return div;
+}
+
+// Filter logs
+function filterLogs() {
+    renderLogs();
+}
+
+// Should show log based on filters
+function shouldShowLog(log, level, search) {
+    // Level filter
+    if (level !== 'all' && log.level !== level) {
+        return false;
+    }
+    
+    // Search filter
+    if (search && !log.message.toLowerCase().includes(search)) {
+        return false;
+    }
+    
+    return true;
+}
+
+// Update log statistics
+function updateLogStats() {
+    logStats = { total: logs.length, error: 0, warning: 0 };
+    
+    logs.forEach(log => {
+        if (log.level === 'error') logStats.error++;
+        if (log.level === 'warning') logStats.warning++;
+    });
+    
+    document.getElementById('logCount').textContent = logStats.total;
+    document.getElementById('errorCount').textContent = logStats.error;
+    document.getElementById('warningCount').textContent = logStats.warning;
+}
+
+// Update connection status
+function updateConnectionStatus(connected) {
+    const status = document.getElementById('connectionStatus');
+    if (connected) {
+        status.innerHTML = '<span class="w-2 h-2 bg-green-500 rounded-full mr-2"></span>Connected';
+    } else {
+        status.innerHTML = '<span class="w-2 h-2 bg-red-500 rounded-full mr-2"></span>Disconnected';
+    }
+}
+
+// Toggle pause
+function togglePause() {
+    isPaused = !isPaused;
+    const btn = document.getElementById('pauseBtn');
+    
+    if (isPaused) {
+        btn.innerHTML = `
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+        `;
+    } else {
+        btn.innerHTML = `
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+        `;
+    }
+}
+
+// Refresh logs
+function refreshLogs() {
+    loadLogs();
+}
+
+// Download logs
+function downloadLogs() {
+    const text = logs.map(log => {
+        const timestamp = new Date(log.timestamp).toISOString();
+        return `${timestamp} [${log.level.toUpperCase()}] ${log.message}`;
+    }).join('\n');
+    
+    const blob = new Blob([text], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${apiId}-logs-${new Date().toISOString()}.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+}
+
+// Highlight search term
+function highlightSearch(text) {
+    const search = document.getElementById('searchInput').value;
+    if (!search) return text;
+    
+    const regex = new RegExp(`(${escapeRegex(search)})`, 'gi');
+    return text.replace(regex, '<span class="highlight">$1</span>');
+}
+
+// Escape HTML
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+// Escape regex
+function escapeRegex(str) {
+    return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+</script>
+{% endblock %}

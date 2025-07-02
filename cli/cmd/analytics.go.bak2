@@ -1,0 +1,992 @@
+package cmd
+
+import (
+	"encoding/json"
+	"fmt"
+	"io"
+	"math"
+	"strings"
+	"time"
+
+	"github.com/api-direct/cli/pkg/config"
+	"github.com/api-direct/cli/pkg/manifest"
+	"github.com/fatih/color"
+	"github.com/spf13/cobra"
+)
+
+var (
+	analyticsPeriod    string
+	analyticsGroupBy   string
+	analyticsFormat    string
+	analyticsLimit     int
+	analyticsAPI       string
+	analyticsBreakdown bool
+)
+
+// analyticsCmd represents the analytics command group
+var analyticsCmd = &cobra.Command{
+	Use:   "analytics",
+	Short: "View detailed analytics for your APIs",
+	Long: `View comprehensive analytics including usage patterns, revenue metrics,
+and performance data for your published APIs.`,
+}
+
+// Analytics subcommands
+var analyticsUsageCmd = &cobra.Command{
+	Use:   "usage [api-name]",
+	Short: "View API usage analytics",
+	Long: `View detailed usage analytics for your APIs including request counts,
+unique consumers, popular endpoints, and usage trends.
+
+Examples:
+  apidirect analytics usage                    # All APIs
+  apidirect analytics usage my-api             # Specific API
+  apidirect analytics usage --period 7d        # Last 7 days
+  apidirect analytics usage --group-by hour    # Hourly breakdown`,
+	RunE: runAnalyticsUsage,
+}
+
+var analyticsRevenueCmd = &cobra.Command{
+	Use:   "revenue [api-name]",
+	Short: "View revenue analytics",
+	Long: `View revenue analytics including earnings, subscription growth,
+and revenue trends for your published APIs.
+
+Examples:
+  apidirect analytics revenue                  # All APIs
+  apidirect analytics revenue my-api           # Specific API
+  apidirect analytics revenue --period 30d     # Last 30 days
+  apidirect analytics revenue --breakdown      # Detailed breakdown`,
+	RunE: runAnalyticsRevenue,
+}
+
+var analyticsConsumersCmd = &cobra.Command{
+	Use:   "consumers [api-name]",
+	Short: "View consumer analytics",
+	Long: `View analytics about your API consumers including top users,
+usage patterns, and geographic distribution.
+
+Examples:
+  apidirect analytics consumers                # All APIs
+  apidirect analytics consumers my-api         # Specific API
+  apidirect analytics consumers --limit 20     # Top 20 consumers`,
+	RunE: runAnalyticsConsumers,
+}
+
+var analyticsPerformanceCmd = &cobra.Command{
+	Use:   "performance [api-name]",
+	Short: "View performance analytics",
+	Long: `View API performance analytics including response times,
+error rates, and availability metrics.
+
+Examples:
+  apidirect analytics performance              # All APIs
+  apidirect analytics performance my-api       # Specific API
+  apidirect analytics performance --period 24h # Last 24 hours`,
+	RunE: runAnalyticsPerformance,
+}
+
+func init() {
+	rootCmd.AddCommand(analyticsCmd)
+	
+	// Add subcommands
+	analyticsCmd.AddCommand(analyticsUsageCmd)
+	analyticsCmd.AddCommand(analyticsRevenueCmd)
+	analyticsCmd.AddCommand(analyticsConsumersCmd)
+	analyticsCmd.AddCommand(analyticsPerformanceCmd)
+	
+	// Common flags for all analytics commands
+	for _, cmd := range []*cobra.Command{
+		analyticsUsageCmd, analyticsRevenueCmd, 
+		analyticsConsumersCmd, analyticsPerformanceCmd,
+	} {
+		cmd.Flags().StringVar(&analyticsPeriod, "period", "7d", "Time period (1h, 24h, 7d, 30d, 90d)")
+		cmd.Flags().StringVar(&analyticsFormat, "format", "table", "Output format (table, json, csv)")
+		cmd.Flags().StringVar(&analyticsAPI, "api", "", "Filter by specific API (defaults to all)")
+	}
+	
+	// Command-specific flags
+	analyticsUsageCmd.Flags().StringVar(&analyticsGroupBy, "group-by", "day", "Group by (hour, day, week, month)")
+	analyticsRevenueCmd.Flags().BoolVar(&analyticsBreakdown, "breakdown", false, "Show detailed breakdown")
+	analyticsConsumersCmd.Flags().IntVar(&analyticsLimit, "limit", 10, "Number of top consumers to show")
+}
+
+// Data structures
+type UsageAnalytics struct {
+	Period      string              `json:"period"`
+	TotalCalls  int64               `json:"total_calls"`
+	UniquUsers  int                 `json:"unique_users"`
+	ErrorRate   float64             `json:"error_rate"`
+	Endpoints   []EndpointUsage     `json:"endpoints"`
+	TimeSeries  []TimeSeriesData    `json:"time_series"`
+	Geographic  []GeographicData    `json:"geographic,omitempty"`
+}
+
+type EndpointUsage struct {
+	Endpoint    string  `json:"endpoint"`
+	Method      string  `json:"method"`
+	Calls       int64   `json:"calls"`
+	ErrorRate   float64 `json:"error_rate"`
+	AvgLatency  float64 `json:"avg_latency_ms"`
+	P95Latency  float64 `json:"p95_latency_ms"`
+}
+
+type TimeSeriesData struct {
+	Timestamp   time.Time `json:"timestamp"`
+	Calls       int64     `json:"calls"`
+	Errors      int64     `json:"errors"`
+	UniqueUsers int       `json:"unique_users"`
+}
+
+type GeographicData struct {
+	Country     string  `json:"country"`
+	Region      string  `json:"region"`
+	Calls       int64   `json:"calls"`
+	Percentage  float64 `json:"percentage"`
+}
+
+type RevenueAnalytics struct {
+	Period          string              `json:"period"`
+	TotalRevenue    float64             `json:"total_revenue"`
+	RecurringRevenue float64            `json:"recurring_revenue"`
+	NewRevenue      float64             `json:"new_revenue"`
+	ChurnedRevenue  float64             `json:"churned_revenue"`
+	GrowthRate      float64             `json:"growth_rate"`
+	Subscriptions   SubscriptionMetrics `json:"subscriptions"`
+	PlanBreakdown   []PlanRevenue       `json:"plan_breakdown"`
+	TimeSeries      []RevenueTimeSeries `json:"time_series"`
+}
+
+type SubscriptionMetrics struct {
+	Total      int     `json:"total"`
+	New        int     `json:"new"`
+	Churned    int     `json:"churned"`
+	ChurnRate  float64 `json:"churn_rate"`
+	AvgValue   float64 `json:"avg_value"`
+}
+
+type PlanRevenue struct {
+	PlanName     string  `json:"plan_name"`
+	Subscribers  int     `json:"subscribers"`
+	Revenue      float64 `json:"revenue"`
+	Percentage   float64 `json:"percentage"`
+}
+
+type RevenueTimeSeries struct {
+	Date         time.Time `json:"date"`
+	Revenue      float64   `json:"revenue"`
+	Subscribers  int       `json:"subscribers"`
+}
+
+type ConsumerAnalytics struct {
+	Period       string           `json:"period"`
+	TotalConsumers int            `json:"total_consumers"`
+	ActiveConsumers int           `json:"active_consumers"`
+	TopConsumers []ConsumerUsage  `json:"top_consumers"`
+	PlanDistribution []PlanStats  `json:"plan_distribution"`
+	RetentionRate float64         `json:"retention_rate"`
+}
+
+type ConsumerUsage struct {
+	ConsumerID   string    `json:"consumer_id"`
+	Company      string    `json:"company"`
+	Plan         string    `json:"plan"`
+	Calls        int64     `json:"calls"`
+	Revenue      float64   `json:"revenue"`
+	JoinedDate   time.Time `json:"joined_date"`
+	LastActive   time.Time `json:"last_active"`
+}
+
+type PlanStats struct {
+	Plan         string  `json:"plan"`
+	Consumers    int     `json:"consumers"`
+	Percentage   float64 `json:"percentage"`
+	AvgUsage     int64   `json:"avg_usage"`
+}
+
+type PerformanceAnalytics struct {
+	Period         string                 `json:"period"`
+	Availability   float64                `json:"availability"`
+	AvgLatency     float64                `json:"avg_latency_ms"`
+	P50Latency     float64                `json:"p50_latency_ms"`
+	P95Latency     float64                `json:"p95_latency_ms"`
+	P99Latency     float64                `json:"p99_latency_ms"`
+	ErrorRate      float64                `json:"error_rate"`
+	ErrorBreakdown []ErrorTypeStats       `json:"error_breakdown"`
+	Endpoints      []EndpointPerformance  `json:"endpoints"`
+	TimeSeries     []PerformanceTimeSeries `json:"time_series"`
+}
+
+type ErrorTypeStats struct {
+	ErrorType   string  `json:"error_type"`
+	Count       int64   `json:"count"`
+	Percentage  float64 `json:"percentage"`
+}
+
+type EndpointPerformance struct {
+	Endpoint     string  `json:"endpoint"`
+	Calls        int64   `json:"calls"`
+	AvgLatency   float64 `json:"avg_latency_ms"`
+	P95Latency   float64 `json:"p95_latency_ms"`
+	ErrorRate    float64 `json:"error_rate"`
+	Availability float64 `json:"availability"`
+}
+
+type PerformanceTimeSeries struct {
+	Timestamp    time.Time `json:"timestamp"`
+	AvgLatency   float64   `json:"avg_latency_ms"`
+	ErrorRate    float64   `json:"error_rate"`
+	Availability float64   `json:"availability"`
+}
+
+// Command implementations
+
+func runAnalyticsUsage(cmd *cobra.Command, args []string) error {
+	// Check authentication
+	if !config.IsAuthenticated() {
+		return fmt.Errorf("not authenticated. Please run 'apidirect login' first")
+	}
+
+	// Get API name
+	apiName := getAPINameFromArgs(args)
+	
+	cfg, err := config.LoadConfig()
+	if err != nil {
+		return err
+	}
+
+	// Fetch usage analytics
+	analytics, err := fetchUsageAnalytics(cfg, apiName, analyticsPeriod, analyticsGroupBy)
+	if err != nil {
+		return fmt.Errorf("failed to fetch usage analytics: %w", err)
+	}
+
+	// Output based on format
+	switch analyticsFormat {
+	case "json":
+		return outputJSON(analytics)
+	case "csv":
+		return outputUsageCSV(analytics)
+	default:
+		return displayUsageAnalytics(cmd.OutOrStdout(), analytics, apiName)
+	}
+}
+
+func runAnalyticsRevenue(cmd *cobra.Command, args []string) error {
+	// Check authentication
+	if !config.IsAuthenticated() {
+		return fmt.Errorf("not authenticated. Please run 'apidirect login' first")
+	}
+
+	apiName := getAPINameFromArgs(args)
+	
+	cfg, err := config.LoadConfig()
+	if err != nil {
+		return err
+	}
+
+	// Fetch revenue analytics
+	analytics, err := fetchRevenueAnalytics(cfg, apiName, analyticsPeriod)
+	if err != nil {
+		return fmt.Errorf("failed to fetch revenue analytics: %w", err)
+	}
+
+	// Output based on format
+	switch analyticsFormat {
+	case "json":
+		return outputJSON(analytics)
+	case "csv":
+		return outputRevenueCSV(analytics)
+	default:
+		return displayRevenueAnalytics(cmd.OutOrStdout(), analytics, apiName, analyticsBreakdown)
+	}
+}
+
+func runAnalyticsConsumers(cmd *cobra.Command, args []string) error {
+	// Check authentication
+	if !config.IsAuthenticated() {
+		return fmt.Errorf("not authenticated. Please run 'apidirect login' first")
+	}
+
+	apiName := getAPINameFromArgs(args)
+	
+	cfg, err := config.LoadConfig()
+	if err != nil {
+		return err
+	}
+
+	// Fetch consumer analytics
+	analytics, err := fetchConsumerAnalytics(cfg, apiName, analyticsPeriod, analyticsLimit)
+	if err != nil {
+		return fmt.Errorf("failed to fetch consumer analytics: %w", err)
+	}
+
+	// Output based on format
+	switch analyticsFormat {
+	case "json":
+		return outputJSON(analytics)
+	case "csv":
+		return outputConsumerCSV(analytics)
+	default:
+		return displayConsumerAnalytics(cmd.OutOrStdout(), analytics, apiName)
+	}
+}
+
+func runAnalyticsPerformance(cmd *cobra.Command, args []string) error {
+	// Check authentication
+	if !config.IsAuthenticated() {
+		return fmt.Errorf("not authenticated. Please run 'apidirect login' first")
+	}
+
+	apiName := getAPINameFromArgs(args)
+	
+	cfg, err := config.LoadConfig()
+	if err != nil {
+		return err
+	}
+
+	// Fetch performance analytics
+	analytics, err := fetchPerformanceAnalytics(cfg, apiName, analyticsPeriod)
+	if err != nil {
+		return fmt.Errorf("failed to fetch performance analytics: %w", err)
+	}
+
+	// Output based on format
+	switch analyticsFormat {
+	case "json":
+		return outputJSON(analytics)
+	case "csv":
+		return outputPerformanceCSV(analytics)
+	default:
+		return displayPerformanceAnalytics(cmd.OutOrStdout(), analytics, apiName)
+	}
+}
+
+// Display functions
+
+func displayUsageAnalytics(w io.Writer, analytics *UsageAnalytics, apiName string) error {
+	// Header
+	title := "Usage Analytics"
+	if apiName != "" {
+		title += fmt.Sprintf(" - %s", apiName)
+	}
+	fmt.Fprintf(w, "\n📊 %s\n", color.CyanString(title))
+	fmt.Fprintf(w, "📅 Period: %s\n", analytics.Period)
+	fmt.Fprintln(w, strings.Repeat("═", 60))
+
+	// Summary metrics
+	fmt.Fprintf(w, "\n📈 Summary\n")
+	fmt.Fprintf(w, "   Total API Calls:  %s\n", formatNumberShort(analytics.TotalCalls))
+	fmt.Fprintf(w, "   Unique Consumers: %d\n", analytics.UniquUsers)
+	fmt.Fprintf(w, "   Error Rate:       %.2f%%\n", analytics.ErrorRate)
+	fmt.Fprintf(w, "   Avg Calls/User:   %s\n", formatNumberShort(analytics.TotalCalls/int64(max(analytics.UniquUsers, 1))))
+
+	// Top endpoints
+	if len(analytics.Endpoints) > 0 {
+		fmt.Fprintf(w, "\n🎯 Top Endpoints\n")
+		fmt.Fprintf(w, "   %-30s %10s %8s %10s\n", "Endpoint", "Calls", "Errors", "Avg (ms)")
+		fmt.Fprintf(w, "   %s\n", strings.Repeat("-", 60))
+		
+		for i, ep := range analytics.Endpoints {
+			if i >= 5 {
+				break
+			}
+			endpoint := fmt.Sprintf("%s %s", ep.Method, ep.Endpoint)
+			if len(endpoint) > 30 {
+				endpoint = endpoint[:27] + "..."
+			}
+			fmt.Fprintf(w, "   %-30s %10s %7.1f%% %10.0f\n", 
+				endpoint, 
+				formatNumberShort(ep.Calls),
+				ep.ErrorRate,
+				ep.AvgLatency,
+			)
+		}
+	}
+
+	// Time series chart (simplified)
+	if len(analytics.TimeSeries) > 0 {
+		fmt.Fprintf(w, "\n📉 Usage Trend\n")
+		displayUsageChart(w, analytics.TimeSeries)
+	}
+
+	// Geographic distribution
+	if len(analytics.Geographic) > 0 {
+		fmt.Fprintf(w, "\n🌍 Geographic Distribution\n")
+		for i, geo := range analytics.Geographic {
+			if i >= 5 {
+				break
+			}
+			fmt.Fprintf(w, "   %-20s %10s (%5.1f%%)\n", 
+				geo.Country, 
+				formatNumberShort(geo.Calls),
+				geo.Percentage,
+			)
+		}
+	}
+
+	return nil
+}
+
+func displayRevenueAnalytics(w io.Writer, analytics *RevenueAnalytics, apiName string, breakdown bool) error {
+	// Header
+	title := "Revenue Analytics"
+	if apiName != "" {
+		title += fmt.Sprintf(" - %s", apiName)
+	}
+	fmt.Fprintf(w, "\n💰 %s\n", color.CyanString(title))
+	fmt.Fprintf(w, "📅 Period: %s\n", analytics.Period)
+	fmt.Fprintln(w, strings.Repeat("═", 60))
+
+	// Revenue summary
+	fmt.Fprintf(w, "\n💵 Revenue Summary\n")
+	fmt.Fprintf(w, "   Total Revenue:     $%.2f\n", analytics.TotalRevenue)
+	fmt.Fprintf(w, "   Recurring (MRR):   $%.2f\n", analytics.RecurringRevenue)
+	fmt.Fprintf(w, "   New Revenue:       $%.2f\n", analytics.NewRevenue)
+	
+	growthColor := color.GreenString
+	if analytics.GrowthRate < 0 {
+		growthColor = color.RedString
+	}
+	fmt.Fprintf(w, "   Growth Rate:       %s\n", growthColor("%+.1f%%", analytics.GrowthRate))
+
+	// Subscription metrics
+	fmt.Fprintf(w, "\n📊 Subscription Metrics\n")
+	fmt.Fprintf(w, "   Total Subscribers: %d\n", analytics.Subscriptions.Total)
+	fmt.Fprintf(w, "   New This Period:   %d\n", analytics.Subscriptions.New)
+	fmt.Fprintf(w, "   Churned:          %d (%.1f%% churn rate)\n", 
+		analytics.Subscriptions.Churned, 
+		analytics.Subscriptions.ChurnRate,
+	)
+	fmt.Fprintf(w, "   Avg Value:        $%.2f\n", analytics.Subscriptions.AvgValue)
+
+	// Plan breakdown
+	if breakdown && len(analytics.PlanBreakdown) > 0 {
+		fmt.Fprintf(w, "\n📋 Revenue by Plan\n")
+		fmt.Fprintf(w, "   %-20s %10s %12s %8s\n", "Plan", "Subscribers", "Revenue", "Share")
+		fmt.Fprintf(w, "   %s\n", strings.Repeat("-", 52))
+		
+		for _, plan := range analytics.PlanBreakdown {
+			fmt.Fprintf(w, "   %-20s %10d %12s %7.1f%%\n", 
+				plan.PlanName,
+				plan.Subscribers,
+				fmt.Sprintf("$%.2f", plan.Revenue),
+				plan.Percentage,
+			)
+		}
+	}
+
+	// Revenue trend
+	if len(analytics.TimeSeries) > 0 {
+		fmt.Fprintf(w, "\n📈 Revenue Trend\n")
+		displayRevenueChart(analytics.TimeSeries)
+	}
+
+	return nil
+}
+
+func displayConsumerAnalytics(w io.Writer, analytics *ConsumerAnalytics, apiName string) error {
+	// Header
+	title := "Consumer Analytics"
+	if apiName != "" {
+		title += fmt.Sprintf(" - %s", apiName)
+	}
+	fmt.Fprintf(w, "\n👥 %s\n", color.CyanString(title))
+	fmt.Fprintf(w, "📅 Period: %s\n", analytics.Period)
+	fmt.Println(strings.Repeat("═", 60))
+
+	// Summary
+	fmt.Fprintf(w, "\n📊 Summary\n")
+	fmt.Fprintf(w, "   Total Consumers:   %d\n", analytics.TotalConsumers)
+	fmt.Fprintf(w, "   Active Consumers:  %d\n", analytics.ActiveConsumers)
+	fmt.Fprintf(w, "   Retention Rate:    %.1f%%\n", analytics.RetentionRate)
+
+	// Top consumers
+	if len(analytics.TopConsumers) > 0 {
+		fmt.Fprintf(w, "\n🏆 Top Consumers\n")
+		fmt.Fprintf(w, "   %-25s %-15s %10s %10s\n", "Company", "Plan", "Calls", "Revenue")
+		fmt.Fprintf(w, "   %s\n", strings.Repeat("-", 62))
+		
+		for _, consumer := range analytics.TopConsumers {
+			company := consumer.Company
+			if company == "" {
+				company = consumer.ConsumerID[:8] + "..."
+			}
+			if len(company) > 25 {
+				company = company[:22] + "..."
+			}
+			
+			fmt.Fprintf(w, "   %-25s %-15s %10s %10s\n", 
+				company,
+				consumer.Plan,
+				formatNumberShort(consumer.Calls),
+				fmt.Sprintf("$%.2f", consumer.Revenue),
+			)
+		}
+	}
+
+	// Plan distribution
+	if len(analytics.PlanDistribution) > 0 {
+		fmt.Fprintf(w, "\n📊 Plan Distribution\n")
+		for _, plan := range analytics.PlanDistribution {
+			bar := generateBar(plan.Percentage, 20)
+			fmt.Fprintf(w, "   %-15s %s %d (%.1f%%)\n", 
+				plan.Plan,
+				bar,
+				plan.Consumers,
+				plan.Percentage,
+			)
+		}
+	}
+
+	return nil
+}
+
+func displayPerformanceAnalytics(w io.Writer, analytics *PerformanceAnalytics, apiName string) error {
+	// Header
+	title := "Performance Analytics"
+	if apiName != "" {
+		title += fmt.Sprintf(" - %s", apiName)
+	}
+	fmt.Fprintf(w, "\n⚡ %s\n", color.CyanString(title))
+	fmt.Fprintf(w, "📅 Period: %s\n", analytics.Period)
+	fmt.Println(strings.Repeat("═", 60))
+
+	// Summary metrics
+	fmt.Fprintf(w, "\n📊 Summary\n")
+	
+	availColor := color.GreenString
+	if analytics.Availability < 99.9 {
+		availColor = color.YellowString
+	}
+	if analytics.Availability < 99.0 {
+		availColor = color.RedString
+	}
+	fmt.Fprintf(w, "   Availability:      %s\n", availColor("%.2f%%", analytics.Availability))
+	
+	fmt.Fprintf(w, "   Avg Response Time: %.0fms\n", analytics.AvgLatency)
+	fmt.Fprintf(w, "   P95 Response Time: %.0fms\n", analytics.P95Latency)
+	fmt.Fprintf(w, "   P99 Response Time: %.0fms\n", analytics.P99Latency)
+	
+	errorColor := color.GreenString
+	if analytics.ErrorRate > 1.0 {
+		errorColor = color.YellowString
+	}
+	if analytics.ErrorRate > 5.0 {
+		errorColor = color.RedString
+	}
+	fmt.Fprintf(w, "   Error Rate:        %s\n", errorColor("%.2f%%", analytics.ErrorRate))
+
+	// Error breakdown
+	if len(analytics.ErrorBreakdown) > 0 {
+		fmt.Fprintf(w, "\n❌ Error Breakdown\n")
+		for _, err := range analytics.ErrorBreakdown {
+			fmt.Fprintf(w, "   %-20s %6d (%.1f%%)\n", 
+				err.ErrorType,
+				err.Count,
+				err.Percentage,
+			)
+		}
+	}
+
+	// Endpoint performance
+	if len(analytics.Endpoints) > 0 {
+		fmt.Fprintf(w, "\n🎯 Endpoint Performance\n")
+		fmt.Fprintf(w, "   %-30s %8s %8s %8s\n", "Endpoint", "Avg (ms)", "P95 (ms)", "Errors")
+		fmt.Fprintf(w, "   %s\n", strings.Repeat("-", 56))
+		
+		for _, ep := range analytics.Endpoints {
+			endpoint := ep.Endpoint
+			if len(endpoint) > 30 {
+				endpoint = endpoint[:27] + "..."
+			}
+			
+			errorStr := fmt.Sprintf("%.1f%%", ep.ErrorRate)
+			if ep.ErrorRate > 1.0 {
+				errorStr = color.YellowString(errorStr)
+			}
+			if ep.ErrorRate > 5.0 {
+				errorStr = color.RedString(errorStr)
+			}
+			
+			fmt.Fprintf(w, "   %-30s %8.0f %8.0f %8s\n", 
+				endpoint,
+				ep.AvgLatency,
+				ep.P95Latency,
+				errorStr,
+			)
+		}
+	}
+
+	return nil
+}
+
+// Helper functions
+
+func getAPINameFromArgs(args []string) string {
+	if len(args) > 0 {
+		return args[0]
+	}
+	
+	if analyticsAPI != "" {
+		return analyticsAPI
+	}
+	
+	// Try to get from manifest
+	if manifestPath, err := manifest.FindManifest("."); err == nil {
+		if m, err := manifest.Load(manifestPath); err == nil {
+			return m.Name
+		}
+	}
+	
+	return "" // All APIs
+}
+
+func fetchUsageAnalytics(cfg *config.Config, apiName, period, groupBy string) (*UsageAnalytics, error) {
+	// In production, this would call the actual API
+	// For now, return mock data
+	return generateMockUsageAnalytics(apiName, period), nil
+}
+
+func fetchRevenueAnalytics(cfg *config.Config, apiName, period string) (*RevenueAnalytics, error) {
+	// In production, this would call the actual API
+	// For now, return mock data
+	return generateMockRevenueAnalytics(apiName, period), nil
+}
+
+func fetchConsumerAnalytics(cfg *config.Config, apiName, period string, limit int) (*ConsumerAnalytics, error) {
+	// In production, this would call the actual API
+	// For now, return mock data
+	return generateMockConsumerAnalytics(apiName, period, limit), nil
+}
+
+func fetchPerformanceAnalytics(cfg *config.Config, apiName, period string) (*PerformanceAnalytics, error) {
+	// In production, this would call the actual API
+	// For now, return mock data
+	return generateMockPerformanceAnalytics(apiName, period), nil
+}
+
+func formatNumberShort(n int64) string {
+	if n < 1000 {
+		return fmt.Sprintf("%d", n)
+	}
+	if n < 1000000 {
+		return fmt.Sprintf("%.1fK", float64(n)/1000)
+	}
+	if n < 1000000000 {
+		return fmt.Sprintf("%.1fM", float64(n)/1000000)
+	}
+	return fmt.Sprintf("%.1fB", float64(n)/1000000000)
+}
+
+func generateBar(percentage float64, width int) string {
+	filled := int(percentage * float64(width) / 100)
+	bar := strings.Repeat("█", filled) + strings.Repeat("░", width-filled)
+	return bar
+}
+
+func displayUsageChart(timeSeries []TimeSeriesData) {
+	// Simple ASCII chart
+	if len(timeSeries) == 0 {
+		return
+	}
+	
+	// Find max value for scaling
+	maxCalls := int64(0)
+	for _, ts := range timeSeries {
+		if ts.Calls > maxCalls {
+			maxCalls = ts.Calls
+		}
+	}
+	
+	// Display chart
+	height := 10
+	for h := height; h >= 0; h-- {
+		fmt.Fprintf(w, "   ")
+		if h == height {
+			fmt.Fprintf(w, "%7s │", formatNumberShort(maxCalls))
+		} else if h == 0 {
+			fmt.Fprintf(w, "      0 │")
+		} else {
+			fmt.Fprintf(w, "        │")
+		}
+		
+		for _, ts := range timeSeries {
+			barHeight := int(float64(ts.Calls) / float64(maxCalls) * float64(height))
+			if barHeight >= h {
+				fmt.Print("█")
+			} else {
+				fmt.Print(" ")
+			}
+		}
+		fmt.Println()
+	}
+	
+	// X-axis
+	fmt.Fprintf(w, "         └%s\n", strings.Repeat("─", len(timeSeries)))
+}
+
+func displayRevenueChart(timeSeries []RevenueTimeSeries) {
+	// Similar to usage chart but for revenue
+	if len(timeSeries) == 0 {
+		return
+	}
+	
+	maxRevenue := 0.0
+	for _, ts := range timeSeries {
+		if ts.Revenue > maxRevenue {
+			maxRevenue = ts.Revenue
+		}
+	}
+	
+	// Display simplified trend
+	fmt.Fprintf(w, "   ")
+	for _, ts := range timeSeries {
+		height := int(ts.Revenue / maxRevenue * 5)
+		switch height {
+		case 5:
+			fmt.Print("▰")
+		case 4:
+			fmt.Print("▱")
+		case 3:
+			fmt.Print("▲")
+		case 2:
+			fmt.Print("▬")
+		case 1:
+			fmt.Print("▪")
+		default:
+			fmt.Print("_")
+		}
+	}
+	fmt.Fprintf(w, " ($%.0f - $%.0f)\n", timeSeries[0].Revenue, maxRevenue)
+}
+
+// max moved to utils.go
+
+// Output formatters
+
+// outputJSON moved to utils.go
+
+func outputUsageCSV(analytics *UsageAnalytics) error {
+	fmt.Println("timestamp,calls,errors,unique_users")
+	for _, ts := range analytics.TimeSeries {
+		fmt.Fprintf(w, "%s,%d,%d,%d\n", 
+			ts.Timestamp.Format(time.RFC3339),
+			ts.Calls,
+			ts.Errors,
+			ts.UniqueUsers,
+		)
+	}
+	return nil
+}
+
+func outputRevenueCSV(analytics *RevenueAnalytics) error {
+	fmt.Println("date,revenue,subscribers")
+	for _, ts := range analytics.TimeSeries {
+		fmt.Fprintf(w, "%s,%.2f,%d\n", 
+			ts.Date.Format("2006-01-02"),
+			ts.Revenue,
+			ts.Subscribers,
+		)
+	}
+	return nil
+}
+
+func outputConsumerCSV(analytics *ConsumerAnalytics) error {
+	fmt.Println("consumer_id,company,plan,calls,revenue")
+	for _, c := range analytics.TopConsumers {
+		fmt.Fprintf(w, "%s,%s,%s,%d,%.2f\n", 
+			c.ConsumerID,
+			c.Company,
+			c.Plan,
+			c.Calls,
+			c.Revenue,
+		)
+	}
+	return nil
+}
+
+func outputPerformanceCSV(analytics *PerformanceAnalytics) error {
+	fmt.Println("timestamp,avg_latency_ms,error_rate,availability")
+	for _, ts := range analytics.TimeSeries {
+		fmt.Fprintf(w, "%s,%.2f,%.2f,%.2f\n", 
+			ts.Timestamp.Format(time.RFC3339),
+			ts.AvgLatency,
+			ts.ErrorRate,
+			ts.Availability,
+		)
+	}
+	return nil
+}
+
+// Mock data generators
+func generateMockUsageAnalytics(apiName, period string) *UsageAnalytics {
+	// Generate realistic mock data based on period
+	days := 7
+	if strings.HasSuffix(period, "d") {
+		fmt.Sscanf(period, "%dd", &days)
+	}
+	
+	timeSeries := make([]TimeSeriesData, days)
+	baseTime := time.Now().Add(-time.Duration(days) * 24 * time.Hour)
+	
+	for i := 0; i < days; i++ {
+		timeSeries[i] = TimeSeriesData{
+			Timestamp:   baseTime.Add(time.Duration(i) * 24 * time.Hour),
+			Calls:       int64(5000 + i*500 + (i%3)*1000),
+			Errors:      int64(50 + i*5),
+			UniqueUsers: 100 + i*10,
+		}
+	}
+	
+	return &UsageAnalytics{
+		Period:      period,
+		TotalCalls:  42500,
+		UniquUsers:  287,
+		ErrorRate:   0.8,
+		Endpoints: []EndpointUsage{
+			{Endpoint: "/api/weather", Method: "GET", Calls: 15420, ErrorRate: 0.5, AvgLatency: 45.2, P95Latency: 89.5},
+			{Endpoint: "/api/forecast", Method: "GET", Calls: 12380, ErrorRate: 0.3, AvgLatency: 52.1, P95Latency: 95.2},
+			{Endpoint: "/api/alerts", Method: "POST", Calls: 8920, ErrorRate: 1.2, AvgLatency: 38.5, P95Latency: 72.3},
+			{Endpoint: "/api/historical", Method: "GET", Calls: 5780, ErrorRate: 0.8, AvgLatency: 125.3, P95Latency: 245.7},
+		},
+		TimeSeries: timeSeries,
+		Geographic: []GeographicData{
+			{Country: "United States", Region: "North America", Calls: 18500, Percentage: 43.5},
+			{Country: "United Kingdom", Region: "Europe", Calls: 8200, Percentage: 19.3},
+			{Country: "Germany", Region: "Europe", Calls: 5100, Percentage: 12.0},
+			{Country: "Japan", Region: "Asia", Calls: 4300, Percentage: 10.1},
+			{Country: "Canada", Region: "North America", Calls: 3200, Percentage: 7.5},
+		},
+	}
+}
+
+func generateMockRevenueAnalytics(apiName, period string) *RevenueAnalytics {
+	days := 30
+	if strings.HasSuffix(period, "d") {
+		fmt.Sscanf(period, "%dd", &days)
+	}
+	
+	timeSeries := make([]RevenueTimeSeries, days/5) // Weekly data points
+	baseTime := time.Now().Add(-time.Duration(days) * 24 * time.Hour)
+	
+	for i := 0; i < len(timeSeries); i++ {
+		timeSeries[i] = RevenueTimeSeries{
+			Date:        baseTime.Add(time.Duration(i*5) * 24 * time.Hour),
+			Revenue:     2500.0 + float64(i)*350.0,
+			Subscribers: 45 + i*3,
+		}
+	}
+	
+	return &RevenueAnalytics{
+		Period:           period,
+		TotalRevenue:     12847.50,
+		RecurringRevenue: 8950.00,
+		NewRevenue:       3897.50,
+		ChurnedRevenue:   450.00,
+		GrowthRate:       15.3,
+		Subscriptions: SubscriptionMetrics{
+			Total:     58,
+			New:       12,
+			Churned:   3,
+			ChurnRate: 5.2,
+			AvgValue:  154.31,
+		},
+		PlanBreakdown: []PlanRevenue{
+			{PlanName: "Free", Subscribers: 125, Revenue: 0, Percentage: 0},
+			{PlanName: "Starter", Subscribers: 32, Revenue: 960.00, Percentage: 7.5},
+			{PlanName: "Professional", Subscribers: 18, Revenue: 3582.00, Percentage: 27.9},
+			{PlanName: "Enterprise", Subscribers: 8, Revenue: 8305.50, Percentage: 64.6},
+		},
+		TimeSeries: timeSeries,
+	}
+}
+
+func generateMockConsumerAnalytics(apiName, period string, limit int) *ConsumerAnalytics {
+	topConsumers := make([]ConsumerUsage, limit)
+	companies := []string{"TechCorp", "DataFlow Inc", "API Masters", "CloudSync", "DevTools Pro", 
+		"StartupXYZ", "BigCo Industries", "Innovation Labs", "Digital Solutions", "FastTrack Dev"}
+	
+	for i := 0; i < limit && i < len(companies); i++ {
+		plan := "Free"
+		revenue := 0.0
+		if i < 3 {
+			plan = "Enterprise"
+			revenue = 999.00
+		} else if i < 6 {
+			plan = "Professional"
+			revenue = 199.00
+		} else if i < 8 {
+			plan = "Starter"
+			revenue = 29.00
+		}
+		
+		topConsumers[i] = ConsumerUsage{
+			ConsumerID: fmt.Sprintf("cust_%d", 1000+i),
+			Company:    companies[i],
+			Plan:       plan,
+			Calls:      int64(10000 - i*1000),
+			Revenue:    revenue,
+			JoinedDate: time.Now().Add(-time.Duration(30+i*10) * 24 * time.Hour),
+			LastActive: time.Now().Add(-time.Duration(i) * time.Hour),
+		}
+	}
+	
+	return &ConsumerAnalytics{
+		Period:          period,
+		TotalConsumers:  287,
+		ActiveConsumers: 198,
+		TopConsumers:    topConsumers,
+		PlanDistribution: []PlanStats{
+			{Plan: "Free", Consumers: 125, Percentage: 43.6, AvgUsage: 850},
+			{Plan: "Starter", Consumers: 85, Percentage: 29.6, AvgUsage: 5200},
+			{Plan: "Professional", Consumers: 52, Percentage: 18.1, AvgUsage: 25000},
+			{Plan: "Enterprise", Consumers: 25, Percentage: 8.7, AvgUsage: 125000},
+		},
+		RetentionRate: 87.5,
+	}
+}
+
+func generateMockPerformanceAnalytics(apiName, period string) *PerformanceAnalytics {
+	hours := 24
+	if strings.HasSuffix(period, "h") {
+		fmt.Sscanf(period, "%dh", &hours)
+	}
+	
+	timeSeries := make([]PerformanceTimeSeries, min(hours, 24))
+	baseTime := time.Now().Add(-time.Duration(hours) * time.Hour)
+	
+	for i := 0; i < len(timeSeries); i++ {
+		timeSeries[i] = PerformanceTimeSeries{
+			Timestamp:    baseTime.Add(time.Duration(i) * time.Hour),
+			AvgLatency:   45.0 + float64(i%6)*5.0,
+			ErrorRate:    0.5 + float64(i%8)*0.1,
+			Availability: 99.9 - float64(i%12)*0.05,
+		}
+	}
+	
+	return &PerformanceAnalytics{
+		Period:       period,
+		Availability: 99.92,
+		AvgLatency:   48.5,
+		P50Latency:   42.0,
+		P95Latency:   95.2,
+		P99Latency:   142.8,
+		ErrorRate:    0.73,
+		ErrorBreakdown: []ErrorTypeStats{
+			{ErrorType: "4xx Client Errors", Count: 234, Percentage: 45.2},
+			{ErrorType: "5xx Server Errors", Count: 156, Percentage: 30.1},
+			{ErrorType: "Timeout", Count: 89, Percentage: 17.2},
+			{ErrorType: "Rate Limited", Count: 39, Percentage: 7.5},
+		},
+		Endpoints: []EndpointPerformance{
+			{Endpoint: "GET /api/weather", Calls: 15420, AvgLatency: 45.2, P95Latency: 89.5, ErrorRate: 0.5, Availability: 99.95},
+			{Endpoint: "GET /api/forecast", Calls: 12380, AvgLatency: 52.1, P95Latency: 95.2, ErrorRate: 0.3, Availability: 99.98},
+			{Endpoint: "POST /api/alerts", Calls: 8920, AvgLatency: 38.5, P95Latency: 72.3, ErrorRate: 1.2, Availability: 99.85},
+			{Endpoint: "GET /api/historical", Calls: 5780, AvgLatency: 125.3, P95Latency: 245.7, ErrorRate: 0.8, Availability: 99.90},
+		},
+		TimeSeries: timeSeries,
+	}
+}
+
+// min moved to utils.go
