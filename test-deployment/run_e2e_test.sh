@@ -10,8 +10,8 @@ echo "Testing BYOA deployment functionality"
 echo
 
 # Set up environment
-export AWS_ACCESS_KEY_ID=AKIAQFVO6DCPFJ3ODKGA
-export AWS_SECRET_ACCESS_KEY=A3SHMUm5cMKsBWCKpUeh0SSn68mThA6VfPMccnWK
+export AWS_ACCESS_KEY_ID=REPLACE_WITH_NEW_KEY
+export AWS_SECRET_ACCESS_KEY=REPLACE_WITH_NEW_SECRET
 export AWS_REGION=us-east-1
 
 # 1. Check AWS credentials

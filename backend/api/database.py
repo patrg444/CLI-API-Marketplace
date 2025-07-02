@@ -337,6 +337,39 @@ class WebhookEvent(Base):
     )
 
 
+class Deployment(Base):
+    """Deployment model for tracking Lambda deployments"""
+    __tablename__ = 'deployments'
+    
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id = Column(UUID(as_uuid=True), ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
+    api_id = Column(String(100), nullable=False)  # API name, not FK since APIs might not exist in DB yet
+    
+    # Deployment Details
+    status = Column(String(20), default='pending')  # pending, deploying, deployed, failed
+    environment = Column(String(20), default='production')
+    endpoint = Column(String(500))
+    
+    # AWS Resources
+    function_name = Column(String(255))
+    api_gateway_id = Column(String(100))
+    
+    # Deployment metadata
+    deployment_metadata = Column('metadata', JSON, default={})
+    error = Column(Text)
+    
+    # Timestamps
+    created_at = Column(DateTime(timezone=True), default=datetime.utcnow)
+    updated_at = Column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow)
+    deployed_at = Column(DateTime(timezone=True))
+    
+    # Indexes
+    __table_args__ = (
+        Index('idx_deployment_user_status', 'user_id', 'status'),
+        Index('idx_deployment_api', 'api_id'),
+    )
+
+
 class WebhookDelivery(Base):
     """Webhook delivery attempt record"""
     __tablename__ = 'webhook_deliveries'
@@ -380,6 +413,10 @@ class DatabaseManager:
             'DATABASE_URL', 
             'postgresql://user:password@localhost:5432/api_marketplace'
         )
+        # Convert to async URL if needed
+        if self.connection_string.startswith('postgresql://'):
+            self.connection_string = self.connection_string.replace('postgresql://', 'postgresql+asyncpg://')
+        
         self.pool_size = pool_size
         self.max_overflow = max_overflow
         self.engine = None

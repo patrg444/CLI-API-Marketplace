@@ -48,6 +48,10 @@ auth_service = MockAuthService(JWT_SECRET) if USE_MOCK_AUTH else None
 # Include routers
 app.include_router(api_creation_router, prefix="/api")
 
+# Import and include deployment router
+from .routes.deployments import router as deployment_router
+app.include_router(deployment_router, prefix="/api")
+
 # Models
 class UserRegister(BaseModel):
     name: str

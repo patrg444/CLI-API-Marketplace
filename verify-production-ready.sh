@@ -33,7 +33,7 @@ check_item() {
 echo -e "${YELLOW}1. Environment Configuration:${NC}"
 check_item ".env.production exists" "[ -f .env.production ]"
 check_item "Production secrets generated" "grep -q 'JWT_SECRET=tv5MmfTGiAl1TwDR8wdBKy127OWWTSr4JPAkqO2ZVmtKnQM4NPtRvOijZcBuDG' .env.production 2>/dev/null"
-check_item "AWS credentials configured" "grep -q 'AWS_ACCESS_KEY_ID=AKIAQFVO6DCPFJ3ODKGA' .env.production 2>/dev/null"
+check_item "AWS credentials configured" "grep -q 'AWS_ACCESS_KEY_ID=REPLACE_WITH_NEW_KEY' .env.production 2>/dev/null"
 check_item "Cognito configured" "grep -q 'COGNITO_USER_POOL_ID=us-east-1_t63hJGq1S' .env.production 2>/dev/null"
 check_item "SES email configured" "grep -q 'SMTP_HOST=email-smtp.us-east-1.amazonaws.com' .env.production 2>/dev/null"
 check_item "Stripe webhook configured" "grep -q 'STRIPE_WEBHOOK_SECRET=whsec_' .env.production 2>/dev/null"

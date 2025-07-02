@@ -74,8 +74,8 @@ echo -e "${BLUE}3. Testing BYOA Mode Prerequisites...${NC}"
 unset APIDIRECT_DEMO_MODE
 
 # Check AWS
-export AWS_ACCESS_KEY_ID=AKIAQFVO6DCPFJ3ODKGA
-export AWS_SECRET_ACCESS_KEY=A3SHMUm5cMKsBWCKpUeh0SSn68mThA6VfPMccnWK
+export AWS_ACCESS_KEY_ID=REPLACE_WITH_NEW_KEY
+export AWS_SECRET_ACCESS_KEY=REPLACE_WITH_NEW_SECRET
 export AWS_REGION=us-east-1
 
 if aws sts get-caller-identity > /dev/null 2>&1; then
